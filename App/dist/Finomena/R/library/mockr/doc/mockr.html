@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Mocking with mockr</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Mocking with mockr</h1>
+
+
+
+<p>The mockr package helps testing code that relies on functions that
+are slow, have unintended side effects or access resources that may not
+be available when testing. It allows replacing such functions with
+deterministic <a href="https://en.wikipedia.org/wiki/Mock_object"><em>mock
+functions</em></a>. This article gives an overview and introduces a few
+techniques.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(mockr)</span></code></pre></div>
+<div id="general-idea" class="section level2">
+<h2>General idea</h2>
+<p>Let’s assume a function <code>access_resource()</code> that accesses
+some resource. This works in normal circumstances, but not during tests.
+A function <code>work_with_resource()</code> works with that resource.
+How can we test <code>work_with_resource()</code> without adding too
+much logic to the implementation?</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>access_resource <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">&quot;Trying to access resource...&quot;</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="co"># For some reason we can&#39;t access the resource in our tests.</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="fu">stop</span>(<span class="st">&quot;Can&#39;t access resource now.&quot;</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>}</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>work_with_resource <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  resource <span class="ot">&lt;-</span> <span class="fu">access_resource</span>()</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">&quot;Fetched resource: &quot;</span>, resource)</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  <span class="fu">invisible</span>(resource)</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>}</span></code></pre></div>
+<p>In our example, calling the worker function gives an error:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">work_with_resource</span>()</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; Trying to access resource...</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt; Error in access_resource(): Can&#39;t access resource now.</span></span></code></pre></div>
+<p>We can use <code>local_mock()</code> to temporarily replace the
+implementation of <code>access_resource()</code> with one that doesn’t
+throw an error:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>access_resource_for_test <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="co"># We return a value that&#39;s good enough for testing</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="co"># and can be computed quickly:</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="dv">42</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>}</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="fu">local</span>({</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="co"># Here, we override the function that raises the error</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>  <span class="fu">local_mock</span>(<span class="at">access_resource =</span> access_resource_for_test)</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>  <span class="fu">work_with_resource</span>()</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>})</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; Fetched resource: 42</span></span></code></pre></div>
+<p>The use of <code>local()</code> here is required for technical
+reasons. This package is most useful in conjunction with testthat, the
+remainder of this article will focus on that use case.</p>
+</div>
+<div id="create-demo-package" class="section level2">
+<h2>Create demo package</h2>
+<p>We create a package called {mocktest} for demonstration. For this
+demo, the package is created in a temporary directory. A real project
+will live somewhere in your home directory. The
+<code>usethis::create_package()</code> function sets up a package
+project ready for development. The output shows the details of the
+package created.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>pkg <span class="ot">&lt;-</span> usethis<span class="sc">::</span><span class="fu">create_package</span>(<span class="fu">file.path</span>(<span class="fu">tempdir</span>(), <span class="st">&quot;mocktest&quot;</span>))</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt; ✔ Creating</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt;   &#39;/var/folders/dj/yhk9rkx97wn_ykqtnmk18xvc0000gn/T/Rtmpre1pOM/mocktest/&#39;.</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; ✔ Setting active project to</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt;   &quot;/private/var/folders/dj/yhk9rkx97wn_ykqtnmk18xvc0000gn/T/Rtmpre1pOM/mocktest&quot;.</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; ✔ Creating &#39;R/&#39;.</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; ✔ Writing &#39;DESCRIPTION&#39;.</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; Package: mocktest</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; Title: What the Package Does (One Line, Title Case)</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; Version: 0.0.0.9000</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; Authors@R (parsed):</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt;     * First Last &lt;first.last@example.com&gt; [aut, cre]</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt; Description: What the package does (one paragraph).</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt;     license</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; Encoding: UTF-8</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; Roxygen: list(markdown = TRUE)</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; RoxygenNote: 7.3.2.9000</span></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; ✔ Writing &#39;NAMESPACE&#39;.</span></span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; ✔ Setting active project to &quot;&lt;no active project&gt;&quot;.</span></span></code></pre></div>
+<p>In an interactive RStudio session, a new window opens. Users of other
+environments would change the working directory manually. For this demo,
+we manually set the active project.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>usethis<span class="sc">::</span><span class="fu">proj_set</span>()</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt; ✔ Setting active project to</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt;   &quot;/private/var/folders/dj/yhk9rkx97wn_ykqtnmk18xvc0000gn/T/Rtmpre1pOM/mocktest&quot;.</span></span></code></pre></div>
+<p>The infrastructure files and directories that comprise a minimal R
+package are created:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>fs<span class="sc">::</span><span class="fu">dir_tree</span>()</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co">#&gt; .</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; ├── DESCRIPTION</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; ├── NAMESPACE</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; └── R</span></span></code></pre></div>
+</div>
+<div id="import-function" class="section level2">
+<h2>Import function</h2>
+<p>We copy the functions from the previous example (under different
+names) into the package. Normally we would use a text editor:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> R/resource.R <span class="op">&lt;&lt;&quot;EOF&quot;</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="st">access_resource_pkg &lt;- function() {</span></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="st">  message(&quot;Trying to access resource...&quot;)</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="st">  # For some reason we can&#39;t access the resource in our tests.</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="st">  stop(&quot;Can&#39;t access resource now.&quot;)</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="st">work_with_resource_pkg &lt;- function() {</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="st">  resource &lt;- access_resource_pkg()</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="st">  message(&quot;Fetched resource: &quot;, resource)</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="st">  invisible(resource)</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div>
+<p>Loading the package and calling the function gives the error we have
+seen before:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>pkgload<span class="sc">::</span><span class="fu">load_all</span>()</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co">#&gt; ℹ Loading mocktest</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="fu">work_with_resource_pkg</span>()</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt; Trying to access resource...</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt; Error in access_resource_pkg(): Can&#39;t access resource now.</span></span></code></pre></div>
+</div>
+<div id="adding-test-with-mock" class="section level2">
+<h2>Adding test with mock</h2>
+<p>We create a test that tests <code>work_with_resource_pkg()</code>,
+mocking <code>access_resource_pkg()</code>. We need to prefix with the
+package name, because testthat provides its own
+<code>testthat::local_mock()</code> which is now deprecated.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>usethis<span class="sc">::</span><span class="fu">use_testthat</span>()</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="co">#&gt; ✔ Adding testthat to &#39;Suggests&#39; field in DESCRIPTION.</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="co">#&gt; ✔ Adding &quot;3&quot; to &#39;Config/testthat/edition&#39;.</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co">#&gt; ✔ Creating &#39;tests/testthat/&#39;.</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co">#&gt; ✔ Writing &#39;tests/testthat.R&#39;.</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt; ☐ Call `usethis::use_test()` to initialize a basic test file and open it for</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co">#&gt;   editing.</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> tests/testthat/test-resource.R <span class="op">&lt;&lt;&quot;EOF&quot;</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="st">test_that(&quot;Can work with resource&quot;, {</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="st">  mockr::local_mock(access_resource_pkg = function() {</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="st">    42</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="st">  })</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="st">  expect_message(</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="st">    expect_equal(work_with_resource_pkg(), 42)</span></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="st">  )</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="st">})</span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div>
+<p>The test succeeds:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>testthat<span class="sc">::</span><span class="fu">test_local</span>(<span class="at">reporter =</span> <span class="st">&quot;location&quot;</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co">#&gt; Attaching package: &#39;testthat&#39;</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co">#&gt; The following objects are masked from &#39;package:mockr&#39;:</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co">#&gt;     local_mock, with_mock</span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="co">#&gt; Start test: Can work with resource</span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co">#&gt;   &#39;test-resource.R:6:3&#39; [success]</span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt;   &#39;test-resource.R:6:3&#39; [success]</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt; End test: Can work with resource</span></span></code></pre></div>
+</div>
+<div id="run-individual-tests" class="section level2">
+<h2>Run individual tests</h2>
+<p>mockr is aware of testthat and will work even if executing the tests
+in the current session. This is especially handy if you want to
+troubleshoot single tests:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">test_that</span>(<span class="st">&quot;Can work with resource&quot;</span>, {</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  mockr<span class="sc">::</span><span class="fu">local_mock</span>(<span class="at">access_resource_pkg =</span> <span class="cf">function</span>() {</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>    <span class="dv">42</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  })</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>  <span class="fu">expect_message</span>(</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>    <span class="fu">expect_equal</span>(<span class="fu">work_with_resource_pkg</span>(), <span class="dv">42</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>  )</span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>})</span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co">#&gt; Test passed 🥳</span></span></code></pre></div>
+</div>
+<div id="write-wrapper-functions" class="section level2">
+<h2>Write wrapper functions</h2>
+<p>mockr can only mock functions in the current package. To substitute
+implementations of functions in other packages, create wrappers in your
+package and use these wrappers exclusively.</p>
+<p>The example below demonstrates a <code>d6()</code> function that is
+used to get the value of a random die throw. Instead of using
+<code>runif()</code> directly, this function uses
+<code>my_runif()</code> which wraps <code>runif()</code>.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> R/runif.R <span class="op">&lt;&lt;&quot;EOF&quot;</span></span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="st">my_runif &lt;- function(...) {</span></span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a><span class="st">  runif(...)</span></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a><span class="st">d6 &lt;- function() {</span></span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a><span class="st">  trunc(my_runif(1, 0, 6)) + 1</span></span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>pkgload<span class="sc">::</span><span class="fu">load_all</span>()</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="co">#&gt; ℹ Loading mocktest</span></span></code></pre></div>
+<p>This allows testing the behavior of <code>d6()</code>:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="fu">test_that</span>(<span class="st">&quot;d6() works correctly&quot;</span>, {</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>  seq <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.32</span>, <span class="fl">5.4</span>, <span class="dv">5</span>, <span class="fl">2.99</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>  my_runif_mock <span class="ot">&lt;-</span> <span class="cf">function</span>(...) {</span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>    <span class="fu">on.exit</span>(seq <span class="ot">&lt;&lt;-</span> seq[<span class="sc">-</span><span class="dv">1</span>])</span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>    seq[[<span class="dv">1</span>]]</span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>  }</span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a>  mockr<span class="sc">::</span><span class="fu">local_mock</span>(<span class="at">my_runif =</span> my_runif_mock)</span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a>  <span class="fu">expect_equal</span>(<span class="fu">d6</span>(), <span class="dv">1</span>)</span>
+<span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a>  <span class="fu">expect_equal</span>(<span class="fu">d6</span>(), <span class="dv">6</span>)</span>
+<span id="cb16-12"><a href="#cb16-12" tabindex="-1"></a>  <span class="fu">expect_equal</span>(<span class="fu">d6</span>(), <span class="dv">6</span>)</span>
+<span id="cb16-13"><a href="#cb16-13" tabindex="-1"></a>  <span class="fu">expect_equal</span>(<span class="fu">d6</span>(), <span class="dv">3</span>)</span>
+<span id="cb16-14"><a href="#cb16-14" tabindex="-1"></a>})</span>
+<span id="cb16-15"><a href="#cb16-15" tabindex="-1"></a><span class="co">#&gt; Test passed 😸</span></span></code></pre></div>
+</div>
+<div id="mock-s3-methods" class="section level2">
+<h2>Mock S3 methods</h2>
+<p>mockr cannot substitute implementations of S3 methods. To substitute
+methods for a class <code>&quot;foo&quot;</code>, implement a subclass and add new
+methods only for that subclass. The pillar package contains <a href="https://github.com/r-lib/pillar/blob/fd6376eca74e9748ed616c49f906529eaee68df9/tests/testthat/helper-unknown-rows.R">an
+example</a> where a class with changed behavior for <code>dim()</code>
+and <code>head()</code> for the sole purpose of testing.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

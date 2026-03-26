@@ -1,0 +1,24 @@
+PySide6>=6.5
+pandas
+numpy<2
+matplotlib
+seaborn
+scikit-learn
+pycatch22
+PyMuPDF
+pyqtdarktheme
+jaraco.text
+jaraco.functools
+jaraco.context
+# Color palette packages
+distinctipy
+glasbey
+colorcet
+palettable
+cmocean
+cmasher
+husl
+vapeplot
+bokeh
+# Build tool
+pyinstaller

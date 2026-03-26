@@ -1,0 +1,7 @@
+"Condition","phase1","phase2","pseudo_median_difference","conf_int_lower","conf_int_upper","statistic","tails","p.value","method","data_name","p.adjusted","adjustment_method"
+"WT+DMSO","600Hz","200Hz",-621.471296733494,-1749.50004447327,479.000024677475,201,"two.sided",0.238783367849923,"Wilcoxon signed rank test","subset1 and subset2",1,"holm"
+"Mut1","600Hz","200Hz",129.00003993152,-1230.50001483214,1237.50006902635,243,"two.sided",0.82901303169467,"Wilcoxon signed rank test","subset1 and subset2",1,"holm"
+"Mut2","600Hz","200Hz",-85.5823244815663,-863.999994719252,944.499964576159,236,"two.sided",0.81408568361146,"Wilcoxon signed rank test","subset1 and subset2",1,"holm"
+"Mut3","600Hz","200Hz",242.421898477241,-860.499950821848,1006.99997943686,270.5,"two.sided",0.659261613447095,"Wilcoxon signed rank test","subset1 and subset2",1,"holm"
+"Mut4","600Hz","200Hz",214.072268496182,-1299.99998775443,1192.99998313404,260,"two.sided",0.81408568361146,"Wilcoxon signed rank test","subset1 and subset2",1,"holm"
+"MUT+DMSO","600Hz","200Hz",-694.023330574809,-1613.49999692713,132.499991963614,165,"two.sided",0.103840519454576,"Wilcoxon signed rank test","subset1 and subset2",0.623043116727455,"holm"

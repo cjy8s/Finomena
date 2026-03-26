@@ -1,0 +1,20 @@
+AIC.robmixglm           AIC for robmixglm object
+BIC.robmixglm           BIC for robmixglm object
+coef                    Coefficients for a robmixglm object
+diabdata                Diabetes data
+extractAIC.robmixglm    Extract AIC from a Fitted Model
+fitted.robmixglm        Fitted values.
+hospcosts               Hospital Costs data
+logLik.robmixglm        log Likelikelihood for robmixglm object
+outlierProbs            Calculate outlier probabilities for each
+                        observation.
+outlierTest             Test for the presence of outliers.
+plot.outlierProbs       Plot outlier probabilities.
+predict.robmixglm       Predict Method for robmixglm
+print.outlierTest       Print an outlierTest object
+residuals.robmixglm     Extract Model Residuals
+robmixglm               Fits a Robust Generalized Linear Model and
+                        Variants
+robmixglm-package       Fits random effects meta-analysis models
+                        including robust models
+summary.robmixglm       summaryficients for robmixglm object

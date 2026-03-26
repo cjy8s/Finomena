@@ -1,0 +1,5 @@
+mockr-package	mockr-package
+get_mock_env	get_mock_env
+local_mock	local_mock
+mockr	mockr-package
+with_mock	local_mock

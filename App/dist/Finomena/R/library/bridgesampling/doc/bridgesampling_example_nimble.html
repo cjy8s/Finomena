@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Quentin F. Gronau, Henrik Singmann &amp; Perry de Valpine" />
+
+<meta name="date" content="2025-11-18" />
+
+<title>Hierarchical Normal Example (nimble)</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rstudio/markdown/inst/resources/prism-xcode.css" data-external="1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/yihui/knitr/inst/misc/vignette.css" data-external="1">
+<script src="https://cdn.jsdelivr.net/combine/npm/@xiee/utils/js/code-lang.min.js,npm/@xiee/utils/js/number-captions.min.js,npm/prismjs@1.29.0/components/prism-core.min.js" data-external="1" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" data-external="1" defer></script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Hierarchical Normal Example (nimble)</h1>
+<h4 class="author">Quentin F. Gronau, Henrik Singmann &amp; Perry de
+Valpine</h4>
+<h4 class="date">2025-11-18</h4>
+
+
+<div id="TOC">
+<ul>
+<li><a href="#model-and-data" id="toc-model-and-data">Model and
+Data</a></li>
+<li><a href="#specifying-the-models" id="toc-specifying-the-models">Specifying the Models</a></li>
+<li><a href="#fitting-the-models" id="toc-fitting-the-models">Fitting
+the Models</a></li>
+<li><a href="#computing-the-log-marginal-likelihoods" id="toc-computing-the-log-marginal-likelihoods">Computing the (Log)
+Marginal Likelihoods</a></li>
+<li><a href="#bayesian-model-comparison" id="toc-bayesian-model-comparison">Bayesian Model Comparison</a></li>
+</ul>
+</div>
+
+<p>In this vignette, we explain how one can compute marginal
+likelihoods, Bayes factors, and posterior model probabilities using a
+simple hierarchical normal model implemented in <code>nimble</code>. The
+<a href="https://r-nimble.org/manual/cha-welcome-nimble.html"><code>nimble</code>
+documentation</a> provides a comprehensive overview. This vignette uses
+the same models and data as the <a href="bridgesampling_example_stan.html"><code>Stan</code> vignette</a>
+and <a href="bridgesampling_example_jags.html"><code>Jags</code>
+vignette</a>.</p>
+<div id="model-and-data" class="section level2">
+<h2>Model and Data</h2>
+<p>The model that we will use assumes that each of the <span class="math inline">\(n\)</span> observations <span class="math inline">\(y_i\)</span> (where <span class="math inline">\(i\)</span> indexes the observation, <span class="math inline">\(i = 1,2,...,n\)</span>) is normally distributed
+with corresponding mean <span class="math inline">\(\theta_i\)</span>
+and a common known variance <span class="math inline">\(\sigma^2\)</span>: <span class="math inline">\(y_i
+\sim \mathcal{N}(\theta_i, \sigma^2)\)</span>. Each <span class="math inline">\(\theta_i\)</span> is drawn from a normal
+group-level distribution with mean <span class="math inline">\(\mu\)</span> and variance <span class="math inline">\(\tau^2\)</span>: <span class="math inline">\(\theta_i \sim \mathcal{N}(\mu, \tau^2)\)</span>.
+For the group-level mean <span class="math inline">\(\mu\)</span>, we
+use a normal prior distribution of the form <span class="math inline">\(\mathcal{N}(\mu_0, \tau^2_0)\)</span>. For the
+group-level variance <span class="math inline">\(\tau^2\)</span>, we use
+an inverse-gamma prior of the form <span class="math inline">\(\text{Inv-Gamma}(\alpha, \beta)\)</span>.</p>
+<p>In this example, we are interested in comparing the null model <span class="math inline">\(\mathcal{H}_0\)</span>, which posits that the
+group-level mean <span class="math inline">\(\mu = 0\)</span>, to the
+alternative model <span class="math inline">\(\mathcal{H}_1\)</span>,
+which allows <span class="math inline">\(\mu\)</span> to be different
+from zero. First, we generate some data from the null model:</p>
+<pre class="r"><code>library(bridgesampling)
+
+### generate data ###
+set.seed(12345)
+
+mu &lt;- 0
+tau2 &lt;- 0.5
+sigma2 &lt;- 1
+
+n &lt;- 20
+theta &lt;- rnorm(n, mu, sqrt(tau2))
+y &lt;- rnorm(n, theta, sqrt(sigma2))</code></pre>
+<p>Next, we specify the prior parameters <span class="math inline">\(\mu_0\)</span>, <span class="math inline">\(\tau^2_0\)</span>, <span class="math inline">\(\alpha\)</span>, and <span class="math inline">\(\beta\)</span>:</p>
+<pre class="r"><code>### set prior parameters ###
+mu0 &lt;- 0
+tau20 &lt;- 1
+alpha &lt;- 1
+beta &lt;- 1</code></pre>
+</div>
+<div id="specifying-the-models" class="section level2">
+<h2>Specifying the Models</h2>
+<p>Next, we implement the models in <code>nimble</code>. This requires
+to first transform the code into a <code>nimbleModel</code>, then we
+need to set the data, and then we can compile the model. Given that
+<code>nimble</code> is build on BUGS, the similarity between the
+<code>nimble</code> code and the <a href="bridgesampling_example_jags.html"><code>Jags</code> code</a> is
+not too surprising.</p>
+<pre class="r"><code>library(&quot;nimble&quot;)
+
+# models
+codeH0 &lt;- nimbleCode({
+  invTau2 ~ dgamma(1, 1)
+  tau2 &lt;- 1/invTau2
+  for (i in 1:20) {
+    theta[i] ~ dnorm(0, sd = sqrt(tau2))
+    y[i] ~ dnorm(theta[i], sd = 1)
+  }
+})
+codeH1 &lt;- nimbleCode({
+  mu ~ dnorm(0, sd = 1)
+  invTau2 ~ dgamma(1, 1)
+  tau2 &lt;- 1/invTau2
+  for (i in 1:20) {
+    theta[i] ~ dnorm(mu, sd = sqrt(tau2))
+    y[i] ~ dnorm(theta[i], sd = 1)
+  }
+})
+
+## steps for H0:
+modelH0 &lt;- nimbleModel(codeH0)
+modelH0$setData(y = y) # set data
+cmodelH0 &lt;- compileNimble(modelH0) # make compiled version from generated C++
+
+## steps for H1:
+modelH1 &lt;- nimbleModel(codeH1)
+modelH1$setData(y = y) # set data
+cmodelH1 &lt;- compileNimble(modelH1) # make compiled version from generated C++</code></pre>
+</div>
+<div id="fitting-the-models" class="section level2">
+<h2>Fitting the Models</h2>
+<p>Fitting a model with <code>nimble</code> requires one to first create
+an MCMC function from the (compiled or uncompiled) model. This function
+then needs to be compiled again. With this object we can then create the
+samples. Note that nimble uses a reference object semantic so we do not
+actually need the samples object, as the samples will be saved in the
+MCMC function objects. But as <code>runMCMC</code> returns them anyway,
+we nevertheless save them.</p>
+<p>One usually requires a larger number of posterior samples for
+estimating the marginal likelihood than for simply estimating the model
+parameters. This is the reason for using a comparatively large number of
+samples for these simple models.</p>
+<pre class="r"><code># build MCMC functions, skipping customization of the configuration.
+mcmcH0 &lt;- buildMCMC(modelH0,
+                    monitors = modelH0$getNodeNames(stochOnly = TRUE,
+                                                    includeData = FALSE))
+mcmcH1 &lt;- buildMCMC(modelH1,
+                    monitors = modelH1$getNodeNames(stochOnly = TRUE,
+                                                    includeData = FALSE))
+# compile the MCMC function via generated C++
+cmcmcH0 &lt;- compileNimble(mcmcH0, project = modelH0)
+cmcmcH1 &lt;- compileNimble(mcmcH1, project = modelH1)
+
+# run the MCMC.  This is a wrapper for cmcmc$run() and extraction of samples.
+# the object samplesH1 is actually not needed as the samples are also in cmcmcH1
+samplesH0 &lt;- runMCMC(cmcmcH0, niter = 1e5, nburnin = 1000, nchains = 2,
+                     progressBar = FALSE)
+samplesH1 &lt;- runMCMC(cmcmcH1, niter = 1e5, nburnin = 1000, nchains = 2,
+                     progressBar = FALSE)</code></pre>
+</div>
+<div id="computing-the-log-marginal-likelihoods" class="section level2">
+<h2>Computing the (Log) Marginal Likelihoods</h2>
+<p>Computing the (log) marginal likelihoods via the
+<code>bridge_sampler</code> function is now easy: we only need to pass
+the compiled MCMC function objects (of class
+<code>&quot;MCMC_refClass&quot;</code>) which contain all information necessary.
+We use <code>silent = TRUE</code> to suppress printing the number of
+iterations to the console:</p>
+<pre class="r"><code># compute log marginal likelihood via bridge sampling for H0
+H0.bridge &lt;- bridge_sampler(cmcmcH0, silent = TRUE)
+
+# compute log marginal likelihood via bridge sampling for H1
+H1.bridge &lt;- bridge_sampler(cmcmcH1, silent = TRUE)</code></pre>
+<p>We obtain:</p>
+<pre class="r"><code>print(H0.bridge)</code></pre>
+<pre><code>## Bridge sampling estimate of the log marginal likelihood: -37.52918
+## Estimate obtained in 4 iteration(s) via method &quot;normal&quot;.</code></pre>
+<pre class="r"><code>print(H1.bridge)</code></pre>
+<pre><code>## Bridge sampling estimate of the log marginal likelihood: -37.80257
+## Estimate obtained in 4 iteration(s) via method &quot;normal&quot;.</code></pre>
+<p>We can use the <code>error_measures</code> function to compute an
+approximate percentage error of the estimates:</p>
+<pre class="r"><code># compute percentage errors
+H0.error &lt;- error_measures(H0.bridge)$percentage
+H1.error &lt;- error_measures(H1.bridge)$percentage</code></pre>
+<p>We obtain:</p>
+<pre class="r"><code>print(H0.error)</code></pre>
+<pre><code>## [1] &quot;0.2%&quot;</code></pre>
+<pre class="r"><code>print(H1.error)</code></pre>
+<pre><code>## [1] &quot;0.22%&quot;</code></pre>
+</div>
+<div id="bayesian-model-comparison" class="section level2">
+<h2>Bayesian Model Comparison</h2>
+<p>To compare the null model and the alternative model, we can compute
+the Bayes factor by using the <code>bf</code> function. In our case, we
+compute <span class="math inline">\(\text{BF}_{01}\)</span>, that is,
+the Bayes factor which quantifies how much more likely the data are
+under the null versus the alternative model:</p>
+<pre class="r"><code># compute Bayes factor
+BF01 &lt;- bf(H0.bridge, H1.bridge)
+print(BF01)</code></pre>
+<pre><code>## Estimated Bayes factor in favor of H0.bridge over H1.bridge: 1.31441</code></pre>
+<p>In this case, the Bayes factor is close to one, indicating that there
+is not much evidence for either model. We can also compute posterior
+model probabilities by using the <code>post_prob</code> function:</p>
+<pre class="r"><code># compute posterior model probabilities (assuming equal prior model probabilities)
+post1 &lt;- post_prob(H0.bridge, H1.bridge)
+print(post1)</code></pre>
+<pre><code>## H0.bridge H1.bridge 
+## 0.5679244 0.4320756</code></pre>
+<p>When the argument <code>prior_prob</code> is not specified, as is the
+case here, the prior model probabilities of all models under
+consideration are set equal (i.e., in this case with two models to 0.5).
+However, if we had prior knowledge about how likely both models are, we
+could use the <code>prior_prob</code> argument to specify different
+prior model probabilities:</p>
+<pre class="r"><code># compute posterior model probabilities (using user-specified prior model probabilities)
+post2 &lt;- post_prob(H0.bridge, H1.bridge, prior_prob = c(.6, .4))
+print(post2)</code></pre>
+<pre><code>## H0.bridge H1.bridge 
+## 0.6634826 0.3365174</code></pre>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
