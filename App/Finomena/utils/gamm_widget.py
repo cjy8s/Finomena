@@ -81,6 +81,8 @@ class GammWidget(QWidget):
         self._roles               = {}         # {condition_name: role_str}
         self._global_correction   = "BH"       # default global multiple-testing method
         self._contrast_correction = "dunnett"  # default within-contrast adjustment
+        self._family_name         = "Tweedie"  # distribution family (set by FamilySelectionWidget)
+        self._shift_val           = 0.0        # additive shift applied before fitting
 
         self._build_ui()
 
@@ -101,6 +103,19 @@ class GammWidget(QWidget):
     def set_roles(self, roles: dict):
         """Stores the {condition_name: role_str} mapping."""
         self._roles = dict(roles)
+
+    def set_family(self, family_name: str, shift_val: float):
+        """Receives the chosen distribution family from FamilySelectionWidget."""
+        self._family_name = family_name
+        self._shift_val   = shift_val
+        labels = {
+            "Tweedie":     "Tweedie (compound Poisson-Gamma)",
+            "Gamma":       "Gamma (log link)",
+            "NegBinomial": "Negative Binomial",
+        }
+        display = labels.get(family_name, family_name)
+        shift_note = f" — shift: {shift_val:.4f}" if shift_val != 0 else ""
+        self._family_label.setText(f"Family: <b>{display}</b>{shift_note}")
 
     def set_output_dir(self, path: str):
         """Sets the output directory for R results (called from MainWindow)."""
@@ -173,7 +188,13 @@ class GammWidget(QWidget):
         row_23 = QHBoxLayout()
 
         run_group = QGroupBox("2. Run GAMM Analysis")
-        rg_layout = QHBoxLayout(run_group)
+        rg_layout = QVBoxLayout(run_group)
+
+        self._family_label = QLabel("Family: <b>Tweedie (compound Poisson-Gamma)</b> — default")
+        self._family_label.setStyleSheet("font-style: italic; color: #aaaaaa;")
+        rg_layout.addWidget(self._family_label)
+
+        run_row = QHBoxLayout()
         self._run_button = QPushButton("Run R Analysis")
         self._run_button.setEnabled(False)
         self._run_button.setMinimumHeight(36)
@@ -183,9 +204,10 @@ class GammWidget(QWidget):
         self._stop_button.setEnabled(False)
         self._stop_button.clicked.connect(self._on_stop)
         self._r_status_label = QLabel("")
-        rg_layout.addWidget(self._run_button)
-        rg_layout.addWidget(self._stop_button)
-        rg_layout.addWidget(self._r_status_label, stretch=1)
+        run_row.addWidget(self._run_button)
+        run_row.addWidget(self._stop_button)
+        run_row.addWidget(self._r_status_label, stretch=1)
+        rg_layout.addLayout(run_row)
 
         row_23.addWidget(run_group, stretch=1)
         layout.addLayout(row_23)
@@ -369,6 +391,7 @@ class GammWidget(QWidget):
             var_names_str, ref_values_str, self._ref_condition,
             self._global_correction, self._contrast_correction,
             roles_str,
+            self._family_name, str(self._shift_val),
         ]
 
         kwargs = {}

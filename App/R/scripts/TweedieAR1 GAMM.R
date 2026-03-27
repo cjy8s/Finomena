@@ -19,8 +19,10 @@ library(emmeans)
 
 # ── ARGUMENT PARSING ──────────────────────────────────────────────────────────
 # Called from the app as:
-#  Rscript "TweedieAR1 GAMM.R" <input_csv> <output_dir> <var_names> <ref_values> <ref_condition> <global_corr> <contrast_adj>
+#  Rscript "TweedieAR1 GAMM.R" <input_csv> <output_dir> <var_names> <ref_values> <ref_condition> <global_corr> <contrast_adj> <roles> <family_name> <shift_val>
 # var_names and ref_values are comma-separated strings, e.g. "Genotype,Drug" and "WT,DMSO"
+# family_name: "Tweedie" | "Gamma" | "NegBinomial"  (default: "Tweedie")
+# shift_val:   numeric constant added to pxl_diff before fitting (default: 0)
 args <- commandArgs(trailingOnly = TRUE)
 input_csv  <- args[1]
 output_dir <- if (length(args) >= 2 && !is.na(args[2])) args[2] else dirname(input_csv)
@@ -39,6 +41,19 @@ ref_condition  <- if (length(args) >= 5 && !is.na(args[5]) && nchar(args[5]) > 0
 global_correction <- if (length(args) >= 6 && !is.na(args[6]) && nchar(args[6]) > 0) args[6] else "BH"
 contrast_adjust   <- if (length(args) >= 7 && !is.na(args[7]) && nchar(args[7]) > 0) args[7] else "dunnett"
 roles_raw         <- if (length(args) >= 8 && !is.na(args[8]) && nchar(args[8]) > 0) args[8] else ""
+family_name       <- if (length(args) >= 9 && !is.na(args[9]) && nchar(args[9]) > 0) args[9] else "Tweedie"
+shift_val         <- if (length(args) >= 10 && !is.na(args[10]) && nchar(args[10]) > 0) as.numeric(args[10]) else 0
+
+# Build the family object from the name
+chosen_family <- switch(family_name,
+  Tweedie     = tw(),
+  Gamma       = Gamma(link = "log"),
+  NegBinomial = nb(),
+  {
+    warning("Unknown family '", family_name, "' — defaulting to Tweedie.")
+    tw()
+  }
+)
 
 var_names_raw_vec <- str_split(var_names_raw, ",")[[1]]
 ref_values        <- str_split(ref_values_raw, ",")[[1]]
@@ -82,6 +97,8 @@ cat("Ref Condition:    ", ref_condition, "\n")
 cat("Global correction:", global_correction, "\n")
 cat("Contrast adjust:  ", contrast_adjust, "\n")
 cat("Roles:            ", roles_raw, "\n")
+cat("Family:           ", family_name, "\n")
+cat("Shift applied:    ", shift_val, "\n")
 
 # Find how many cores the computer has, and leave 1 free so the computer doesn't freeze
 usable_cores <- max(1, detectCores() - 1)
@@ -132,6 +149,12 @@ gam_df <- full_df %>%
 # Convert each variable to factor
 for (v in var_names) {
   gam_df[[v]] <- as.factor(gam_df[[v]])
+}
+
+# Apply shift to pxl_diff if requested (required when using Gamma family)
+if (shift_val != 0) {
+  gam_df <- gam_df %>% mutate(pxl_diff = pxl_diff + shift_val)
+  cat(sprintf("\nShift of %.4f applied to pxl_diff (family: %s).\n", shift_val, family_name))
 }
 
 # ---------------------------------------------------------
@@ -188,7 +211,7 @@ for (g in unique_groups) {
   model_no_ar <- bam(
     formula = gamm_formula,
     data = group_data,
-    family = tw(),
+    family = chosen_family,
     select = TRUE,
     method = "fREML",
     discrete = TRUE,
@@ -216,7 +239,7 @@ for (g in unique_groups) {
   final_model <- bam(
     formula = gamm_formula,
     data = group_data,
-    family = tw(),
+    family = chosen_family,
     rho = optimal_rho,
     AR.start = group_data$start_event,
     select = TRUE,

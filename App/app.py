@@ -6,7 +6,7 @@ Main entry point for the rebuilt app.
 Tab layout:
   1. Experimental Design  — plate layout + phases + conditions + reference controls
   2. Data Loading         — multi-directory input, Cell-4 preprocessing pipeline
-  3. GAMM Analysis        — export CSV → run Rscript → view figures
+  3. Analysis in R        — optional family selection + GAMM analysis
   4. Catch22 Clustering   — CATCH24 features → clustermaps → top drivers
 """
 
@@ -40,8 +40,9 @@ from experiment_design import (
 from plate_format     import ExperimentalPlateWidget
 from dataframe_viewer import DataFrameViewerWidget
 from data_loader      import DataLoaderWidget
-from gamm_widget      import GammWidget
-from catch22_widget   import Catch22Widget
+from gamm_widget             import GammWidget
+from family_selection_widget import FamilySelectionWidget
+from catch22_widget          import Catch22Widget
 
 
 # =============================================================================
@@ -130,9 +131,19 @@ class MainWindow(QMainWindow):
 
         self.main_tabs.addTab(data_loading_tab, "Data Loading")
 
-        # ── Tab 3: GAMM Analysis ───────────────────────────────────────────────
-        self.gamm_widget = GammWidget()
-        self.main_tabs.addTab(self.gamm_widget, "GAMM Analysis")
+        # ── Tab 3: Analysis in R ───────────────────────────────────────────────
+        r_analysis_tab = QWidget()
+        r_layout       = QVBoxLayout(r_analysis_tab)
+        r_sub_tabs     = QTabWidget()
+        r_layout.addWidget(r_sub_tabs)
+
+        self.family_selection_widget = FamilySelectionWidget()
+        self.gamm_widget             = GammWidget()
+
+        r_sub_tabs.addTab(self.family_selection_widget, "1. Family Selection (Optional)")
+        r_sub_tabs.addTab(self.gamm_widget,             "2. GAMM Analysis")
+
+        self.main_tabs.addTab(r_analysis_tab, "Analysis in R")
 
         # ── Tab 4: Catch22 Clustering ──────────────────────────────────────────
         self.catch22_widget = Catch22Widget()
@@ -155,12 +166,15 @@ class MainWindow(QMainWindow):
             self._push_condition_variables
         )
 
-        # Variable names → metadata, gamm, data loader
+        # Variable names → metadata, gamm, family selection, data loader
         self.conditions_format.variables_updated.connect(
             self.metadata_assignment.set_variable_names
         )
         self.conditions_format.variables_updated.connect(
             self.gamm_widget.set_variable_names
+        )
+        self.conditions_format.variables_updated.connect(
+            self.family_selection_widget.set_variable_names
         )
         self.conditions_format.variables_updated.connect(
             self.data_loader.set_variable_names
@@ -184,6 +198,11 @@ class MainWindow(QMainWindow):
         self.data_loader.data_ready.connect(self.sanity_check_viewer.load_data)
         self.sanity_check_viewer.data_passed_through.connect(self._on_data_ready)
 
+        # Family selection → GAMM analysis
+        self.family_selection_widget.family_changed.connect(
+            self.gamm_widget.set_family
+        )
+
         # Seed with initial conditions
         self.conditions_format.emit_conditions_data()
 
@@ -196,6 +215,7 @@ class MainWindow(QMainWindow):
         self._output_dir = directory
         self._output_dir_label.setText(directory)
         self.gamm_widget.set_output_dir(directory)
+        self.family_selection_widget.set_output_dir(directory)
 
     # ── Condition variable push ──────────────────────────────────────────────
 
@@ -208,6 +228,7 @@ class MainWindow(QMainWindow):
 
     def _on_references_updated(self, variable_refs: dict, ref_condition: str):
         self.gamm_widget.set_references(variable_refs, ref_condition)
+        self.family_selection_widget.set_references(variable_refs, ref_condition)
         self.catch22_widget.set_references(variable_refs, ref_condition)
 
     # ── Data fan-out ──────────────────────────────────────────────────────────
@@ -217,6 +238,7 @@ class MainWindow(QMainWindow):
         if df is None or df.empty:
             return
         self.gamm_widget.load_data(df)
+        self.family_selection_widget.load_data(df)
         self.catch22_widget.load_data(df)
 
     # ── Save / Load config ────────────────────────────────────────────────────
