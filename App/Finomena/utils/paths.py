@@ -32,7 +32,7 @@ def resource_path(*parts: str) -> str:
     Works in both development and frozen mode.
 
     Usage:
-        resource_path("R", "scripts", "TweedieAR1 GAMM.R")
+        resource_path("R", "scripts", "TweedieAR1 BAM.R")
         resource_path("README.md")
     """
     return os.path.join(APP_DIR, *parts)

@@ -24,9 +24,11 @@ from matplotlib.colors import to_rgba
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-    QListWidget, QListWidgetItem, QGroupBox, QProgressBar,
+    QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView,
+    QComboBox, QGroupBox, QProgressBar,
     QMessageBox, QFileDialog, QScrollArea, QSizePolicy, QDoubleSpinBox
 )
+print("[DBG] data_loader: imports done", flush=True)
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap, QImage
 
@@ -62,16 +64,22 @@ class DataLoaderWidget(QWidget):
         setup_widget : ExperimentalSetupWidget
             Used to call get_phases_data().
         """
+        print("[DBG] DataLoaderWidget.__init__ START", flush=True)
         super().__init__(parent)
         self._plate_widget = plate_widget
         self._setup_widget = setup_widget
-        self._directories      = []   # list of absolute directory paths (in plate order)
+        # Each entry: {"path": str, "layout": str | None}
+        self._directories      = []
         self._conditions       = {}   # {condition_name: hex_color} from Experimental Design
         self._variable_names   = ["Genotype", "Drug"]  # descriptor variable names
+        self._available_layouts = []  # list of plate layout names (from plate widget)
         self._result_df        = None
+        print("[DBG] data_loader: calling _build_ui()", flush=True)
         self._build_ui()
+        print("[DBG] data_loader: _build_ui() done", flush=True)
         self._progress_signal.connect(self._on_progress)
         self._done_signal.connect(self._on_done)
+        print("[DBG] DataLoaderWidget.__init__ END", flush=True)
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -93,17 +101,27 @@ class DataLoaderWidget(QWidget):
         layout = QVBoxLayout(self)
 
         # ── Directory list group ──────────────────────────────────────────────
+        print("[DBG] data_loader: building dir_group (QTableWidget)", flush=True)
         dir_group = QGroupBox("Input Directories  (each directory = one plate replicate, in order)")
         dir_group_layout = QVBoxLayout(dir_group)
 
-        self._dir_list = QListWidget()
-        self._dir_list.setAlternatingRowColors(True)
-        self._dir_list.setMaximumHeight(80)
-        self._dir_list.setToolTip(
+        self._dir_table = QTableWidget(0, 2)
+        self._dir_table.setHorizontalHeaderLabels(["Directory", "Plate Layout"])
+        self._dir_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self._dir_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self._dir_table.verticalHeader().setVisible(False)
+        self._dir_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self._dir_table.setSelectionMode(QAbstractItemView.SingleSelection)
+        self._dir_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self._dir_table.setAlternatingRowColors(True)
+        self._dir_table.setMaximumHeight(140)
+        self._dir_table.setToolTip(
             "Each directory is treated as a separate plate replicate.\n"
-            "The topmost directory = Plate 1, next = Plate 2, etc."
+            "The topmost row = Plate 1, next = Plate 2, etc.\n"
+            "Pick a Plate Layout for each plate from the dropdown in the right column."
         )
-        dir_group_layout.addWidget(self._dir_list)
+        dir_group_layout.addWidget(self._dir_table)
+        print("[DBG] data_loader: dir_group built", flush=True)
 
         btn_row = QHBoxLayout()
         self._add_btn    = QPushButton("Add Directory…")
@@ -364,74 +382,122 @@ class DataLoaderWidget(QWidget):
 
     # ── Directory list management ─────────────────────────────────────────────
 
+    def update_layouts(self, names: list):
+        """Slot: called when the plate widget's layout library changes."""
+        print(f"[DBG] data_loader.update_layouts({names}) called", flush=True)
+        self._available_layouts = list(names)
+        for entry in self._directories:
+            if entry["layout"] and entry["layout"] not in self._available_layouts:
+                entry["layout"] = None
+        self._rebuild_table()
+        print("[DBG] data_loader.update_layouts done", flush=True)
+
     def _on_add(self):
         directory = QFileDialog.getExistingDirectory(self, "Select Input Directory")
         if not directory:
             return
-        self._directories.append(directory)
-        plate_num = len(self._directories)
-        self._dir_list.addItem(QListWidgetItem(f"Plate {plate_num}:  {directory}"))
+        self._directories.append({"path": directory, "layout": None})
+        self._rebuild_table()
         self._run_btn.setEnabled(True)
-        self._refresh_plate_labels()
 
     def _on_remove(self):
-        row = self._dir_list.currentRow()
+        row = self._dir_table.currentRow()
         if row < 0:
             return
-        self._dir_list.takeItem(row)
         del self._directories[row]
-        self._refresh_plate_labels()
+        self._rebuild_table()
         self._run_btn.setEnabled(bool(self._directories))
 
     def _on_move_up(self):
-        row = self._dir_list.currentRow()
+        row = self._dir_table.currentRow()
         if row <= 0:
             return
         self._directories[row], self._directories[row - 1] = (
             self._directories[row - 1], self._directories[row]
         )
-        self._rebuild_list()
-        self._dir_list.setCurrentRow(row - 1)
+        self._rebuild_table()
+        self._dir_table.setCurrentCell(row - 1, 0)
 
     def _on_move_down(self):
-        row = self._dir_list.currentRow()
+        row = self._dir_table.currentRow()
         if row < 0 or row >= len(self._directories) - 1:
             return
         self._directories[row], self._directories[row + 1] = (
             self._directories[row + 1], self._directories[row]
         )
-        self._rebuild_list()
-        self._dir_list.setCurrentRow(row + 1)
+        self._rebuild_table()
+        self._dir_table.setCurrentCell(row + 1, 0)
 
-    def _refresh_plate_labels(self):
-        """Updates the "Plate N:" prefix for all list items."""
-        for i, d in enumerate(self._directories):
-            item = self._dir_list.item(i)
-            if item:
-                item.setText(f"Plate {i + 1}:  {d}")
+    def _rebuild_table(self):
+        """Rebuild the directory table rows from self._directories."""
+        self._dir_table.setRowCount(len(self._directories))
+        for i, entry in enumerate(self._directories):
+            label_item = QTableWidgetItem(f"Plate {i + 1}:  {entry['path']}")
+            label_item.setToolTip(entry["path"])
+            self._dir_table.setItem(i, 0, label_item)
 
-    def _rebuild_list(self):
-        self._dir_list.clear()
-        for i, d in enumerate(self._directories):
-            self._dir_list.addItem(QListWidgetItem(f"Plate {i + 1}:  {d}"))
+            combo = QComboBox()
+            combo.addItem("- pick a layout -", None)
+            for name in self._available_layouts:
+                combo.addItem(name, name)
+            if entry["layout"]:
+                idx = combo.findData(entry["layout"])
+                if idx >= 0:
+                    combo.setCurrentIndex(idx)
+            combo.currentIndexChanged.connect(
+                lambda _idx, row=i: self._on_layout_combo_changed(row)
+            )
+            self._dir_table.setCellWidget(i, 1, combo)
+
+    def _on_layout_combo_changed(self, row: int):
+        if row < 0 or row >= len(self._directories):
+            return
+        combo = self._dir_table.cellWidget(row, 1)
+        if combo is None:
+            return
+        self._directories[row]["layout"] = combo.currentData()
 
     # ── Run pipeline ──────────────────────────────────────────────────────────
 
     def _on_run(self):
-        # Validate widgets
         if self._plate_widget is None or self._setup_widget is None:
             QMessageBox.critical(self, "Configuration Error",
                                  "Plate widget or setup widget not configured.")
             return
 
-        well_condition_map = self._plate_widget.get_well_condition_map()
-        if not well_condition_map:
+        if not self._directories:
+            QMessageBox.warning(self, "No Directories",
+                                "Add at least one input directory first.")
+            return
+
+        missing = [i + 1 for i, d in enumerate(self._directories) if not d["layout"]]
+        if missing:
             QMessageBox.warning(
-                self, "No Plate Layout",
-                "No conditions have been painted on the plate.\n"
-                "Please go to the Experimental Design tab and assign conditions to wells first."
+                self, "Plate Layout Required",
+                "Please choose a plate layout for plate(s): "
+                f"{', '.join(map(str, missing))}.\n"
+                "Every directory must have a plate layout assigned before processing."
             )
             return
+
+        per_directory_layouts = []
+        for i, entry in enumerate(self._directories, start=1):
+            name = entry["layout"]
+            wc_map     = self._plate_widget.get_well_condition_map(name)
+            rows, cols = self._plate_widget.get_plate_format(name)
+            if not wc_map:
+                QMessageBox.warning(
+                    self, "Empty Plate Layout",
+                    f"Plate layout '{name}' (assigned to Plate {i}) has no wells painted.\n"
+                    "Please go to the Plate Format tab and paint wells first."
+                )
+                return
+            per_directory_layouts.append({
+                "name": name,
+                "rows": rows,
+                "cols": cols,
+                "map":  wc_map,
+            })
 
         phases_data = self._setup_widget.get_phases_data()
         if not phases_data:
@@ -442,44 +508,28 @@ class DataLoaderWidget(QWidget):
             )
             return
 
-        plate_rows, plate_cols = self._plate_widget.get_plate_format()
-
-        # Build time_frame DataFrame from phases_data
         time_frame = pd.DataFrame([
             {'End': p['End_s'], 'Phase': p['Phase'], 'Group': p['Group']}
             for p in phases_data
         ])
 
-        # Disable button and reset progress
         self._run_btn.setEnabled(False)
         self._progress_bar.setValue(0)
         self._status_label.setText("Processing…")
 
-        # Launch background thread
+        paths = [e["path"] for e in self._directories]
         t = threading.Thread(
             target=self._worker,
-            args=(list(self._directories), well_condition_map, plate_rows, plate_cols, time_frame),
+            args=(paths, per_directory_layouts, time_frame),
             daemon=True
         )
         t.start()
 
-    def _worker(self, directories, well_condition_map, plate_rows, plate_cols, time_frame):
-        """
-        Background thread: runs the Cell 4 preprocessing pipeline.
-        Emits _progress_signal and _done_signal.
-        """
+    def _worker(self, directories, per_directory_layouts, time_frame):
+        """Background thread: runs the Cell 4 preprocessing pipeline."""
         try:
-            # Build loc_id → coordinate and condition mappings
-            row_letters = [chr(ord('A') + i) for i in range(plate_rows)]
-            n_wells = plate_rows * plate_cols
-            coords = [f"{row_letters[i // plate_cols]}{(i % plate_cols) + 1}"
-                      for i in range(n_wells)]
-            loc_to_coord     = {i + 1: coords[i] for i in range(n_wells)}
-            loc_to_condition = {i + 1: well_condition_map.get(coords[i]) for i in range(n_wells)}
-
-            # ── Pass 1: discover all files so we can show per-file progress ────
             self._progress_signal.emit(0, "Scanning directories…")
-            plate_file_lists = []   # list of lists: plate_file_lists[plate_idx] = [(folder, [files])]
+            plate_file_lists = []
             total_files = 0
             for directory in directories:
                 base_path = Path(directory)
@@ -499,24 +549,33 @@ class DataLoaderWidget(QWidget):
                 self._done_signal.emit(False, "No .csv / .xls / .xlsx files were found in the selected directories.")
                 return
 
-            # ── Pass 2: read files with per-file progress ─────────────────────
             all_dfs    = []
             n_dirs     = len(directories)
             files_done = 0
 
-            for plate_idx, (directory, folder_files) in enumerate(
-                zip(directories, plate_file_lists), start=1
+            for plate_idx, (directory, folder_files, layout_info) in enumerate(
+                zip(directories, plate_file_lists, per_directory_layouts), start=1
             ):
+                rows_p, cols_p = layout_info["rows"], layout_info["cols"]
+                row_letters = [chr(ord('A') + i) for i in range(rows_p)]
+                n_wells = rows_p * cols_p
+                coords = [f"{row_letters[i // cols_p]}{(i % cols_p) + 1}"
+                          for i in range(n_wells)]
+                loc_to_coord     = {i + 1: coords[i] for i in range(n_wells)}
+                loc_to_condition = {i + 1: layout_info["map"].get(coords[i])
+                                    for i in range(n_wells)}
+                layout_name = layout_info["name"]
+
                 plate_dfs = []
 
                 for folder, files in folder_files:
                     file_dfs = []
                     for f in files:
                         files_done += 1
-                        pct = int(files_done / total_files * 78)   # 0–78 % for file reading
+                        pct = int(files_done / total_files * 78)
                         self._progress_signal.emit(
                             pct,
-                            f"Plate {plate_idx}/{n_dirs} — "
+                            f"Plate {plate_idx}/{n_dirs} [{layout_name}] - "
                             f"file {files_done}/{total_files}: {f.name}"
                         )
 
@@ -539,7 +598,6 @@ class DataLoaderWidget(QWidget):
 
                     temp_df = pd.concat(file_dfs, ignore_index=True)
 
-                    # Cleaning & feature engineering
                     needed = [c for c in ('time', 'location', 'data1') if c in temp_df.columns]
                     if not needed or 'time' not in needed:
                         print(f"Warning: missing required columns in {directory}. Skipping.")
@@ -554,7 +612,8 @@ class DataLoaderWidget(QWidget):
 
                 if plate_dfs:
                     plate_combined = pd.concat(plate_dfs, ignore_index=True)
-                    plate_combined['plate'] = plate_idx
+                    plate_combined['plate']        = plate_idx
+                    plate_combined['plate_layout'] = layout_name
                     all_dfs.append(plate_combined)
 
             if not all_dfs:
@@ -568,7 +627,7 @@ class DataLoaderWidget(QWidget):
 
             binned_df = (
                 merged_df
-                .groupby(['plate', 'Condition', 'loc_coord', 'location', 'time_sec'])['pxl_diff']
+                .groupby(['plate', 'plate_layout', 'Condition', 'loc_coord', 'location', 'time_sec'])['pxl_diff']
                 .sum()
                 .reset_index()
                 .sort_values(['plate', 'time_sec', 'location'])

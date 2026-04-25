@@ -8,7 +8,7 @@ families on the user's data and recommends the best fit based on AIC, BIC,
 dispersion, deviance explained, and zero-proportion matching.
 
 If the user skips this step entirely, Tweedie is used as the default for the
-GAMM analysis (same as the original behaviour).
+BAM analysis (same as the original behaviour).
 """
 
 import glob as _glob
@@ -69,7 +69,7 @@ _FAMILY_INTERPRETATION = {
 class FamilySelectionWidget(QWidget):
     """
     Optional subtab that runs FamilySelection.R and recommends a distribution
-    family for the GAMM analysis.  Emits family_changed whenever the active
+    family for the BAM analysis.  Emits family_changed whenever the active
     family is updated (either from the test result or a manual override).
     """
 
@@ -112,7 +112,7 @@ class FamilySelectionWidget(QWidget):
         self._update_run_enabled()
 
     def get_active_family(self) -> tuple:
-        """Returns (family_name, shift_val) for use by the GAMM widget."""
+        """Returns (family_name, shift_val) for use by the BAM widget."""
         return self._active_family, self._active_shift
 
     def _update_run_enabled(self):
@@ -202,7 +202,7 @@ class FamilySelectionWidget(QWidget):
 
         # Family selector (auto-set from test, can be overridden)
         sel_row = QHBoxLayout()
-        sel_row.addWidget(QLabel("<b>Family to use for GAMM analysis:</b>"))
+        sel_row.addWidget(QLabel("<b>Family to use for BAM analysis:</b>"))
         self._family_combo = QComboBox()
         self._family_combo.addItem("Tweedie — compound Poisson-Gamma (default)", ("Tweedie",     0.0))
         self._family_combo.addItem("Gamma — log link",                             ("Gamma",       0.0))
@@ -238,7 +238,7 @@ class FamilySelectionWidget(QWidget):
                 self, "Rscript Not Found",
                 "Could not locate Rscript.\n\n"
                 "Install R from https://cran.r-project.org, restart the app, "
-                "then click 'Install R Packages' in the GAMM Analysis tab."
+                "then click 'Install R Packages' in the BAM Analysis tab."
             )
             return
 
@@ -410,7 +410,7 @@ class FamilySelectionWidget(QWidget):
         self._active_shift  = winner_shift
         self.family_changed.emit(winner_name, winner_shift)
 
-    # ── R helpers (mirrors GammWidget) ────────────────────────────────────────
+    # ── R helpers (mirrors BamWidget) ─────────────────────────────────────────
 
     @staticmethod
     def _r_env(rscript_path: str) -> dict:

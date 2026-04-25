@@ -1,0 +1,181 @@
+"""
+Contrast Selection Widget
+=========================
+Lets the user choose which pairwise Full_Interaction contrasts to include
+in statistical testing.
+
+Excluded pairs are filtered BEFORE both the within-family (Sidak) and
+cross-phase (FDR/Holm) corrections, so kept comparisons get full power.
+"""
+
+from itertools import combinations
+
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (
+    QCheckBox, QHBoxLayout, QLabel, QLineEdit, QPushButton,
+    QScrollArea, QVBoxLayout, QWidget,
+)
+
+
+class ContrastSelectionWidget(QWidget):
+    """Tab: pick which pairwise condition contrasts to keep for BAM analysis."""
+
+    selection_changed = Signal()  # fired on any checkbox state change
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._conditions: dict = {}         # {cond_name: hex_color}
+        self._pair_checkboxes: dict = {}    # {(condA, condB): QCheckBox}
+        self._pending_excluded: set = set() # applied when pair list is (re)built
+        self._build_ui()
+        self._update_summary()
+
+    # ── UI ─────────────────────────────────────────────────────────────────
+
+    def _build_ui(self):
+        layout = QVBoxLayout(self)
+
+        info = QLabel(
+            "<b>Pairwise comparisons to include in statistical testing</b><br>"
+            "Uncheck any comparison you don't care about. Excluded pairs are "
+            "dropped <i>before</i> both the within-family (Sidak) and the "
+            "cross-phase (FDR/Holm) corrections, so your kept comparisons "
+            "keep full statistical power."
+        )
+        info.setWordWrap(True)
+        layout.addWidget(info)
+
+        btn_row = QHBoxLayout()
+        self._select_all_btn = QPushButton("Select All")
+        self._select_all_btn.clicked.connect(self._select_all)
+        self._deselect_all_btn = QPushButton("Deselect All")
+        self._deselect_all_btn.clicked.connect(self._deselect_all)
+        btn_row.addWidget(self._select_all_btn)
+        btn_row.addWidget(self._deselect_all_btn)
+        btn_row.addSpacing(12)
+        btn_row.addWidget(QLabel("Filter:"))
+        self._filter_edit = QLineEdit()
+        self._filter_edit.setPlaceholderText("substring match on either side of 'vs'")
+        self._filter_edit.textChanged.connect(self._apply_filter)
+        btn_row.addWidget(self._filter_edit, 1)
+        layout.addLayout(btn_row)
+
+        self._scroll = QScrollArea()
+        self._scroll.setWidgetResizable(True)
+        self._scroll_content = QWidget()
+        self._scroll_layout = QVBoxLayout(self._scroll_content)
+        self._scroll_layout.setAlignment(Qt.AlignTop)
+        self._scroll_layout.setSpacing(2)
+        self._scroll.setWidget(self._scroll_content)
+        layout.addWidget(self._scroll, 1)
+
+        self._summary_label = QLabel("")
+        self._summary_label.setWordWrap(True)
+        layout.addWidget(self._summary_label)
+
+    # ── Public API ─────────────────────────────────────────────────────────
+
+    def update_conditions(self, conditions: dict):
+        """Slot: receives {cond_name: hex_color} from ExperimentalConditionsWidget."""
+        self._conditions = dict(conditions)
+        self._rebuild_pair_list()
+
+    def get_kept_pairs(self) -> list:
+        """Returns [[lhs, rhs], ...] for every checked pair."""
+        return [list(pair) for pair, cb in self._pair_checkboxes.items() if cb.isChecked()]
+
+    def get_excluded_pairs(self) -> list:
+        return [list(pair) for pair, cb in self._pair_checkboxes.items() if not cb.isChecked()]
+
+    def save_config(self) -> dict:
+        """Config persists only EXCLUDED pairs (defaults to 'all kept')."""
+        return {"excluded_pairs": self.get_excluded_pairs()}
+
+    def load_config(self, data: dict):
+        """Restores excluded-pair set. New pairs (not present when saved) default to checked."""
+        excluded = {tuple(self._canon(p)) for p in data.get("excluded_pairs", [])}
+        self._pending_excluded = excluded
+        # If pairs already exist (conditions were loaded first), apply immediately
+        for pair, cb in self._pair_checkboxes.items():
+            cb.blockSignals(True)
+            cb.setChecked(pair not in excluded)
+            cb.blockSignals(False)
+        self._update_summary()
+        self.selection_changed.emit()
+
+    # ── Internal ───────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _canon(pair):
+        """Canonicalize a pair so (A, B) and (B, A) are treated as equal."""
+        a, b = pair
+        return (a, b) if a <= b else (b, a)
+
+    def _rebuild_pair_list(self):
+        # Preserve current check state across rebuild (only for pairs that still exist)
+        prior_state = {pair: cb.isChecked() for pair, cb in self._pair_checkboxes.items()}
+
+        # Clear widgets
+        for i in reversed(range(self._scroll_layout.count())):
+            w = self._scroll_layout.itemAt(i).widget()
+            if w is not None:
+                w.deleteLater()
+        self._pair_checkboxes.clear()
+
+        # Enumerate new pairs (canonicalized, sorted for stable UI order)
+        conds = sorted(self._conditions.keys())
+        pairs = [self._canon(p) for p in combinations(conds, 2)]
+
+        for pair in pairs:
+            cb = QCheckBox(f"{pair[0]}   vs   {pair[1]}")
+            # Precedence for initial state:
+            #   1. prior state (if pair existed before rebuild)
+            #   2. pending excluded (from load_config before conditions arrived)
+            #   3. default: checked
+            if pair in prior_state:
+                cb.setChecked(prior_state[pair])
+            elif pair in self._pending_excluded:
+                cb.setChecked(False)
+            else:
+                cb.setChecked(True)
+            cb.stateChanged.connect(self._on_checkbox_changed)
+            self._scroll_layout.addWidget(cb)
+            self._pair_checkboxes[pair] = cb
+
+        # Pending excluded was consumed (or stays for pairs not yet present)
+        # Clearing on every rebuild is fine: if load_config is re-called, it repopulates.
+        self._pending_excluded = {e for e in self._pending_excluded if e not in set(pairs)}
+
+        self._apply_filter()
+        self._update_summary()
+
+    def _on_checkbox_changed(self):
+        self._update_summary()
+        self.selection_changed.emit()
+
+    def _update_summary(self):
+        total   = len(self._pair_checkboxes)
+        checked = sum(1 for cb in self._pair_checkboxes.values() if cb.isChecked())
+        if total == 0:
+            self._summary_label.setText(
+                "<i>Define conditions in the Experimental Conditions tab to populate "
+                "pairwise comparisons.</i>"
+            )
+            return
+        self._summary_label.setText(
+            f"<b>{checked}</b> of <b>{total}</b> comparisons selected "
+            f"&nbsp;·&nbsp; Sidak family size per phase group: <b>{checked}</b>"
+        )
+
+    def _select_all(self):
+        for cb in self._pair_checkboxes.values():
+            cb.setChecked(True)
+
+    def _deselect_all(self):
+        for cb in self._pair_checkboxes.values():
+            cb.setChecked(False)
+
+    def _apply_filter(self):
+        query = self._filter_edit.text().strip().lower()
+        for cb in self._pair_checkboxes.values():
+            cb.setVisible(not query or query in cb.text().lower())

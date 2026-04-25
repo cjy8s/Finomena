@@ -1,8 +1,8 @@
 """
-GAMM Analysis Widget
-====================
+BAM Analysis Widget
+===================
 Receives the preprocessed full_df from the Python pipeline,
-exports it to a CSV compatible with the adapted TweedieAR1 GAMM.R script,
+exports it to a CSV compatible with the adapted TweedieAR1 BAM.R script,
 runs Rscript as a subprocess with real-time log streaming,
 and displays the resulting PNG figures inline.
 
@@ -16,6 +16,7 @@ regardless of which system R is installed.
 """
 
 import glob
+import json
 import os
 import shutil
 import subprocess
@@ -46,7 +47,7 @@ _BUNDLED_RSCRIPT = os.path.join(
 )
 
 # R script is small — bundled inside the app via resource_path
-_DEFAULT_R_SCRIPT = resource_path("R", "scripts", "TweedieAR1 GAMM.R")
+_DEFAULT_R_SCRIPT = resource_path("R", "scripts", "TweedieAR1 BAM.R")
 
 # Expected output files from the R script (static ones; per-variable plots are discovered dynamically)
 _EXPECTED_PNGS_STATIC = [
@@ -57,9 +58,9 @@ _EXPECTED_PNGS_STATIC = [
 _EXPECTED_CSV = "summary_statistics_by_group.csv"
 
 
-class GammWidget(QWidget):
+class BamWidget(QWidget):
     """
-    Tab widget for running the TweedieAR1 GAMM R analysis.
+    Tab widget for running the TweedieAR1 BAM R analysis.
     """
 
     # Public signal
@@ -83,6 +84,7 @@ class GammWidget(QWidget):
         self._contrast_correction = "dunnett"  # default within-contrast adjustment
         self._family_name         = "Tweedie"  # distribution family (set by FamilySelectionWidget)
         self._shift_val           = 0.0        # additive shift applied before fitting
+        self._contrast_widget     = None       # reference to ContrastSelectionWidget
 
         self._build_ui()
 
@@ -99,6 +101,10 @@ class GammWidget(QWidget):
         """Stores the reference/control levels to be passed to the R script."""
         self._variable_refs = dict(variable_refs)
         self._ref_condition = ref_condition
+
+    def set_contrast_selection_widget(self, widget):
+        """Reference to ContrastSelectionWidget; its kept pairs are read at run time."""
+        self._contrast_widget = widget
 
     def set_roles(self, roles: dict):
         """Stores the {condition_name: role_str} mapping."""
@@ -184,10 +190,10 @@ class GammWidget(QWidget):
         self._on_global_correction_changed(0)
         self._on_contrast_correction_changed(0)
 
-        # ── 2: Run GAMM Analysis ───────────────────────────────────────────────
+        # ── 2: Run BAM Analysis ────────────────────────────────────────────────
         row_23 = QHBoxLayout()
 
-        run_group = QGroupBox("2. Run GAMM Analysis")
+        run_group = QGroupBox("2. Run BAM Analysis")
         rg_layout = QVBoxLayout(run_group)
 
         self._family_label = QLabel("Family: <b>Tweedie (compound Poisson-Gamma)</b> — default")
@@ -226,7 +232,7 @@ class GammWidget(QWidget):
 
         results_group = QGroupBox("4. Results")
         res_layout = QVBoxLayout(results_group)
-        self._figure_viewer = FigureViewerWidget(title="GAMM Figures")
+        self._figure_viewer = FigureViewerWidget(title="BAM Figures")
         res_layout.addWidget(self._figure_viewer)
         splitter.addWidget(results_group)
 
@@ -334,6 +340,25 @@ class GammWidget(QWidget):
 
         output_dir = self._output_dir
 
+        # Step 1b: Write contrast-selection sidecar JSON. The R script looks for
+        # this file in the output directory and, if present, builds only the
+        # listed pairs for the Full_Interaction contrast family.
+        #   - kept_pairs non-empty → R uses exactly those pairs
+        #   - kept_pairs empty     → R skips the Full_Interaction family entirely
+        #   - sidecar missing      → R falls back to full pairwise (legacy behavior)
+        if self._contrast_widget is not None:
+            try:
+                kept = self._contrast_widget.get_kept_pairs()
+                sidecar = os.path.join(output_dir, "contrast_selection.json")
+                with open(sidecar, "w", encoding="utf-8") as f:
+                    json.dump({"kept_pairs": kept}, f, indent=2)
+            except Exception as e:
+                QMessageBox.warning(
+                    self, "Contrast Sidecar",
+                    f"Could not write contrast_selection.json:\n{e}\n\n"
+                    "R will fall back to full pairwise comparisons."
+                )
+
         rscript = self._find_rscript()
         if rscript is None:
             QMessageBox.critical(
@@ -347,7 +372,7 @@ class GammWidget(QWidget):
         if not os.path.isfile(_DEFAULT_R_SCRIPT):
             QMessageBox.critical(
                 self, "R Script Not Found",
-                f"The GAMM R script was not found at:\n{_DEFAULT_R_SCRIPT}"
+                f"The BAM R script was not found at:\n{_DEFAULT_R_SCRIPT}"
             )
             return
 

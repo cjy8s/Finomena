@@ -2,12 +2,12 @@
 # Packages are managed by the Python app (installed into App/R/library/).
 # R_LIBS is set by the app before launching this script, so R finds them there.
 cat("R library path:", paste(.libPaths(), collapse = "\n               "), "\n")
-required_pkgs <- c("tidyverse", "data.table", "mgcv", "parallel", "emmeans")
+required_pkgs <- c("tidyverse", "data.table", "mgcv", "parallel", "emmeans", "jsonlite")
 missing_pkgs  <- required_pkgs[!sapply(required_pkgs, requireNamespace, quietly = TRUE)]
 if (length(missing_pkgs) > 0) {
   stop(
     "Missing R packages: ", paste(missing_pkgs, collapse = ", "), "\n",
-    "Open the app, go to the GAMM Analysis tab, and click 'Install R Packages'."
+    "Open the app, go to the BAM Analysis tab, and click 'Install R Packages'."
   )
 }
 
@@ -16,10 +16,11 @@ library(data.table)
 library(mgcv)
 library(parallel)
 library(emmeans)
+library(jsonlite)
 
 # ── ARGUMENT PARSING ──────────────────────────────────────────────────────────
 # Called from the app as:
-#  Rscript "TweedieAR1 GAMM.R" <input_csv> <output_dir> <var_names> <ref_values> <ref_condition> <global_corr> <contrast_adj> <roles> <family_name> <shift_val>
+#  Rscript "TweedieAR1 BAM.R" <input_csv> <output_dir> <var_names> <ref_values> <ref_condition> <global_corr> <contrast_adj> <roles> <family_name> <shift_val>
 # var_names and ref_values are comma-separated strings, e.g. "Genotype,Drug" and "WT,DMSO"
 # family_name: "Tweedie" | "Gamma" | "NegBinomial"  (default: "Tweedie")
 # shift_val:   numeric constant added to pxl_diff before fitting (default: 0)
@@ -158,7 +159,7 @@ if (shift_val != 0) {
 }
 
 # ---------------------------------------------------------
-# 2. BUILD DYNAMIC GAMM FORMULA
+# 2. BUILD DYNAMIC BAM FORMULA
 # ---------------------------------------------------------
 # Parametric: all main effects + all interactions  (Var1 * Var2 * ... * VarN)
 # Smooth: s(time_in_group) + s(time_in_group, by=Condition_Combo) + s(time_in_group, animal_id, bs="fs")
@@ -169,7 +170,7 @@ formula_str <- paste0(
   " + s(time_in_group, by = Condition_Combo, k = k_start)",
   " + s(time_in_group, animal_id, bs = 'fs', m = 1)"
 )
-cat("\nGAMM formula:\n  ", formula_str, "\n\n")
+cat("\nBAM formula:\n  ", formula_str, "\n\n")
 
 models_by_group <- list()
 unique_groups <- sort(unique(gam_df$Group))
@@ -178,7 +179,7 @@ unique_groups <- sort(unique(gam_df$Group))
 k_start = 30
 
 # Parse the formula
-gamm_formula <- as.formula(formula_str)
+bam_formula <- as.formula(formula_str)
 
 for (g in unique_groups) {
   cat("\n========================================\n")
@@ -209,7 +210,7 @@ for (g in unique_groups) {
   cat("  -> Fitting initial model to estimate autocorrelation (rho)...\n")
 
   model_no_ar <- bam(
-    formula = gamm_formula,
+    formula = bam_formula,
     data = group_data,
     family = chosen_family,
     select = TRUE,
@@ -237,7 +238,7 @@ for (g in unique_groups) {
   cat("  -> Fitting final model with AR1 correction...\n")
 
   final_model <- bam(
-    formula = gamm_formula,
+    formula = bam_formula,
     data = group_data,
     family = chosen_family,
     rho = optimal_rho,
@@ -258,6 +259,33 @@ for (g in unique_groups) {
 # 3. GLOBAL MULTIPLE COMPARISONS: ACROSS ALL PHASE GROUPS
 # ---------------------------------------------------------
 # Dynamically generate per-variable contrasts and the full interaction contrast
+
+# ── Optional contrast-selection sidecar ────────────────────────────────────
+# The Python app may write contrast_selection.json into the output dir to
+# narrow the Full_Interaction family to a user-chosen subset of pairs. The
+# filter is applied BEFORE building the emmeans contrast set so the local
+# (Sidak / Dunnett / Tukey) and global (FDR / Holm) corrections both operate
+# on the trimmed family.
+#   - file present, kept_pairs non-empty → build only those pairs
+#   - file present, kept_pairs empty     → skip Full_Interaction entirely
+#   - file absent                        → fall back to method = "pairwise"
+contrast_sidecar <- file.path(output_dir, "contrast_selection.json")
+if (file.exists(contrast_sidecar)) {
+  contrast_spec <- tryCatch(
+    fromJSON(contrast_sidecar, simplifyVector = FALSE),
+    error = function(e) {
+      warning("Could not parse contrast_selection.json: ", conditionMessage(e),
+              " — falling back to full pairwise.")
+      NULL
+    }
+  )
+  if (!is.null(contrast_spec)) {
+    cat("Contrast selection sidecar found: ",
+        length(contrast_spec$kept_pairs), " pair(s) requested.\n", sep = "")
+  }
+} else {
+  contrast_spec <- NULL
+}
 
 all_contrasts_list <- list()
 
@@ -307,23 +335,64 @@ for (g in as.character(sort(as.integer(names(models_by_group))))) {
     all_contrasts_list[[paste0(g, "_", focal_var)]] <- df_contrasts
   }
 
-  # ── Full interaction: all pairwise condition comparisons ──
+  # ── Full interaction: pairwise condition comparisons ──
   # Build the full interaction spec: ~ Var1 * Var2 * ... * VarN
   inter_spec_str <- paste0("~ ", paste(var_names, collapse = " * "))
   inter_spec <- as.formula(inter_spec_str)
 
   emm_inter_base <- emmeans(target_model, specs = inter_spec)
-  emm_inter_contrasts <- contrast(emm_inter_base, method = "pairwise")
 
-  df_inter <- as.data.frame(emm_inter_contrasts) %>%
-    mutate(
-      Group = g,
-      Test_Family = "Full_Interaction",
-      Tested_Level = as.character(contrast),
-      Split_By = "None"
-    )
+  # Build the contrast set, optionally trimmed by the sidecar JSON.
+  emm_inter_contrasts <- NULL
+  if (!is.null(contrast_spec)) {
+    kept_pairs <- contrast_spec$kept_pairs
+    if (length(kept_pairs) == 0) {
+      cat("  Group ", g, ": Full_Interaction skipped (no pairs selected).\n", sep = "")
+    } else {
+      # Reconstruct the Python-side condition string ("WT+DMSO") for each grid row
+      grid <- emm_inter_base@grid
+      cond_strs <- apply(grid[, var_names, drop = FALSE], 1,
+                         function(r) paste(as.character(r), collapse = "+"))
 
-  all_contrasts_list[[paste0(g, "_interaction")]] <- df_inter
+      custom_contrasts <- list()
+      missing <- c()
+      for (pair in kept_pairs) {
+        lhs <- pair[[1]]; rhs <- pair[[2]]
+        lhs_i <- which(cond_strs == lhs)
+        rhs_i <- which(cond_strs == rhs)
+        if (length(lhs_i) == 1L && length(rhs_i) == 1L) {
+          v <- numeric(length(cond_strs))
+          v[lhs_i] <-  1
+          v[rhs_i] <- -1
+          custom_contrasts[[paste(lhs, "-", rhs)]] <- v
+        } else {
+          missing <- c(missing, paste(lhs, "vs", rhs))
+        }
+      }
+      if (length(missing) > 0) {
+        warning("Group ", g, ": couldn't locate pair(s) in emmeans grid: ",
+                paste(missing, collapse = "; "))
+      }
+      if (length(custom_contrasts) > 0) {
+        emm_inter_contrasts <- contrast(emm_inter_base,
+                                        method = custom_contrasts,
+                                        adjust = contrast_adjust)
+      }
+    }
+  } else {
+    emm_inter_contrasts <- contrast(emm_inter_base, method = "pairwise")
+  }
+
+  if (!is.null(emm_inter_contrasts)) {
+    df_inter <- as.data.frame(emm_inter_contrasts) %>%
+      mutate(
+        Group = g,
+        Test_Family = "Full_Interaction",
+        Tested_Level = as.character(contrast),
+        Split_By = "None"
+      )
+    all_contrasts_list[[paste0(g, "_interaction")]] <- df_inter
+  }
 }
 
 # ---------------------------------------------------------
@@ -331,11 +400,17 @@ for (g in as.character(sort(as.integer(names(models_by_group))))) {
 # ---------------------------------------------------------
 master_results_df <- bind_rows(all_contrasts_list)
 
+# Convert effect sizes from natural-log (log_e) fold change — the scale produced
+# by emmeans on log-link models — to log_2 fold change. Dividing both estimate
+# and SE by log(2) preserves t-statistics, p-values, and CI shape; only the
+# axis units change (log_2 doublings/halvings instead of natural-log units).
 final_master_table <- master_results_df %>%
   group_by(Test_Family) %>%
   mutate(
     Global_FDR_pvalue = p.adjust(p.value, method = global_correction),
-    Group = as.integer(Group)   # convert from character so sorting is numerical
+    estimate = estimate / log(2),
+    SE       = SE       / log(2),
+    Group    = as.integer(Group)   # convert from character so sorting is numerical
   ) %>%
   ungroup() %>%
   select(Test_Family, Group, Split_By, Tested_Level, estimate, SE, p.value, Global_FDR_pvalue) %>%
@@ -415,7 +490,7 @@ for (vi in seq_along(var_names)) {
     facet_grid(Split_By ~ ., scales = "free_y", space = "free_y") +
     labs(
       title = paste0(display_var, " Effect (vs. ", ref_val, ")"),
-      x = "Effect Size (log scale pixel difference)",
+      x = expression("Effect Size (log"[2]*" fold change in pixel difference)"),
       y = NULL,
       caption = "Significance: * p < 0.05   ** p < 0.01   *** p < 0.001"
     ) +
@@ -450,7 +525,7 @@ if (nrow(inter_plot_data) > 0) {
     facet_wrap(~Tested_Level_Annotated, ncol = 3, scales = "free_x") +
     labs(
       title = paste0("Full Interaction (", paste(var_names_display, collapse = " x "), ")"),
-      x = "Effect Size (log scale pixel difference)",
+      x = expression("Effect Size (log"[2]*" fold change in pixel difference)"),
       y = "Group",
       caption = "Significance: * p < 0.05   ** p < 0.01   *** p < 0.001"
     ) +

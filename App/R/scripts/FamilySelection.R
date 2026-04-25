@@ -1,5 +1,5 @@
 # ── FamilySelection.R ──────────────────────────────────────────────────────────
-# Optional distribution family selection test for Finomena GAMM analysis.
+# Optional distribution family selection test for Finomena BAM analysis.
 # Compares Tweedie, Gamma(log), and Negative Binomial using a simplified model
 # with a fixed rho = 0.25 (assumed AR1 correlation) for speed.
 #
@@ -18,7 +18,7 @@ missing_pkgs  <- required_pkgs[!sapply(required_pkgs, requireNamespace, quietly 
 if (length(missing_pkgs) > 0) {
   stop(
     "Missing R packages: ", paste(missing_pkgs, collapse = ", "), "\n",
-    "Open the app, go to the GAMM Analysis tab, and click 'Install R Packages'."
+    "Open the app, go to the BAM Analysis tab, and click 'Install R Packages'."
   )
 }
 

@@ -232,7 +232,7 @@ class ExperimentalConditionsWidget(QWidget):
       - For N vars: all C(N,2) + C(N,3) + ... + C(N,N) combination columns
 
     The full interaction column (all variables combined) is the "Condition" used
-    downstream by the plate format, GAMM, and catch22 widgets.
+    downstream by the plate format, BAM, and catch22 widgets.
     """
     conditions_updated = Signal(dict)   # {full_interaction_name: hex_color}
     variables_updated  = Signal(list)   # [var_name_str, ...]

@@ -4,8 +4,9 @@ from functools import partial
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
     QMessageBox, QTableWidget, QTableWidgetItem, QHeaderView, QSplitter,
-    QComboBox, QAbstractItemView, QGridLayout, QFrame
+    QComboBox, QAbstractItemView, QGridLayout, QFrame, QInputDialog
 )
+print("[DBG] plate_format: imports done", flush=True)
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor
 
@@ -16,6 +17,7 @@ from PySide6.QtGui import QColor
 class ExperimentalPlateWidget(QWidget):
     """Sub-tab for assigning conditions to wells on a plate."""
     plate_layout_applied = Signal(object) # Emits the updated DataFrame
+    layouts_changed      = Signal(list)   # Emits list of layout names when the library changes
 
     PLATE_FORMATS = {
         "6-well": (2, 3),
@@ -27,12 +29,18 @@ class ExperimentalPlateWidget(QWidget):
     }
 
     def __init__(self, parent=None):
+        print("[DBG] ExperimentalPlateWidget.__init__ START", flush=True)
         super().__init__(parent)
         self.df = None
         self.conditions = {}
         self.active_condition = None
         self.active_button = None
         self._roles = {}  # {condition_name: role_string}
+
+        # Multi-layout library: {name: {"format": str, "map": {well_coord: condition}}}
+        self._layouts     = {"Default": {"format": "96-well", "map": {}}}
+        self._active_name = "Default"
+        print("[DBG] plate_format: state initialized", flush=True)
 
         # --- Main Layout ---
         self.main_layout = QHBoxLayout(self)
@@ -47,12 +55,45 @@ class ExperimentalPlateWidget(QWidget):
         self.info_label = QLabel("1. Define conditions in the previous tab.\n2. Click a condition button below.\n3. Click on wells, rows, or columns to paint the condition.")
         self.info_label.setWordWrap(True)
 
+        # Layout library selector
+        print("[DBG] plate_format: building layout library row", flush=True)
+        layout_lib_row = QHBoxLayout()
+        layout_lib_row.addWidget(QLabel("<b>Layout:</b>"))
+        self.layout_combo = QComboBox()
+        self.layout_combo.setMinimumWidth(140)
+        self.layout_combo.addItem("Default")
+        self.layout_combo.currentTextChanged.connect(self._on_layout_switched)
+        layout_lib_row.addWidget(self.layout_combo, 1)
+
+        self.add_layout_btn = QPushButton("+")
+        self.add_layout_btn.setFixedWidth(28)
+        self.add_layout_btn.setToolTip("Add a new plate layout")
+        self.add_layout_btn.clicked.connect(self._on_add_layout)
+
+        self.rename_layout_btn = QPushButton("Rename")
+        self.rename_layout_btn.setToolTip("Rename the current layout")
+        self.rename_layout_btn.clicked.connect(self._on_rename_layout)
+
+        self.duplicate_layout_btn = QPushButton("Dup")
+        self.duplicate_layout_btn.setToolTip("Duplicate the current layout")
+        self.duplicate_layout_btn.clicked.connect(self._on_duplicate_layout)
+
+        self.delete_layout_btn = QPushButton("-")
+        self.delete_layout_btn.setFixedWidth(28)
+        self.delete_layout_btn.setToolTip("Delete the current layout")
+        self.delete_layout_btn.clicked.connect(self._on_delete_layout)
+
+        for b in (self.add_layout_btn, self.rename_layout_btn,
+                  self.duplicate_layout_btn, self.delete_layout_btn):
+            layout_lib_row.addWidget(b)
+        print("[DBG] plate_format: layout library row done", flush=True)
+
         # Plate format selection
         plate_format_layout = QHBoxLayout()
         plate_format_layout.addWidget(QLabel("<b>Plate Format:</b>"))
         self.plate_format_combo = QComboBox()
         self.plate_format_combo.addItems(self.PLATE_FORMATS.keys())
-        self.plate_format_combo.currentTextChanged.connect(self.setup_plate_grid)
+        self.plate_format_combo.currentTextChanged.connect(self._on_format_changed)
         plate_format_layout.addWidget(self.plate_format_combo)
 
         # Conditions container
@@ -75,6 +116,8 @@ class ExperimentalPlateWidget(QWidget):
 
         left_layout.addWidget(self.info_label)
         left_layout.addSpacing(15)
+        left_layout.addLayout(layout_lib_row)
+        left_layout.addSpacing(8)
         left_layout.addLayout(plate_format_layout)
         left_layout.addSpacing(15)
         left_layout.addWidget(self.conditions_label)
@@ -99,7 +142,9 @@ class ExperimentalPlateWidget(QWidget):
         self.plate_table.verticalHeader().sectionClicked.connect(self.paint_row)
 
         # Initialize
+        print("[DBG] plate_format: calling setup_plate_grid", flush=True)
         self.setup_plate_grid()
+        print("[DBG] ExperimentalPlateWidget.__init__ END", flush=True)
 
     def load_data(self, df):
         """Receives the DataFrame from the file/plate assignment step."""
@@ -263,40 +308,61 @@ class ExperimentalPlateWidget(QWidget):
         self.plate_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.plate_table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-    def paint_well(self, item):
-        """Applies the active condition to a single clicked well."""
-        if not self.active_condition:
+    def _apply_active_to_cell(self, item):
+        """Paints the active condition onto a cell unconditionally."""
+        if item is None or not self.active_condition:
             return
-        
-        name = self.active_condition['name']
+        name  = self.active_condition['name']
         color = self.active_condition['color']
-        
-        # Set background and text color with contrast
-        background_color = QColor(color)
-        text_color = QColor(self._get_contrasting_text_color(color))
-        
-        item.setBackground(background_color)
-        item.setForeground(text_color)
-        item.setText(name) # Display the condition name in the well
+        item.setBackground(QColor(color))
+        item.setForeground(QColor(self._get_contrasting_text_color(color)))
+        item.setText(name)
         item.setData(Qt.UserRole, name)
+
+    def _clear_cell(self, item):
+        """Removes any condition assignment from a cell, restoring the default
+        theme background by clearing the explicit background/foreground roles."""
+        if item is None:
+            return
+        item.setData(Qt.BackgroundRole, None)
+        item.setData(Qt.ForegroundRole, None)
+        item.setText("")
+        item.setData(Qt.UserRole, None)
+
+    def paint_well(self, item):
+        """Single-cell click handler.
+
+        - If no active condition is selected: clicking a painted cell clears it
+          (empty cell does nothing).
+        - If an active condition is selected: clicking a cell that already has
+          that condition clears it (toggle); otherwise paints it with the
+          active condition.
+        """
+        if item is None:
+            return
+        current = item.data(Qt.UserRole)
+        if not self.active_condition:
+            if current:
+                self._clear_cell(item)
+            return
+        if current == self.active_condition['name']:
+            self._clear_cell(item)
+        else:
+            self._apply_active_to_cell(item)
 
     def paint_column(self, col_index):
         """Applies the active condition to all wells in a clicked column."""
         if not self.active_condition:
             return
-            
         for row in range(self.plate_table.rowCount()):
-            item = self.plate_table.item(row, col_index)
-            self.paint_well(item)
+            self._apply_active_to_cell(self.plate_table.item(row, col_index))
 
     def paint_row(self, row_index):
         """Applies the active condition to all wells in a clicked row."""
         if not self.active_condition:
             return
-            
         for col in range(self.plate_table.columnCount()):
-            item = self.plate_table.item(row_index, col)
-            self.paint_well(item)
+            self._apply_active_to_cell(self.plate_table.item(row_index, col))
 
     def apply_condition_to_selection(self, name, color):
         """Applies the selected condition's name and color to the selected wells."""
@@ -352,8 +418,13 @@ class ExperimentalPlateWidget(QWidget):
                 item.setText(condition_name)
                 item.setData(Qt.UserRole, condition_name)
 
-    def get_well_condition_map(self):
-        """Returns {well_coord: condition_name} for all painted wells."""
+    def get_well_condition_map(self, name: str = None):
+        """Returns {well_coord: condition_name}. Active layout reads from the grid;
+        named inactive layout returns its stored map."""
+        if name is not None and name != self._active_name:
+            data = self._layouts.get(name)
+            return dict(data["map"]) if data else {}
+
         well_to_condition = {}
         row_headers = [self.plate_table.verticalHeaderItem(r).text()
                        for r in range(self.plate_table.rowCount())]
@@ -367,19 +438,20 @@ class ExperimentalPlateWidget(QWidget):
                         well_to_condition[well_name] = condition_name
         return well_to_condition
 
-    def get_plate_format(self):
-        """Returns (rows, cols) for the currently selected plate format."""
-        format_name = self.plate_format_combo.currentText()
+    def get_plate_format(self, name: str = None):
+        """Returns (rows, cols) for the named layout, or active if ``name`` is None."""
+        if name is not None and name != self._active_name:
+            data = self._layouts.get(name)
+            format_name = data["format"] if data else "96-well"
+        else:
+            format_name = self.plate_format_combo.currentText()
         return self.PLATE_FORMATS.get(format_name, (8, 12))
 
     def clear_plate(self):
         """Resets all well assignments in the table."""
         for r in range(self.plate_table.rowCount()):
             for c in range(self.plate_table.columnCount()):
-                item = self.plate_table.item(r, c)
-                item.setBackground(QColor("white")) # Reset background
-                item.setText("") # Clear the text
-                item.setData(Qt.UserRole, None) # Clear stored data
+                self._clear_cell(self.plate_table.item(r, c))
 
     def apply_layout_to_dataframe(self):
         """Maps the plate layout to the DataFrame and emits the result."""
@@ -430,3 +502,190 @@ class ExperimentalPlateWidget(QWidget):
         # Emit the updated dataframe for the next step in the pipeline
         self.plate_layout_applied.emit(self.df)
         print("Emitting DataFrame with 'Condition' and 'Color' columns.")
+
+    # ── Multi-layout library ────────────────────────────────────────────────
+
+    def _flush_active_to_layouts(self):
+        if self._active_name is None:
+            return
+        self._layouts[self._active_name] = {
+            "format": self.plate_format_combo.currentText(),
+            "map":    self.get_well_condition_map(None),
+        }
+
+    def _paint_map_on_grid(self, well_condition_map: dict):
+        row_headers = [self.plate_table.verticalHeaderItem(r).text()
+                       for r in range(self.plate_table.rowCount())]
+        for well, condition_name in well_condition_map.items():
+            color = self.conditions.get(condition_name, "#cccccc")
+            letter_part = ''.join(c for c in well if c.isalpha())
+            num_part    = ''.join(c for c in well if c.isdigit())
+            if not letter_part or not num_part:
+                continue
+            try:
+                row_idx = row_headers.index(letter_part)
+                col_idx = int(num_part) - 1
+            except (ValueError, IndexError):
+                continue
+            item = self.plate_table.item(row_idx, col_idx)
+            if item:
+                item.setBackground(QColor(color))
+                item.setForeground(QColor(self._get_contrasting_text_color(color)))
+                item.setText(condition_name)
+                item.setData(Qt.UserRole, condition_name)
+
+    def _load_layout_into_grid(self, name: str):
+        data = self._layouts.get(name)
+        if not data:
+            return
+        self.plate_format_combo.blockSignals(True)
+        idx = self.plate_format_combo.findText(data["format"])
+        if idx >= 0:
+            self.plate_format_combo.setCurrentIndex(idx)
+        self.plate_format_combo.blockSignals(False)
+        self.setup_plate_grid()
+        self._paint_map_on_grid(data["map"])
+
+    def _on_layout_switched(self, new_name: str):
+        if not new_name or new_name == self._active_name:
+            return
+        if new_name not in self._layouts:
+            return
+        self._flush_active_to_layouts()
+        self._active_name = new_name
+        self._load_layout_into_grid(new_name)
+
+    def _on_format_changed(self, new_format: str):
+        if self._active_name:
+            self._layouts[self._active_name] = {
+                "format": new_format,
+                "map":    {},
+            }
+        self.setup_plate_grid()
+
+    def _refresh_layout_combo(self):
+        self.layout_combo.blockSignals(True)
+        self.layout_combo.clear()
+        for name in self._layouts:
+            self.layout_combo.addItem(name)
+        if self._active_name:
+            idx = self.layout_combo.findText(self._active_name)
+            if idx >= 0:
+                self.layout_combo.setCurrentIndex(idx)
+        self.layout_combo.blockSignals(False)
+
+    def _on_add_layout(self):
+        name, ok = QInputDialog.getText(self, "New Plate Layout",
+                                        "Name for the new layout:")
+        name = name.strip() if name else ""
+        if not ok or not name:
+            return
+        if name in self._layouts:
+            QMessageBox.warning(self, "Name Exists",
+                                f"A layout named '{name}' already exists.")
+            return
+        self._flush_active_to_layouts()
+        self._layouts[name] = {"format": "96-well", "map": {}}
+        self._active_name = name
+        self._refresh_layout_combo()
+        self._load_layout_into_grid(name)
+        self.layouts_changed.emit(list(self._layouts.keys()))
+
+    def _on_rename_layout(self):
+        if not self._active_name:
+            return
+        current = self._active_name
+        new_name, ok = QInputDialog.getText(self, "Rename Layout",
+                                            "New name:", text=current)
+        new_name = new_name.strip() if new_name else ""
+        if not ok or not new_name or new_name == current:
+            return
+        if new_name in self._layouts:
+            QMessageBox.warning(self, "Name Exists",
+                                f"A layout named '{new_name}' already exists.")
+            return
+        self._flush_active_to_layouts()
+        self._layouts = {
+            (new_name if k == current else k): v
+            for k, v in self._layouts.items()
+        }
+        self._active_name = new_name
+        self._refresh_layout_combo()
+        self.layouts_changed.emit(list(self._layouts.keys()))
+
+    def _on_duplicate_layout(self):
+        if not self._active_name:
+            return
+        base = self._active_name
+        new_name, ok = QInputDialog.getText(self, "Duplicate Layout",
+                                            "Name for the duplicate:",
+                                            text=f"{base} (copy)")
+        new_name = new_name.strip() if new_name else ""
+        if not ok or not new_name:
+            return
+        if new_name in self._layouts:
+            QMessageBox.warning(self, "Name Exists",
+                                f"A layout named '{new_name}' already exists.")
+            return
+        self._flush_active_to_layouts()
+        src = self._layouts[base]
+        self._layouts[new_name] = {
+            "format": src["format"],
+            "map":    dict(src["map"]),
+        }
+        self._active_name = new_name
+        self._refresh_layout_combo()
+        self._load_layout_into_grid(new_name)
+        self.layouts_changed.emit(list(self._layouts.keys()))
+
+    def _on_delete_layout(self):
+        if not self._active_name:
+            return
+        if len(self._layouts) == 1:
+            QMessageBox.warning(self, "Cannot Delete",
+                                "At least one plate layout must exist.")
+            return
+        current = self._active_name
+        reply = QMessageBox.question(
+            self, "Delete Layout",
+            f"Delete layout '{current}'? This cannot be undone.",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+        )
+        if reply != QMessageBox.Yes:
+            return
+        del self._layouts[current]
+        self._active_name = next(iter(self._layouts))
+        self._refresh_layout_combo()
+        self._load_layout_into_grid(self._active_name)
+        self.layouts_changed.emit(list(self._layouts.keys()))
+
+    def get_layout_names(self) -> list:
+        return list(self._layouts.keys())
+
+    def get_all_layouts(self) -> dict:
+        self._flush_active_to_layouts()
+        return {
+            name: {"format": data["format"], "map": dict(data["map"])}
+            for name, data in self._layouts.items()
+        }
+
+    def load_layouts_config(self, layouts: dict, active: str = None):
+        if not layouts:
+            return
+        self._layouts = {
+            name: {
+                "format": data.get("format", "96-well"),
+                "map":    dict(data.get("map", {})),
+            }
+            for name, data in layouts.items()
+        }
+        chosen = active if (active and active in self._layouts) else next(iter(self._layouts))
+        self._active_name = chosen
+        self._refresh_layout_combo()
+        self._load_layout_into_grid(chosen)
+        self.layouts_changed.emit(list(self._layouts.keys()))
+
+    def emit_layouts_state(self):
+        print("[DBG] plate_format.emit_layouts_state() called", flush=True)
+        self.layouts_changed.emit(list(self._layouts.keys()))
+        print("[DBG] plate_format.emit_layouts_state() done", flush=True)

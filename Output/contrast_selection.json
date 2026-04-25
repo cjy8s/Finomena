@@ -1,0 +1,20 @@
+{
+  "kept_pairs": [
+    [
+      "KO+DMSO",
+      "KO+compound"
+    ],
+    [
+      "KO+DMSO",
+      "WT+compound"
+    ],
+    [
+      "KO+compound",
+      "WT+DMSO"
+    ],
+    [
+      "WT+DMSO",
+      "WT+compound"
+    ]
+  ]
+}

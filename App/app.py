@@ -6,13 +6,28 @@ Main entry point for the rebuilt app.
 Tab layout:
   1. Experimental Design  — plate layout + phases + conditions + reference controls
   2. Data Loading         — multi-directory input, Cell-4 preprocessing pipeline
-  3. Analysis in R        — optional family selection + GAMM analysis
+  3. Analysis in R        — optional family selection + BAM analysis
   4. Catch22 Clustering   — CATCH24 features → clustermaps → top drivers
 """
 
-import json
 import os
+import signal
+
+# Workarounds for VS Code integrated-terminal shell-integration escape
+# sequences being misinterpreted as Ctrl+C on Windows:
+#   1. Disable Intel Fortran's console handler (must be set before
+#      libifcoremd.dll loads via numpy/scipy), or the process aborts
+#      with forrtl error 200.
+#   2. Ignore SIGINT in the Python main thread, or imports get
+#      interrupted with KeyboardInterrupt mid-decode.
+# Closing the GUI window remains the normal way to exit.
+os.environ["FOR_DISABLE_CONSOLE_CTRL_HANDLER"] = "1"
+signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+import json
 import sys
+
+print("[DBG] app.py: script start", flush=True)
 
 # ── Path setup ─────────────────────────────────────────────────────────────────
 # Must be self-contained (cannot import paths.py yet — it lives inside utils/).
@@ -37,12 +52,18 @@ from experiment_design import (
     ExperimentalConditionsWidget,
     MetadataAssignmentWidget,
 )
+print("[DBG] app.py: about to import plate_format", flush=True)
 from plate_format     import ExperimentalPlateWidget
+print("[DBG] app.py: plate_format imported", flush=True)
 from dataframe_viewer import DataFrameViewerWidget
+print("[DBG] app.py: about to import data_loader", flush=True)
 from data_loader      import DataLoaderWidget
-from gamm_widget             import GammWidget
+print("[DBG] app.py: data_loader imported", flush=True)
+from bam_widget              import BamWidget
 from family_selection_widget import FamilySelectionWidget
+from contrast_selection_widget import ContrastSelectionWidget
 from catch22_widget          import Catch22Widget
+print("[DBG] app.py: all widget imports done", flush=True)
 
 
 # =============================================================================
@@ -51,6 +72,7 @@ from catch22_widget          import Catch22Widget
 
 class MainWindow(QMainWindow):
     def __init__(self):
+        print("[DBG] MainWindow.__init__ START", flush=True)
         super().__init__()
         self.setWindowTitle("Finomena: Zebrafish Time-Series Behavioral Analysis Suite")
         self.setGeometry(100, 100, 1280, 860)
@@ -80,10 +102,15 @@ class MainWindow(QMainWindow):
         exp_sub_tabs = QTabWidget()
         exp_design_layout.addWidget(exp_sub_tabs)
 
+        print("[DBG] building ExperimentalSetupWidget", flush=True)
         self.experiment_format    = ExperimentalSetupWidget()
+        print("[DBG] building ExperimentalConditionsWidget", flush=True)
         self.conditions_format    = ExperimentalConditionsWidget()
+        print("[DBG] building MetadataAssignmentWidget", flush=True)
         self.metadata_assignment  = MetadataAssignmentWidget()
+        print("[DBG] building ExperimentalPlateWidget", flush=True)
         self.plate_format_widget  = ExperimentalPlateWidget()
+        print("[DBG] ExperimentalPlateWidget built", flush=True)
 
         exp_sub_tabs.addTab(self.conditions_format,   "1. Experimental Conditions")
         exp_sub_tabs.addTab(self.metadata_assignment,  "2. Metadata Assignment")
@@ -98,10 +125,12 @@ class MainWindow(QMainWindow):
         dl_sub_tabs = QTabWidget()
         dl_layout.addWidget(dl_sub_tabs)
 
+        print("[DBG] building DataLoaderWidget", flush=True)
         self.data_loader = DataLoaderWidget(
             plate_widget=self.plate_format_widget,
             setup_widget=self.experiment_format,
         )
+        print("[DBG] DataLoaderWidget built", flush=True)
 
         # Output directory chooser
         self._output_dir = None
@@ -110,7 +139,7 @@ class MainWindow(QMainWindow):
         od_layout.setAlignment(Qt.AlignTop)
         od_layout.addWidget(QLabel(
             "<b>Set the output directory for all analysis results.</b><br>"
-            "The pre-processed CSV, GAMM results, and figures will be saved here."
+            "The pre-processed CSV, BAM results, and figures will be saved here."
         ))
         od_row = QHBoxLayout()
         self._output_dir_btn = QPushButton("Choose Output Directory…")
@@ -137,11 +166,14 @@ class MainWindow(QMainWindow):
         r_sub_tabs     = QTabWidget()
         r_layout.addWidget(r_sub_tabs)
 
-        self.family_selection_widget = FamilySelectionWidget()
-        self.gamm_widget             = GammWidget()
+        self.family_selection_widget  = FamilySelectionWidget()
+        self.contrast_selection_widget = ContrastSelectionWidget()
+        self.bam_widget               = BamWidget()
+        self.bam_widget.set_contrast_selection_widget(self.contrast_selection_widget)
 
-        r_sub_tabs.addTab(self.family_selection_widget, "1. Family Selection (Optional)")
-        r_sub_tabs.addTab(self.gamm_widget,             "2. GAMM Analysis")
+        r_sub_tabs.addTab(self.family_selection_widget,  "1. Family Selection (Optional)")
+        r_sub_tabs.addTab(self.contrast_selection_widget, "2. Contrast Selection")
+        r_sub_tabs.addTab(self.bam_widget,               "3. BAM Analysis")
 
         self.main_tabs.addTab(r_analysis_tab, "Analysis in R")
 
@@ -161,17 +193,20 @@ class MainWindow(QMainWindow):
         self.conditions_format.conditions_updated.connect(
             self.metadata_assignment.update_from_conditions
         )
+        self.conditions_format.conditions_updated.connect(
+            self.contrast_selection_widget.update_conditions
+        )
         # Also push the per-variable breakdown to metadata for reference derivation
         self.conditions_format.conditions_updated.connect(
             self._push_condition_variables
         )
 
-        # Variable names → metadata, gamm, family selection, data loader
+        # Variable names → metadata, bam, family selection, data loader
         self.conditions_format.variables_updated.connect(
             self.metadata_assignment.set_variable_names
         )
         self.conditions_format.variables_updated.connect(
-            self.gamm_widget.set_variable_names
+            self.bam_widget.set_variable_names
         )
         self.conditions_format.variables_updated.connect(
             self.family_selection_widget.set_variable_names
@@ -188,7 +223,12 @@ class MainWindow(QMainWindow):
             self.catch22_widget.set_roles
         )
         self.metadata_assignment.roles_updated.connect(
-            self.gamm_widget.set_roles
+            self.bam_widget.set_roles
+        )
+
+        # Plate layout library → data loader
+        self.plate_format_widget.layouts_changed.connect(
+            self.data_loader.update_layouts
         )
 
         # Reference controls → analysis widgets
@@ -198,13 +238,17 @@ class MainWindow(QMainWindow):
         self.data_loader.data_ready.connect(self.sanity_check_viewer.load_data)
         self.sanity_check_viewer.data_passed_through.connect(self._on_data_ready)
 
-        # Family selection → GAMM analysis
+        # Family selection → BAM analysis
         self.family_selection_widget.family_changed.connect(
-            self.gamm_widget.set_family
+            self.bam_widget.set_family
         )
 
         # Seed with initial conditions
+        print("[DBG] seeding conditions", flush=True)
         self.conditions_format.emit_conditions_data()
+        print("[DBG] seeding plate layouts", flush=True)
+        self.plate_format_widget.emit_layouts_state()
+        print("[DBG] MainWindow.__init__ END", flush=True)
 
     # ── Output directory ────────────────────────────────────────────────────────
 
@@ -214,7 +258,7 @@ class MainWindow(QMainWindow):
             return
         self._output_dir = directory
         self._output_dir_label.setText(directory)
-        self.gamm_widget.set_output_dir(directory)
+        self.bam_widget.set_output_dir(directory)
         self.family_selection_widget.set_output_dir(directory)
 
     # ── Condition variable push ──────────────────────────────────────────────
@@ -227,7 +271,7 @@ class MainWindow(QMainWindow):
     # ── Reference controls ────────────────────────────────────────────────────
 
     def _on_references_updated(self, variable_refs: dict, ref_condition: str):
-        self.gamm_widget.set_references(variable_refs, ref_condition)
+        self.bam_widget.set_references(variable_refs, ref_condition)
         self.family_selection_widget.set_references(variable_refs, ref_condition)
         self.catch22_widget.set_references(variable_refs, ref_condition)
 
@@ -237,7 +281,7 @@ class MainWindow(QMainWindow):
         """Fans out the processed full_df to all analysis tabs."""
         if df is None or df.empty:
             return
-        self.gamm_widget.load_data(df)
+        self.bam_widget.load_data(df)
         self.family_selection_widget.load_data(df)
         self.catch22_widget.load_data(df)
 
@@ -255,11 +299,11 @@ class MainWindow(QMainWindow):
             return
 
         config = {
-            "phases":         self.experiment_format.get_phases_data(),
-            "conditions":     self.conditions_format.save_conditions_config(),
-            "roles":          self.metadata_assignment.save_roles_config(),
-            "plate_format":   self.plate_format_widget.plate_format_combo.currentText(),
-            "plate_layout":   self.plate_format_widget.get_well_condition_map(),
+            "phases":              self.experiment_format.get_phases_data(),
+            "conditions":          self.conditions_format.save_conditions_config(),
+            "roles":               self.metadata_assignment.save_roles_config(),
+            "plate_layouts":       self.plate_format_widget.get_all_layouts(),
+            "contrast_selection":  self.contrast_selection_widget.save_config(),
         }
 
         try:
@@ -312,14 +356,32 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 errors.append(f"Roles: {e}")
 
-        # 4. Restore plate layout
-        fmt    = config.get("plate_format", "96-well")
-        layout = config.get("plate_layout", {})
-        if layout:
+        # 3b. Restore contrast selection (must happen after conditions populate
+        #     so the pair list exists to apply excluded_pairs to)
+        cs = config.get("contrast_selection")
+        if cs:
             try:
-                self.plate_format_widget.load_plate_config(fmt, layout)
+                self.contrast_selection_widget.load_config(cs)
             except Exception as e:
-                errors.append(f"Plate layout: {e}")
+                errors.append(f"Contrast selection: {e}")
+
+        # 4. Restore plate layout library
+        layouts = config.get("plate_layouts")
+        if layouts:
+            try:
+                self.plate_format_widget.load_layouts_config(layouts)
+            except Exception as e:
+                errors.append(f"Plate layouts: {e}")
+        else:
+            fmt    = config.get("plate_format")
+            layout = config.get("plate_layout")
+            if fmt and layout:
+                try:
+                    self.plate_format_widget.load_layouts_config(
+                        {"Default": {"format": fmt, "map": layout}}
+                    )
+                except Exception as e:
+                    errors.append(f"Plate layout (legacy): {e}")
 
         # 5. Legacy support: old configs with ref_genotype / ref_drug / ref_condition
         if not roles:
@@ -379,7 +441,9 @@ _SPINBOX_STYLESHEET = """
 # =============================================================================
 
 if __name__ == "__main__":
+    print("[DBG] __main__: creating QApplication", flush=True)
     app = QApplication(sys.argv)
+    print("[DBG] __main__: QApplication created", flush=True)
 
     try:
         import qdarktheme
@@ -388,6 +452,9 @@ if __name__ == "__main__":
         print("qdarktheme not found — using system theme.")
         print("Install with: pip install pyqtdarktheme")
 
+    print("[DBG] about to construct MainWindow", flush=True)
     window = MainWindow()
+    print("[DBG] about to call window.show()", flush=True)
     window.show()
+    print("[DBG] about to enter app.exec()", flush=True)
     sys.exit(app.exec())

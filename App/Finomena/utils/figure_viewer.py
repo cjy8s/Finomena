@@ -15,7 +15,7 @@ class FigureViewerWidget(QWidget):
     navigation arrows and a Save All button.
 
     Usage:
-        viewer = FigureViewerWidget(title="GAMM Results")
+        viewer = FigureViewerWidget(title="BAM Results")
         viewer.load_figures([
             {'pixmap': qpixmap, 'title': 'Figure 1', 'filepath': '/path/to/file.pdf'},
             ...
