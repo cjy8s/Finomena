@@ -3,3 +3,10 @@
 __pycache__/
 *.pyc
 *.pyo
+
+# Project data folders
+/Input/
+/Output/
+
+# Original script files, no longer needed
+/Script/

@@ -1,0 +1,24 @@
+Tweedie                 Tweedie distributions
+dtweedie_inversion      Fourier Inversion Evaluation for the Tweedie
+                        Probability Function
+dtweedie_saddle         Tweedie densities evaluation using the
+                        saddlepoint approximation
+dtweedie_series         Series Evaluation for the Tweedie Probability
+                        Function
+logLiktweedie           Log-likelihood for Tweedie distributions
+ptweedie_inversion      Fourier Inversion Evaluation for the Tweedie
+                        Distribution Function
+ptweedie_series         Series Evaluation for the Tweedie Distribution
+                        Function
+tweedie-package         Evaluation of Tweedie Exponential Family Models
+tweedie_AIC             AIC for Tweedie Glms
+tweedie_convert         Tweedie Distribution: Convert Between Parameter
+                        Formats
+tweedie_dev             Unit Deviance for a Tweedie Distribution
+tweedie_integrand       Display Integrand Information for Tweedie
+                        Fourier inversion
+tweedie_lambda          The Probability of Observing a Zero Value for a
+                        Tweedie Density
+tweedie_plot            Plot Tweedie Models
+tweedie_profile         Profile Likelihood Estimate of Tweedie Variance
+                        Index Parameter

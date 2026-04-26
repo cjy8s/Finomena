@@ -1,0 +1,193 @@
+add_confint             Add a confidence interval to an existing object
+add_constant            Add a constant to estimated values
+add_fitted              Add fitted values from a model to a data frame
+add_fitted.gam          Add fitted values from a GAM to a data frame
+add_fitted_samples      Add posterior draws from a model to a data
+                        object
+add_partial_residuals   Add partial residuals
+add_residuals           Add residuals from a model to a data frame
+add_residuals.gam       Add residuals from a GAM to a data frame
+add_sizer               Add indicators of significant change after
+                        SiZeR
+appraise                Model diagnostic plots
+assemble                Prepare plots via 'ggplot2' and assembles them
+                        as a list
+assemble.gam            Plot estimated smooths from a fitted GAM
+basis                   Basis expansions for smooths
+basis_size              Extract basis dimension of a smooth
+bird_move               Simulated bird migration data
+boundary                Extract the boundary of a soap film smooth
+check_user_select_smooths
+                        Select smooths based on user's choices
+coef.scam               Extract coefficients from a fitted 'scam'
+                        model.
+compare_smooths         Compare smooths across models
+conditional_values      Conditional predictions from a GAM
+confint.fderiv          Point-wise and simultaneous confidence
+                        intervals for derivatives of smooths
+confint.gam             Point-wise and simultaneous confidence
+                        intervals for smooths
+data_combos             All combinations of factor levels plus typical
+                        values of continuous variables
+data_sim                Simulate example data for fitting GAMs
+data_slice              Prepare a data slice through model covariates
+derivative_samples      Posterior expectations of derivatives from an
+                        estimated model
+derivatives             Derivatives of estimated smooths via finite
+                        differences
+difference_smooths      Differences of factor smooth interactions
+dispersion              Dispersion parameter for fitted model
+draw                    Generic plotting via 'ggplot2'
+draw.basis              Plot basis functions
+draw.compare_smooths    Plot comparisons of smooths
+draw.conditional_values
+                        Plot conditional predictions
+draw.derivatives        Plot derivatives of smooths
+draw.difference_smooth
+                        Plot differences of smooths
+draw.evaluated_parametric_term
+                        Plot estimated parametric effects
+draw.gam                Plot estimated smooths from a fitted GAM
+draw.gamlss             Plot smooths of a GAMLSS model estimated by
+                        'GJRM::gamlss'
+draw.mgcv_smooth        Plot basis functions
+draw.pairwise_concurvity
+                        Plot concurvity measures
+draw.parametric_effects
+                        Plot estimated effects for model parametric
+                        terms
+draw.penalty_df         Display penalty matrices of smooths using
+                        'ggplot'
+draw.rootogram          Draw a rootogram
+draw.smooth_estimates   Plot the result of a call to
+                        'smooth_estimates()'
+draw.smooth_samples     Plot posterior smooths
+edf                     Effective degrees of freedom for smooths and
+                        GAMs
+eval_smooth             S3 methods to evaluate individual smooths
+evaluate_parametric_term
+                        Evaluate parametric model terms
+evaluate_smooth         Evaluate a smooth
+evenly                  Create a sequence of evenly-spaced values
+factor_combos           All combinations of factor levels
+family.gam              Extract family objects from models
+family_name             Name of family used to fit model
+family_type             Extracts the type of family in a consistent way
+fitted_samples          Draw fitted values from the posterior
+                        distribution
+fitted_values           Generate fitted values from a estimated GAM
+fix_offset              Fix the names of a data frame containing an
+                        offset variable.
+fixef                   Extract fixed effects estimates
+fixef.gam               Extract fixed effects estimates from a fitted
+                        GAM
+gaussian_draws          Posterior samples using a simple Metropolis
+                        Hastings sampler
+get_by_smooth           Extract an factor-by smooth by name
+get_smooth              Extract an mgcv smooth by name
+get_smooths_by_id       Extract an mgcv smooth given its position in
+                        the model object
+gss_vocab               Data from the General Social Survey (GSS) from
+                        the National Opinion Research Center of the
+                        University of Chicago
+gw_f0                   Gu and Wahba test functions
+has_theta               Are additional parameters available for a GAM?
+is_by_smooth            Tests for by variable smooths
+is_factor_term          Is a model term a factor (categorical)?
+is_mgcv_family          Is an object one of mgcv's family objects?
+is_mgcv_smooth          Check if objects are smooths or are a
+                        particular type of smooth
+is_multivariate_y       Is a model multivariate?
+is_offset               Is a model term an offset?
+link                    Extract link and inverse link functions from
+                        models
+load_mgcv               Load mgcv quietly
+lp_matrix               Return the linear prediction matrix of a fitted
+                        GAM
+mh_draws                Posterior samples using a Gaussian
+                        approximation to the posterior distribution
+model_concurvity        Concurvity of an estimated GAM
+model_constant          Extract the model constant term
+model_terms             Find the names of model terms
+model_vars              List the variables involved in a model fitted
+                        with a formula
+n_eta                   The Number of linear predictors in model
+n_smooths               How many smooths in a fitted model
+nb_theta                Negative binomial parameter theta
+null_deviance           Extract the null deviance of a fitted model
+observed_fitted_plot    Plot of fitted against observed response values
+overview                Provides an overview of a model and the terms
+                        in that model
+parametric_effects      Estimated values for parametric model terms
+parametric_terms        Names of any parametric terms in a GAM
+partial_derivatives     Partial derivatives of estimated multivariate
+                        smooths via finite differences
+partial_residuals       Partial residuals
+penalty                 Extract and tidy penalty matrices
+post_draws              Low-level Functions to generate draws from the
+                        posterior distribution of model coefficients
+posterior_samples       Draw samples from the posterior distribution of
+                        an estimated model
+predicted_samples       Draw new response values from the conditional
+                        distribution of the response
+qq_plot                 Quantile-quantile plot of model residuals
+quantile_residuals      Randomised residuals
+ref_level               Return the reference or specific level of a
+                        factor
+ref_sims                Reference simulation data
+rep_first_factor_value
+                        Repeat the first level of a factor n times
+residuals_hist_plot     Histogram of model residuals
+residuals_linpred_plot
+                        Plot of residuals versus linear predictor
+                        values
+response_derivatives    Derivatives on the response scale from an
+                        estimated GAM
+rootogram               Rootograms to assess goodness of model fit
+rtw                     Simulator for tweedie LSS models
+scale_fill_partial_effect
+                        Default diverging red-blue colour palette for
+                        partial effects
+seq_min_max_eps         Create a sequence of evenly-spaced values
+                        adjusted to accommodate a small adjustment
+shift_values            Shift numeric values in a data frame by an
+                        amount 'eps'
+simulate.gam            Simulate from the posterior distribution of a
+                        GAM
+smallAges               Lead-210 age-depth measurements for Small Water
+smooth_coef_indices     Indices of the parametric terms for a
+                        particular smooth
+smooth_coefs            Coefficients for a particular smooth
+smooth_data             Generate regular data over the covariates of a
+                        smooth
+smooth_dim              Dimension of a smooth
+smooth_estimates        Evaluate smooths at covariate values
+smooth_label            Extract the label for a smooth used by 'mgcv'
+smooth_samples          Posterior draws for individual smooths
+smooth_terms            List the variables involved in smooths
+smooth_type             Determine the type of smooth and return it n a
+                        human readable form
+smooths                 Names of smooths in a GAM
+spline_values           Evaluate a spline at provided covariate values
+term_names              Extract names of all variables needed to fit a
+                        GAM or a smooth
+term_variables          Names of variables involved in a specified
+                        model term
+theta                   General extractor for additional parameters in
+                        mgcv models
+tidy_basis              A tidy basis representation of a smooth object
+to_na                   Sets the elements of vector to 'NA'
+too_far                 Exclude values that lie too far from the
+                        support of data
+too_far_to_na           Set rows of data to 'NA' if the lie too far
+                        from a reference set of values
+transform_fun           Transform estimated values and confidence
+                        intervals by applying a function
+typical_values          Typical values of model covariates
+user_draws              Handle user-supplied posterior draws
+variance_comp           Variance components of smooths from smoothness
+                        estimates
+vars_from_label         Returns names of variables from a smooth label
+which_smooths           Identify a smooth term by its label
+worm_plot               Worm plot of model residuals
+zooplankton             Madison lakes zooplankton data

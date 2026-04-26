@@ -32,13 +32,14 @@ dir.create(lib_dir, showWarnings = FALSE, recursive = TRUE)
 
 cat("Installing R packages into:", lib_dir, "\n")
 
-required_pkgs <- c("tidyverse", "data.table", "mgcv", "emmeans")
+required_pkgs <- c("tidyverse", "data.table", "mgcv", "emmeans",
+                   "jsonlite", "gratia")
 
 install.packages(
   required_pkgs,
   lib = lib_dir,
   repos = "https://cloud.r-project.org",
-  dependencies = TRUE
+  dependencies = c("Depends", "Imports", "LinkingTo")
 )
 
 # Verify

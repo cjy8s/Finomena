@@ -12,8 +12,8 @@ from itertools import combinations
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
-    QCheckBox, QHBoxLayout, QLabel, QLineEdit, QPushButton,
-    QScrollArea, QVBoxLayout, QWidget,
+    QCheckBox, QDoubleSpinBox, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
+    QPushButton, QScrollArea, QSpinBox, QVBoxLayout, QWidget,
 )
 
 
@@ -73,6 +73,69 @@ class ContrastSelectionWidget(QWidget):
         self._summary_label.setWordWrap(True)
         layout.addWidget(self._summary_label)
 
+        # ── Posterior equivalence section ─────────────────────────────────
+        pe_group = QGroupBox("Posterior Equivalence Testing (Bayesian)")
+        pe_layout = QVBoxLayout(pe_group)
+
+        self._pe_enabled_cb = QCheckBox(
+            "Run posterior equivalence test for the kept pairs (during BAM run)"
+        )
+        self._pe_enabled_cb.stateChanged.connect(self._on_pe_toggle)
+        pe_layout.addWidget(self._pe_enabled_cb)
+
+        pe_help = QLabel(
+            "<i>For every kept pair, draws from the BAM posterior to compute "
+            "<b>M</b> = the maximum absolute log<sub>2</sub> fold change between "
+            "the two condition trajectories across each phase's time course. "
+            "Reports the posterior distribution of <b>M</b> and "
+            "<b>Pr(M &lt; δ)</b> — a direct Bayesian credibility statement of "
+            "equivalence within tolerance δ.</i>"
+        )
+        pe_help.setWordWrap(True)
+        pe_help.setStyleSheet("color: #888; padding-left: 22px;")
+        pe_layout.addWidget(pe_help)
+
+        pe_settings = QHBoxLayout()
+        pe_settings.addSpacing(22)
+        pe_settings.addWidget(QLabel("δ (log<sub>2</sub> fold change):"))
+        self._pe_delta_spin = QDoubleSpinBox()
+        self._pe_delta_spin.setRange(0.01, 10.0)
+        self._pe_delta_spin.setSingleStep(0.1)
+        self._pe_delta_spin.setDecimals(2)
+        self._pe_delta_spin.setValue(1.0)
+        self._pe_delta_spin.setToolTip(
+            "Equivalence margin on log₂ scale. Default 1.0 = trajectories never differ "
+            "by more than a factor of 2 at any time point."
+        )
+        pe_settings.addWidget(self._pe_delta_spin)
+        pe_settings.addSpacing(20)
+        pe_settings.addWidget(QLabel("Posterior draws:"))
+        self._pe_draws_spin = QSpinBox()
+        self._pe_draws_spin.setRange(100, 100000)
+        self._pe_draws_spin.setSingleStep(1000)
+        self._pe_draws_spin.setValue(10000)
+        self._pe_draws_spin.setToolTip(
+            "Number of posterior samples used to estimate the M distribution and Pr(M < δ). "
+            "Default 10,000 gives ~0.5% Monte Carlo precision on Pr. Lower values run faster "
+            "but produce a noisier estimate."
+        )
+        pe_settings.addWidget(self._pe_draws_spin)
+        pe_settings.addStretch()
+        pe_layout.addLayout(pe_settings)
+
+        pe_draws_note = QLabel(
+            "<i>10,000 draws is recommended for final results. Reduce for "
+            "quicker runs at lower precision.</i>"
+        )
+        pe_draws_note.setWordWrap(True)
+        pe_draws_note.setStyleSheet("color: #888; padding-left: 22px;")
+        pe_layout.addWidget(pe_draws_note)
+
+        self._pe_settings_widgets = [self._pe_delta_spin, self._pe_draws_spin]
+        self._update_pe_settings_enabled()
+
+        layout.addWidget(pe_group)
+
     # ── Public API ─────────────────────────────────────────────────────────
 
     def update_conditions(self, conditions: dict):
@@ -87,12 +150,23 @@ class ContrastSelectionWidget(QWidget):
     def get_excluded_pairs(self) -> list:
         return [list(pair) for pair, cb in self._pair_checkboxes.items() if not cb.isChecked()]
 
+    def get_posterior_settings(self) -> dict:
+        """Returns the posterior-equivalence settings (enabled / delta / n_draws)."""
+        return {
+            "enabled": self._pe_enabled_cb.isChecked(),
+            "delta":   float(self._pe_delta_spin.value()),
+            "n_draws": int(self._pe_draws_spin.value()),
+        }
+
     def save_config(self) -> dict:
-        """Config persists only EXCLUDED pairs (defaults to 'all kept')."""
-        return {"excluded_pairs": self.get_excluded_pairs()}
+        """Config persists EXCLUDED pairs (defaults to 'all kept') + posterior settings."""
+        return {
+            "excluded_pairs":       self.get_excluded_pairs(),
+            "posterior_equivalence": self.get_posterior_settings(),
+        }
 
     def load_config(self, data: dict):
-        """Restores excluded-pair set. New pairs (not present when saved) default to checked."""
+        """Restores excluded-pair set + posterior settings."""
         excluded = {tuple(self._canon(p)) for p in data.get("excluded_pairs", [])}
         self._pending_excluded = excluded
         # If pairs already exist (conditions were loaded first), apply immediately
@@ -100,6 +174,21 @@ class ContrastSelectionWidget(QWidget):
             cb.blockSignals(True)
             cb.setChecked(pair not in excluded)
             cb.blockSignals(False)
+
+        pe = data.get("posterior_equivalence") or {}
+        self._pe_enabled_cb.setChecked(bool(pe.get("enabled", False)))
+        if "delta" in pe:
+            try:
+                self._pe_delta_spin.setValue(float(pe["delta"]))
+            except (TypeError, ValueError):
+                pass
+        if "n_draws" in pe:
+            try:
+                self._pe_draws_spin.setValue(int(pe["n_draws"]))
+            except (TypeError, ValueError):
+                pass
+        self._update_pe_settings_enabled()
+
         self._update_summary()
         self.selection_changed.emit()
 
@@ -179,3 +268,12 @@ class ContrastSelectionWidget(QWidget):
         query = self._filter_edit.text().strip().lower()
         for cb in self._pair_checkboxes.values():
             cb.setVisible(not query or query in cb.text().lower())
+
+    def _on_pe_toggle(self, _state):
+        self._update_pe_settings_enabled()
+        self.selection_changed.emit()
+
+    def _update_pe_settings_enabled(self):
+        on = self._pe_enabled_cb.isChecked()
+        for w in self._pe_settings_widgets:
+            w.setEnabled(on)

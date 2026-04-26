@@ -1,0 +1,32 @@
+as.promise.mirai        Make mirai Promise
+as.promise.mirai_map    Make mirai_map Promise
+call_mirai              mirai (Call Value)
+cluster_config          Cluster Remote Launch Configuration
+collect_mirai           mirai (Collect Value)
+daemon                  Daemon Instance
+daemons                 Daemons (Set Persistent Processes)
+daemons_set             Query if Daemons are Set
+dispatcher              Dispatcher
+everywhere              Evaluate Everywhere
+host_url                URL Constructors
+http_config             HTTP Remote Launch Configuration
+info                    Information Statistics
+is_mirai                Is mirai / mirai_map
+is_mirai_error          Error Validators
+launch_local            Launch Daemons
+make_cluster            Make Mirai Cluster
+mirai                   mirai (Evaluate Async)
+mirai-package           mirai: Minimalist Async Evaluation Framework
+                        for R
+mirai_map               mirai Map
+on_daemon               On Daemon
+race_mirai              mirai (Race)
+register_serial         Register Serialization Configuration
+remote_config           Generic Remote Launch Configuration
+require_daemons         Require Daemons
+serial_config           Create Serialization Configuration
+ssh_config              SSH Remote Launch Configuration
+stop_mirai              mirai (Stop)
+unresolved              Query if a mirai is Unresolved
+with.miraiDaemons       With Mirai Daemons
+with_daemons            With Daemons

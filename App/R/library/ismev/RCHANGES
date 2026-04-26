@@ -1,0 +1,33 @@
+The ismev package is based on S functions by Stuart Coles.     
+This file documents the main changes from these functions. 
+
+
+1. The datasets no longer end in `.data'. As is usual for R 
+   packages, the datasets are made available using the function 
+   data.
+
+2. The $conv element of the list returned by fitting functions
+   is the return code provided by the optimization function 
+   optim (which gives zero when a local minimum has been found). 
+
+3. The first column of the dowjones dataset, giving the dates of
+   each observation, is now a POSIXct object.
+
+4. The fitting functions and the functions pp.fitrange and 
+   gpd.fitrange have show arguments to control printing.
+
+5. The argument method has been added to fitting functions to
+   specify the optimization method used by optim.
+
+6. The fitting functions allow full control of the optimization,
+   as arguments can be specified that are passed to components
+   of the control argument of optim.
+
+7. The formal argument ufun of pp.fit and gpd.fit has been changed
+   to threshold, and can no longer be a function. 
+
+
+
+
+
+

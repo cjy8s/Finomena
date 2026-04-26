@@ -19,6 +19,7 @@ import glob
 import json
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import threading
@@ -54,6 +55,8 @@ _EXPECTED_PNGS_STATIC = [
     "forest_plot_interactions.png",
     "heatmap_diverging_v1.png",
     "rescue_assessment_context_faceted.png",
+    "posterior_equivalence_density.png",
+    "posterior_equivalence_heatmap.png",
 ]
 _EXPECTED_CSV = "summary_statistics_by_group.csv"
 
@@ -85,6 +88,7 @@ class BamWidget(QWidget):
         self._family_name         = "Tweedie"  # distribution family (set by FamilySelectionWidget)
         self._shift_val           = 0.0        # additive shift applied before fitting
         self._contrast_widget     = None       # reference to ContrastSelectionWidget
+        self._user_stopped        = False      # set by Stop button so _on_run_finished skips the error dialog
 
         self._build_ui()
 
@@ -341,17 +345,22 @@ class BamWidget(QWidget):
         output_dir = self._output_dir
 
         # Step 1b: Write contrast-selection sidecar JSON. The R script looks for
-        # this file in the output directory and, if present, builds only the
-        # listed pairs for the Full_Interaction contrast family.
-        #   - kept_pairs non-empty → R uses exactly those pairs
-        #   - kept_pairs empty     → R skips the Full_Interaction family entirely
-        #   - sidecar missing      → R falls back to full pairwise (legacy behavior)
+        # this file in the output directory and, if present:
+        #   - filters Full_Interaction comparisons to the listed pairs
+        #     (kept_pairs non-empty), or skips the family entirely (empty)
+        #   - if posterior_equivalence.enabled, also runs Bayesian equivalence
+        #     testing on those same pairs and emits posterior_equivalence_*.png
+        #     and posterior_equivalence_summary.csv
+        # If the sidecar is missing, R falls back to full pairwise (legacy).
         if self._contrast_widget is not None:
             try:
-                kept = self._contrast_widget.get_kept_pairs()
+                sidecar_data = {
+                    "kept_pairs":           self._contrast_widget.get_kept_pairs(),
+                    "posterior_equivalence": self._contrast_widget.get_posterior_settings(),
+                }
                 sidecar = os.path.join(output_dir, "contrast_selection.json")
                 with open(sidecar, "w", encoding="utf-8") as f:
-                    json.dump({"kept_pairs": kept}, f, indent=2)
+                    json.dump(sidecar_data, f, indent=2)
             except Exception as e:
                 QMessageBox.warning(
                     self, "Contrast Sidecar",
@@ -364,8 +373,9 @@ class BamWidget(QWidget):
             QMessageBox.critical(
                 self, "Rscript Not Found",
                 "Could not locate Rscript.\n\n"
-                "Install R from https://cran.r-project.org, restart the app, "
-                "then click 'Install R Packages'."
+                "Install R from https://cran.r-project.org, then run "
+                "the package setup script:\n"
+                "  Rscript App/R/install_packages.R"
             )
             return
 
@@ -378,6 +388,7 @@ class BamWidget(QWidget):
 
         self._run_button.setEnabled(False)
         self._stop_button.setEnabled(True)
+        self._user_stopped = False
         self._r_status_label.setText("Running…")
         self._log_text.clear()
         self._append_log(f"Rscript: {rscript}")
@@ -422,6 +433,10 @@ class BamWidget(QWidget):
         kwargs = {}
         if sys.platform == "win32":
             kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+        else:
+            # Put the child in its own process group so we can SIGTERM/SIGKILL
+            # the whole tree (R parallel workers etc.) on Stop.
+            kwargs["start_new_session"] = True
 
         self._process = subprocess.Popen(
             cmd,
@@ -437,9 +452,46 @@ class BamWidget(QWidget):
         t.start()
 
     def _on_stop(self):
-        if self._process:
-            self._process.terminate()
-            self._append_log("--- Analysis stopped by user ---")
+        """Force-kill the R process AND its descendants.
+
+        Plain Popen.terminate() is unreliable here:
+          • Windows: it only ends the immediate Rscript.exe; any worker
+            processes spawned by R (parallel:: or BLAS threads using their own
+            processes) keep running until they finish naturally.
+          • Linux/macOS: same problem unless we kill the whole process group.
+        We use taskkill /F /T on Windows and SIGKILL on the process group on
+        POSIX to guarantee the whole tree is gone.
+        """
+        self._user_stopped = True
+        proc = self._process
+        if proc is None or proc.poll() is not None:
+            self._stop_button.setEnabled(False)
+            return
+
+        self._append_log("--- Stopping R analysis (killing process tree) ---")
+
+        if sys.platform == "win32":
+            try:
+                subprocess.run(
+                    ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                    capture_output=True, timeout=5,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                )
+            except Exception as e:
+                self._append_log(f"taskkill failed ({e}); falling back to terminate()")
+                proc.terminate()
+        else:
+            try:
+                pgid = os.getpgid(proc.pid)
+                os.killpg(pgid, signal.SIGTERM)
+                try:
+                    proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    os.killpg(pgid, signal.SIGKILL)
+            except Exception as e:
+                self._append_log(f"killpg failed ({e}); falling back to terminate()")
+                proc.terminate()
+
         self._run_button.setEnabled(True)
         self._stop_button.setEnabled(False)
         self._r_status_label.setText("Stopped.")
@@ -461,6 +513,10 @@ class BamWidget(QWidget):
     def _on_run_finished(self, success: bool):
         self._run_button.setEnabled(True)
         self._stop_button.setEnabled(False)
+        if self._user_stopped:
+            # User clicked Stop — _on_stop already set the status label and
+            # logged the action. Don't pop a "failed" dialog for an intentional cancel.
+            return
         if success:
             self._r_status_label.setText("Complete ✓")
             self._load_output_figures()

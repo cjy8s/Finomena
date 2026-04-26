@@ -6,15 +6,20 @@
     ],
     [
       "KO+DMSO",
-      "WT+compound"
+      "WT+DMSO"
     ],
     [
       "KO+compound",
       "WT+DMSO"
     ],
     [
-      "WT+DMSO",
+      "KO+compound",
       "WT+compound"
     ]
-  ]
+  ],
+  "posterior_equivalence": {
+    "enabled": true,
+    "delta": 1.0,
+    "n_draws": 10000
+  }
 }

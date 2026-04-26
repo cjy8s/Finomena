@@ -1,0 +1,231 @@
+useDynLib(scam, .registration = TRUE, .fixes = "C_")
+
+export(scam, anova.scam, 
+       bfgs_gcv.ubre, 
+       check.analytical,
+       derivative.scam, 
+       formula.scam,
+       gcv.ubre_grad,       
+       logLik.scam,     
+       marginal.matrices.tesmi1.ps,
+       marginal.matrices.tesmi2.ps,
+       marginal.matrices.tescv.ps,
+       plot.scam, predict.scam, 
+       print.scam, print.anova.scam,
+       print.summary.scam,
+       Predict.matrix.cv.smooth,
+       Predict.matrix.cx.smooth,
+       Predict.matrix.mdcv.smooth,
+       Predict.matrix.mdcx.smooth,
+       Predict.matrix.micv.smooth,
+       Predict.matrix.micx.smooth,
+       Predict.matrix.mpd.smooth,
+       Predict.matrix.mpdBy.smooth,
+       Predict.matrix.mpiBy.smooth,
+       Predict.matrix.cxBy.smooth,
+       Predict.matrix.cvBy.smooth,
+       Predict.matrix.mdcxBy.smooth,
+       Predict.matrix.mdcvBy.smooth,
+       Predict.matrix.micxBy.smooth,
+       Predict.matrix.micvBy.smooth,
+       Predict.matrix.mpi.smooth,
+       Predict.matrix.po.smooth,
+       Predict.matrix.cpopspline.smooth,
+       Predict.matrix.ipo.smooth,
+       Predict.matrix.dpo.smooth,
+       Predict.matrix.mifo.smooth,
+       Predict.matrix.miso.smooth,
+       Predict.matrix.lmpi.smooth,  
+       Predict.matrix.lipl.smooth, 
+       Predict.matrix.tedmd.smooth,
+       Predict.matrix.tedmi.smooth,
+       Predict.matrix.tesmd1.smooth,
+       Predict.matrix.tesmd2.smooth,
+       Predict.matrix.tesmi1.smooth,
+       Predict.matrix.tesmi2.smooth,
+       Predict.matrix.temicx.smooth,
+       Predict.matrix.temicv.smooth,
+       Predict.matrix.tedecx.smooth,
+       Predict.matrix.tedecv.smooth,
+       Predict.matrix.tescx.smooth,
+       Predict.matrix.tescv.smooth,
+       Predict.matrix.tecvcv.smooth,
+       Predict.matrix.tecxcx.smooth,
+       Predict.matrix.tecxcv.smooth,
+       Predict.matrix.tismi.smooth,
+       Predict.matrix.tismd.smooth,
+       residuals.scam,
+       qq.scam,
+       scam.check, scam.control,
+       scam.fit,           
+       summary.scam,
+       smooth.construct.cv.smooth.spec,
+       smooth.construct.cx.smooth.spec,
+       smooth.construct.mdcv.smooth.spec,
+       smooth.construct.mdcx.smooth.spec,
+       smooth.construct.micv.smooth.spec,
+       smooth.construct.micx.smooth.spec,
+       smooth.construct.mpd.smooth.spec,
+       smooth.construct.mpdBy.smooth.spec,
+       smooth.construct.mpiBy.smooth.spec,
+       smooth.construct.cxBy.smooth.spec,
+       smooth.construct.cvBy.smooth.spec,
+       smooth.construct.mdcxBy.smooth.spec,
+       smooth.construct.mdcvBy.smooth.spec,
+       smooth.construct.micxBy.smooth.spec,
+       smooth.construct.micvBy.smooth.spec,
+       smooth.construct.mpi.smooth.spec,
+       smooth.construct.po.smooth.spec,
+       smooth.construct.ipo.smooth.spec,
+       smooth.construct.dpo.smooth.spec,
+       smooth.construct.cpop.smooth.spec,
+       smooth.construct.mifo.smooth.spec,
+       smooth.construct.miso.smooth.spec,
+       smooth.construct.lmpi.smooth.spec,
+       smooth.construct.lipl.smooth.spec,
+       smooth.construct.tedmd.smooth.spec,
+       smooth.construct.tedmi.smooth.spec,
+       smooth.construct.tesmd1.smooth.spec,
+       smooth.construct.tesmd2.smooth.spec,
+       smooth.construct.tesmi1.smooth.spec,
+       smooth.construct.tesmi2.smooth.spec,
+       smooth.construct.temicx.smooth.spec,
+       smooth.construct.temicv.smooth.spec,
+       smooth.construct.tedecx.smooth.spec,
+       smooth.construct.tedecv.smooth.spec,
+       smooth.construct.tescx.smooth.spec,
+       smooth.construct.tescv.smooth.spec,
+       smooth.construct.tecvcv.smooth.spec,
+       smooth.construct.tecxcx.smooth.spec,
+       smooth.construct.tecxcv.smooth.spec,
+       smooth.construct.tismi.smooth.spec,
+       smooth.construct.tismd.smooth.spec,
+       vis.scam, vcov.scam
+)
+
+## importFrom(mgcv, gam,s,Predict.matrix,smoothCon,formula.gam,PredictMat,smooth.construct,
+##           exclude.too.far,mroot,fix.family.link,fix.family.var,pcls, Rrank, interpret.gam)
+
+import(mgcv)  ## imports ALL exported variables from mgcv package
+
+importFrom(grDevices,cm.colors,dev.interactive,devAskNewPage,gray,grey,
+           heat.colors,terrain.colors,topo.colors,axisTicks)
+importFrom(graphics,abline,axis,axTicks,box,contour,hist,image,lines,
+           mtext, par, persp,plot,points,
+           polygon,rect,strheight,strwidth,text,title)
+
+importFrom(stats,.checkMFClasses,.getXlevels,anova,approx,as.formula,
+binomial,coef,contrasts,"contrasts<-",cooks.distance,cor,cov,
+delete.response,dbeta,dgamma,dnorm,dpois,fitted,formula,gaussian,glm,
+influence,logLik,lm,mad,
+make.link,median,model.frame,model.offset,model.matrix,model.response,
+na.action,nlm,na.pass,napredict,na.omit,naresid,optim,pchisq,pnorm,pt,pf,
+ppois, pbinom, pgamma,
+power,predict,printCoefmat,quantile,
+qbeta,qbinom,qcauchy,qchisq,qnbinom,qgamma,qnorm,qpois,qqline,qqnorm,qqplot,
+rchisq,reformulate,residuals,
+rbeta,rbinom,rgamma,rnbinom,rnorm,rpois,runif,sd,
+termplot,terms.formula,terms,uniroot,var,vcov,weights)
+
+import(Matrix)
+importFrom(methods,cbind2)
+importFrom(splines,splineDesign, spline.des)
+
+S3method(plot, scam)
+S3method(print, scam)
+S3method(print, summary.scam)
+S3method(summary, scam)
+S3method(predict, scam)
+S3method(residuals, scam)
+S3method(anova, scam)
+S3method(formula, scam)
+S3method(logLik, scam)
+S3method(print, anova.scam)
+S3method(vcov,scam)
+
+S3method(smooth.construct,mdcv.smooth.spec)
+S3method(smooth.construct,cv.smooth.spec)
+S3method(smooth.construct,cx.smooth.spec)
+S3method(smooth.construct,mdcx.smooth.spec)
+S3method(smooth.construct,micv.smooth.spec)
+S3method(smooth.construct, micx.smooth.spec)
+S3method(smooth.construct, mpd.smooth.spec)
+S3method(smooth.construct, mpdBy.smooth.spec)
+S3method(smooth.construct, mpiBy.smooth.spec)
+S3method(smooth.construct, cxBy.smooth.spec)
+S3method(smooth.construct, cvBy.smooth.spec)
+S3method(smooth.construct, mdcxBy.smooth.spec)
+S3method(smooth.construct, mdcvBy.smooth.spec)
+S3method(smooth.construct, micxBy.smooth.spec)
+S3method(smooth.construct, micvBy.smooth.spec)
+S3method(smooth.construct, mpi.smooth.spec)
+S3method(smooth.construct, lmpi.smooth.spec)
+S3method(smooth.construct, lipl.smooth.spec)   
+S3method(smooth.construct, po.smooth.spec)
+S3method(smooth.construct, dpo.smooth.spec)
+S3method(smooth.construct, ipo.smooth.spec)
+S3method(smooth.construct, cpop.smooth.spec)
+S3method(smooth.construct, mifo.smooth.spec)
+S3method(smooth.construct, miso.smooth.spec)
+S3method(smooth.construct, tedmd.smooth.spec)
+S3method(smooth.construct, tedmi.smooth.spec)
+S3method(smooth.construct, tesmd1.smooth.spec)
+S3method(smooth.construct, tesmd2.smooth.spec)
+S3method(smooth.construct, tesmi1.smooth.spec)
+S3method(smooth.construct, tesmi2.smooth.spec)
+S3method(smooth.construct, temicx.smooth.spec)
+S3method(smooth.construct, temicv.smooth.spec)
+S3method(smooth.construct, tedecx.smooth.spec)
+S3method(smooth.construct, tedecv.smooth.spec)
+S3method(smooth.construct, tescx.smooth.spec)
+S3method(smooth.construct, tescv.smooth.spec)
+S3method(smooth.construct, tecvcv.smooth.spec)
+S3method(smooth.construct, tecxcx.smooth.spec)
+S3method(smooth.construct, tecxcv.smooth.spec)
+S3method(smooth.construct, tismi.smooth.spec)
+S3method(smooth.construct, tismd.smooth.spec)
+
+S3method(Predict.matrix,cv.smooth)
+S3method(Predict.matrix,cx.smooth)
+S3method(Predict.matrix,mdcv.smooth)
+S3method(Predict.matrix,mdcx.smooth)
+S3method(Predict.matrix,micv.smooth)
+S3method(Predict.matrix,micx.smooth)
+S3method(Predict.matrix,mpd.smooth)
+S3method(Predict.matrix,mpdBy.smooth)
+S3method(Predict.matrix,mpiBy.smooth)
+S3method(Predict.matrix,cxBy.smooth)
+S3method(Predict.matrix,cvBy.smooth)
+S3method(Predict.matrix,mdcxBy.smooth)
+S3method(Predict.matrix,mdcvBy.smooth)
+S3method(Predict.matrix,micxBy.smooth)
+S3method(Predict.matrix,micvBy.smooth)
+S3method(Predict.matrix,mpi.smooth)
+S3method(Predict.matrix,lmpi.smooth)
+S3method(Predict.matrix,lipl.smooth)  
+S3method(Predict.matrix,po.smooth)
+S3method(Predict.matrix,dpo.smooth)
+S3method(Predict.matrix,ipo.smooth)
+S3method(Predict.matrix,cpopspline.smooth)
+S3method(Predict.matrix,mifo.smooth)
+S3method(Predict.matrix,miso.smooth)
+S3method(Predict.matrix,tedmd.smooth)
+S3method(Predict.matrix,tedmi.smooth)
+S3method(Predict.matrix,tesmd1.smooth)
+S3method(Predict.matrix,tesmd2.smooth)
+S3method(Predict.matrix,tesmi1.smooth)
+S3method(Predict.matrix,tesmi2.smooth)
+S3method(Predict.matrix,temicx.smooth)
+S3method(Predict.matrix,temicv.smooth)
+S3method(Predict.matrix,tedecx.smooth)
+S3method(Predict.matrix,tedecv.smooth)
+S3method(Predict.matrix,tescx.smooth)
+S3method(Predict.matrix,tescv.smooth)
+S3method(Predict.matrix,tecvcv.smooth)
+S3method(Predict.matrix,tecxcx.smooth)
+S3method(Predict.matrix,tecxcv.smooth)
+S3method(Predict.matrix,tismi.smooth)
+S3method(Predict.matrix,tismd.smooth)
+
+
+

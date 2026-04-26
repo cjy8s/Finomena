@@ -237,8 +237,9 @@ class FamilySelectionWidget(QWidget):
             QMessageBox.critical(
                 self, "Rscript Not Found",
                 "Could not locate Rscript.\n\n"
-                "Install R from https://cran.r-project.org, restart the app, "
-                "then click 'Install R Packages' in the BAM Analysis tab."
+                "Install R from https://cran.r-project.org, then run "
+                "the package setup script:\n"
+                "  Rscript App/R/install_packages.R"
             )
             return
 

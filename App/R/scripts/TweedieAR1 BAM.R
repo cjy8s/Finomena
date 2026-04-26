@@ -2,12 +2,13 @@
 # Packages are managed by the Python app (installed into App/R/library/).
 # R_LIBS is set by the app before launching this script, so R finds them there.
 cat("R library path:", paste(.libPaths(), collapse = "\n               "), "\n")
-required_pkgs <- c("tidyverse", "data.table", "mgcv", "parallel", "emmeans", "jsonlite")
+required_pkgs <- c("tidyverse", "data.table", "mgcv", "parallel", "emmeans", "jsonlite",
+                   "gratia", "MASS")
 missing_pkgs  <- required_pkgs[!sapply(required_pkgs, requireNamespace, quietly = TRUE)]
 if (length(missing_pkgs) > 0) {
   stop(
     "Missing R packages: ", paste(missing_pkgs, collapse = ", "), "\n",
-    "Open the app, go to the BAM Analysis tab, and click 'Install R Packages'."
+    "Install them with:  Rscript App/R/install_packages.R"
   )
 }
 
@@ -17,6 +18,11 @@ library(mgcv)
 library(parallel)
 library(emmeans)
 library(jsonlite)
+library(gratia)
+# MASS::mvrnorm used directly without library() to avoid masking dplyr::select
+
+# Null-coalescing operator (used when reading optional sidecar fields)
+`%||%` <- function(a, b) if (is.null(a)) b else a
 
 # ── ARGUMENT PARSING ──────────────────────────────────────────────────────────
 # Called from the app as:
@@ -172,7 +178,8 @@ formula_str <- paste0(
 )
 cat("\nBAM formula:\n  ", formula_str, "\n\n")
 
-models_by_group <- list()
+models_by_group     <- list()
+group_data_by_group <- list()  # kept around for posterior-equivalence step
 unique_groups <- sort(unique(gam_df$Group))
 
 # Define k value before edf calculation
@@ -249,8 +256,10 @@ for (g in unique_groups) {
     nthreads = usable_cores
   )
 
-  # Store the final model in the list
-  models_by_group[[as.character(g)]] <- final_model
+  # Store the final model + the group_data used to fit it (the latter is needed
+  # later for posterior-equivalence prediction grids)
+  models_by_group[[as.character(g)]]     <- final_model
+  group_data_by_group[[as.character(g)]] <- group_data
 
   cat("Successfully fitted Group", g, "!\n")
 }
@@ -667,4 +676,196 @@ summary_table <- final_master_table %>%
   )
 
 write_csv(summary_table, "summary_statistics_by_group.csv")
+
+# =============================================================================
+# 4. POSTERIOR EQUIVALENCE TESTING (Bayesian)
+# =============================================================================
+# Optional. Runs when contrast_selection.json sets posterior_equivalence.enabled.
+# For each kept pair (lhs, rhs) and each phase group, draws from the BAM
+# posterior to compute
+#     M = max_t |η_lhs(t) − η_rhs(t)|     (log_e fold change at each draw)
+# and converts to log_2 by dividing by log(2). Reports the posterior of M and
+# Pr(M < δ) — a direct Bayesian credibility statement of equivalence within ±δ.
+# Implementation uses mgcv's lpmatrix posterior + MASS::mvrnorm coefficient
+# draws. (gratia is loaded for users who want to do additional posterior work.)
+
+# Helper: for one (model, group_data, lhs, rhs), return the posterior of M.
+.posterior_equivalence_pair <- function(model, group_data, lhs, rhs, var_names,
+                                        delta_log2, n_draws,
+                                        n_time = 200, seed = 42) {
+  cond_levels <- levels(group_data$Condition_Combo)
+  if (!(lhs %in% cond_levels) || !(rhs %in% cond_levels)) {
+    return(NULL)   # condition not present in this phase group
+  }
+  parse_cond <- function(cond_str) {
+    parts <- strsplit(cond_str, "+", fixed = TRUE)[[1]]
+    if (length(parts) != length(var_names)) {
+      stop("Cannot parse '", cond_str, "': expected ", length(var_names),
+           " parts (one per variable), got ", length(parts))
+    }
+    setNames(as.list(parts), var_names)
+  }
+  lhs_vars <- parse_cond(lhs)
+  rhs_vars <- parse_cond(rhs)
+
+  time_grid <- seq(0, max(group_data$time_in_group), length.out = n_time)
+  build_nd <- function(cond_str, vars_list) {
+    nd <- data.frame(time_in_group = time_grid)
+    for (v in var_names) {
+      nd[[v]] <- factor(vars_list[[v]], levels = levels(group_data[[v]]))
+    }
+    nd$Condition_Combo <- factor(cond_str, levels = cond_levels)
+    # animal_id is required by predict() but excluded from the linear predictor.
+    nd$animal_id <- factor(group_data$animal_id[1],
+                           levels = levels(group_data$animal_id))
+    nd
+  }
+  nd_lhs <- build_nd(lhs, lhs_vars)
+  nd_rhs <- build_nd(rhs, rhs_vars)
+
+  # Linear-predictor design matrices, excluding the per-animal random-effect
+  # smooth so we get population-level (not animal-specific) trajectories.
+  excl <- "s(time_in_group,animal_id)"
+  X_lhs <- predict(model, newdata = nd_lhs, type = "lpmatrix", exclude = excl)
+  X_rhs <- predict(model, newdata = nd_rhs, type = "lpmatrix", exclude = excl)
+  X_diff <- X_lhs - X_rhs                      # n_time × n_coef
+
+  # Bayesian (large-sample Gaussian) posterior of β
+  set.seed(seed)
+  Cv <- vcov(model, unconditional = TRUE)
+  beta_samples <- MASS::mvrnorm(n_draws, mu = coef(model), Sigma = Cv)  # n_draws × n_coef
+
+  # Posterior draws of η_lhs(t) − η_rhs(t) on log_e scale → divide by log(2)
+  diff_samples <- X_diff %*% t(beta_samples)   # n_time × n_draws
+  M_log2 <- apply(abs(diff_samples), 2, max) / log(2)
+
+  list(
+    M_log2  = M_log2,
+    median  = median(M_log2),
+    lower95 = unname(quantile(M_log2, 0.025)),
+    upper95 = unname(quantile(M_log2, 0.975)),
+    pr_equiv = mean(M_log2 < delta_log2)
+  )
+}
+
+if (!is.null(contrast_spec) &&
+    !is.null(contrast_spec$posterior_equivalence) &&
+    isTRUE(contrast_spec$posterior_equivalence$enabled) &&
+    length(contrast_spec$kept_pairs) > 0) {
+
+  delta_log2 <- as.numeric(contrast_spec$posterior_equivalence$delta %||% 1.0)
+  n_draws    <- as.integer(contrast_spec$posterior_equivalence$n_draws %||% 10000)
+
+  cat("\n========================================\n")
+  cat("Posterior Equivalence Testing (Bayesian)\n")
+  cat(sprintf("  delta = %.3f (log_2 fold change)\n", delta_log2))
+  cat(sprintf("  posterior draws = %d\n", n_draws))
+  cat("========================================\n")
+
+  pe_summary_rows <- list()
+  pe_draws_named  <- list()
+
+  for (g_str in as.character(sort(as.integer(names(models_by_group))))) {
+    cat(sprintf("Group %s: posterior equivalence...\n", g_str))
+    final_model <- models_by_group[[g_str]]
+    g_data      <- group_data_by_group[[g_str]]
+
+    for (i in seq_along(contrast_spec$kept_pairs)) {
+      pair <- contrast_spec$kept_pairs[[i]]
+      lhs <- pair[[1]]; rhs <- pair[[2]]
+
+      pe <- tryCatch(
+        .posterior_equivalence_pair(final_model, g_data, lhs, rhs, var_names,
+                                    delta_log2, n_draws, seed = 42L + i),
+        error = function(e) {
+          warning(sprintf("Group %s, %s vs %s: %s", g_str, lhs, rhs,
+                          conditionMessage(e)))
+          NULL
+        }
+      )
+      if (is.null(pe)) next
+
+      pe_summary_rows[[length(pe_summary_rows) + 1]] <- data.frame(
+        Group         = as.integer(g_str),
+        lhs           = lhs,
+        rhs           = rhs,
+        pair          = paste(lhs, "vs", rhs),
+        M_median_log2 = pe$median,
+        M_lower95     = pe$lower95,
+        M_upper95     = pe$upper95,
+        Pr_equiv      = pe$pr_equiv,
+        delta_log2    = delta_log2,
+        stringsAsFactors = FALSE
+      )
+      pe_draws_named[[paste0("g", g_str, "__", lhs, "__", rhs)]] <- pe$M_log2
+    }
+  }
+
+  if (length(pe_summary_rows) > 0) {
+    pe_summary_df <- bind_rows(pe_summary_rows) %>%
+      arrange(Group, pair) %>%
+      as_tibble()
+    cat("\n--- POSTERIOR EQUIVALENCE SUMMARY ---\n")
+    # Use plain data.frame print: works whether bind_rows returned a tibble or a
+    # data.frame, and avoids tibble's `n=` partial-matching to print.default's
+    # `na.print` (which throws "invalid 'na.print' specification").
+    print(as.data.frame(pe_summary_df), row.names = FALSE)
+    write_csv(pe_summary_df, "posterior_equivalence_summary.csv")
+
+    # Long form for density plot
+    draws_df <- bind_rows(lapply(seq_along(pe_draws_named), function(j) {
+      key <- names(pe_draws_named)[j]
+      m <- regmatches(key, regexec("^g(.+?)__(.+?)__(.+)$", key))[[1]]
+      data.frame(
+        Group  = as.integer(m[2]),
+        pair   = paste(m[3], "vs", m[4]),
+        M_log2 = pe_draws_named[[j]],
+        stringsAsFactors = FALSE
+      )
+    })) %>% mutate(Group_lbl = paste0("Group ", Group))
+
+    p_density <- ggplot(draws_df,
+                        aes(x = M_log2, color = Group_lbl, fill = Group_lbl)) +
+      geom_density(alpha = 0.3) +
+      geom_vline(xintercept = delta_log2, linetype = "dashed",
+                 color = "red", linewidth = 0.8) +
+      facet_wrap(~ pair, scales = "free_y") +
+      labs(
+        title = "Posterior distribution of maximum absolute trajectory difference (M)",
+        subtitle = sprintf(
+          "Red dashed line: equivalence margin delta = %.2f (log_2). Mass left of delta = Pr(M < delta).",
+          delta_log2
+        ),
+        x = expression("M (log"[2]*" fold change)"),
+        y = "Posterior density",
+        fill = "Phase Group", color = "Phase Group"
+      ) +
+      theme_bw()
+    ggsave("posterior_equivalence_density.png", p_density,
+           width = 12, height = 8, dpi = 150)
+
+    p_heatmap <- ggplot(pe_summary_df,
+                        aes(x = factor(Group), y = pair, fill = Pr_equiv)) +
+      geom_tile(color = "white") +
+      geom_text(aes(label = sprintf("%.2f", Pr_equiv)),
+                color = "black", size = 3.5) +
+      scale_fill_gradient(low = "#fff5e6", high = "steelblue",
+                          limits = c(0, 1),
+                          name = expression(Pr(M < delta))) +
+      labs(
+        title = "Posterior Pr(M < delta) by pair x phase group",
+        subtitle = sprintf(
+          "delta = %.2f (log_2). Higher = more evidence the two trajectories never differ by more than +/- delta.",
+          delta_log2
+        ),
+        x = "Phase Group", y = "Pair"
+      ) +
+      theme_bw()
+    ggsave("posterior_equivalence_heatmap.png", p_heatmap,
+           width = 9, height = 6, dpi = 150)
+  } else {
+    cat("No posterior-equivalence results were produced (all pairs skipped).\n")
+  }
+}
+
 cat("\nAnalysis complete. All outputs saved to:", output_dir, "\n")

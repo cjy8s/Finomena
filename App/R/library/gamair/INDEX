@@ -1,0 +1,53 @@
+CanWeather              Canadian Weather data
+Larynx                  Cancer of the larynx in Germany
+aral                    Aral sea remote sensed chlorophyll data
+bird                    Bird distribution data from Portugal
+blowfly                 Nicholson's Blowfly data
+bone                    Bone marrow treatemtn survival data
+brain                   Brain scan data
+cairo                   Daily temperature data for Cairo
+ch1                     Code for Chapter 1: Linear Models
+ch1.solutions           Solution code for Chapter 1: Linear Models
+ch2                     Code for Chapter 2: Linear Mixed Models
+ch2.solutions           Solution code for Chapter 2: Linear Mixed
+                        Models
+ch3                     Code for Chapter 3: Generalized Linear Models
+ch3.solutions           Solution code for Chapter 3: Generalized Linear
+                        Models
+ch4                     Code for Chapter 4: Introducing GAMs
+ch4.solutions           Solution code for Chapter 4: Introducing GAMs
+ch5                     Code for Chapter 5: Smoothers
+ch5.solutions           Solution code for Chapter 5: Smoothers
+ch6                     Code for Chapter 6: GAM Theory
+ch6.solutions           Solution code for Chapter 6: GAM Theory
+ch7                     Code for Chapter 7: GAMs in Practice: mgcv
+ch7.solutions           Solution code for Chapter 7 GAMs in Practice:
+                        mgcv
+chicago                 Chicago air pollution and death rate data
+chl                     Chlorophyll data
+co2s                    Atmospheric CO2 at South Pole
+coast                   European coastline from -11 to 0 East and from
+                        43 to 59 North
+engine                  Engine wear versus size data
+gamair-package          Data and scripts for 'Generalized Additive
+                        Models: An Introduction with R'
+gas                     Octane rating data
+harrier                 Hen Harriers Eating Grouse
+hubble                  Hubble Space Telescope Data
+ipo                     Initial Public Offering Data
+mack                    Egg data from 1992 mackerel survey
+mackp                   Prediction grid data for 1992 mackerel egg
+                        model
+meh                     Data from 2010 horse mackerel and mackerel egg
+                        survey
+mpg                     Data on automobile efficiency on town streets
+                        and highway.
+prostate                Prostate cancer screening data
+sitka                   Sitka spruce growth data.
+sole                    Sole Eggs in the Bristol Channel
+sperm.comp1             Sperm competition data I
+sperm.comp2             Sperm competition data II
+stomata                 Stomatal area and CO2
+swer                    Swiss 12 hour extreme rainfall
+wesdr                   Diabetic retinopathy in Wisconsin
+wine                    Bordeaux Wines

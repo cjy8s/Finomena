@@ -1,0 +1,136 @@
+anova.scam              Approximate hypothesis tests related to SCAM
+                        fits
+derivative.scam         Derivative of the univariate smooth model terms
+linear.functional.terms
+                        Linear functionals of a smooth in GAMs
+logLik.scam             Log likelihood for a fitted SCAM, for AIC
+plot.scam               SCAM plotting
+predict.scam            Prediction from fitted SCAM model
+print.scam              Print a SCAM object
+qq.scam                 QQ plots for scam model residuals
+residuals.scam          SCAM residuals
+scam                    Shape constrained additive models (SCAM) and
+                        integrated smoothness selection
+scam-package            Shape Constrained Additive Models
+scam.check              Some diagnostics for a fitted scam object
+scam.control            Setting SCAM fitting defaults
+shape.constrained.smooth.terms
+                        Shape preserving smooth terms in SCAM
+smooth.construct.cv.smooth.spec
+                        Constructor for concave P-splines in SCAMs
+smooth.construct.cx.smooth.spec
+                        Constructor for convex P-splines in SCAMs
+smooth.construct.lmpi.smooth.spec
+                        Locally shape-constrained P-spline based
+                        constructor (LSCOP-spline): locally increasing
+                        splines up to a change point.
+smooth.construct.mdcv.smooth.spec
+                        Constructor for monotone decreasing and concave
+                        P-splines in SCAMs
+smooth.construct.mdcx.smooth.spec
+                        Constructor for monotone decreasing and convex
+                        P-splines in SCAMs
+smooth.construct.micv.smooth.spec
+                        Constructor for monotone increasing and concave
+                        P-splines in SCAMs
+smooth.construct.micx.smooth.spec
+                        Constructor for monotone increasing and convex
+                        P-splines in SCAMs
+smooth.construct.mifo.smooth.spec
+                        Constructor for monotone increasing
+                        SCOP-splines with an additional 'finish at
+                        zero' constraint
+smooth.construct.miso.smooth.spec
+                        Constructor for monotone increasing
+                        SCOP-splines with an additional 'start at zero'
+                        constraint
+smooth.construct.mpd.smooth.spec
+                        Constructor for monotone decreasing P-splines
+                        in SCAMs
+smooth.construct.mpi.smooth.spec
+                        Constructor for monotone increasing P-splines
+                        in SCAMs
+smooth.construct.po.smooth.spec
+                        Constructor for SCOP-splines with positivity
+                        constraint
+smooth.construct.tecvcv.smooth.spec
+                        Tensor product smoothing constructor for
+                        bivariate function subject to double concavity
+                        constraint
+smooth.construct.tecxcv.smooth.spec
+                        Tensor product smoothing constructor for
+                        bivariate function subject to mixed
+                        constraints: convexity constraint wrt the first
+                        covariate and concavity wrt the second one
+smooth.construct.tecxcx.smooth.spec
+                        Tensor product smoothing constructor for
+                        bivariate function subject to double convexity
+                        constraint
+smooth.construct.tedecv.smooth.spec
+                        Tensor product smoothing constructor for
+                        bivariate function subject to mixed
+                        constraints: monotone decreasing constraint wrt
+                        the first covariate and concavity wrt the
+                        second one
+smooth.construct.tedecx.smooth.spec
+                        Tensor product smoothing constructor for
+                        bivariate function subject to mixed
+                        constraints: monotone decreasing constraint wrt
+                        the first covariate and convexity wrt the
+                        second one
+smooth.construct.tedmd.smooth.spec
+                        Tensor product smoothing constructor for
+                        bivariate function subject to double monotone
+                        decreasing constraint
+smooth.construct.tedmi.smooth.spec
+                        Tensor product smoothing constructor for
+                        bivariate function subject to double monotone
+                        increasing constraint
+smooth.construct.temicv.smooth.spec
+                        Tensor product smoothing constructor for
+                        bivariate function subject to mixed
+                        constraints: monotone increasing constraint wrt
+                        the first covariate and concavity wrt the
+                        second one
+smooth.construct.temicx.smooth.spec
+                        Tensor product smoothing constructor for
+                        bivariate function subject to mixed
+                        constraints: monotone increasing constraint wrt
+                        the first covariate and convexity wrt the
+                        second one
+smooth.construct.tescv.smooth.spec
+                        Tensor product smoothing constructor for a
+                        bivariate function concave in the second
+                        covariate
+smooth.construct.tescx.smooth.spec
+                        Tensor product smoothing constructor for a
+                        bivariate function convex in the second
+                        covariate
+smooth.construct.tesmd1.smooth.spec
+                        Tensor product smoothing constructor for a
+                        bivariate function monotone decreasing in the
+                        first covariate
+smooth.construct.tesmd2.smooth.spec
+                        Tensor product smoothing constructor for a
+                        bivariate function monotone decreasing in the
+                        second covariate
+smooth.construct.tesmi1.smooth.spec
+                        Tensor product smoothing constructor for a
+                        bivariate function monotone increasing in the
+                        first covariate
+smooth.construct.tesmi2.smooth.spec
+                        Tensor product smoothing constructor for a
+                        bivariate function monotone increasing in the
+                        second covariate
+smooth.construct.tismd.smooth.spec
+                        Tensor product interaction with decreasing
+                        constraint along the first covariate and
+                        unconstrained along the second covariate
+smooth.construct.tismi.smooth.spec
+                        Tensor product interaction with increasing
+                        constraint along the first covariate and
+                        unconstrained along the second covariate
+summary.scam            Summary for a SCAM fit
+vcov.scam               Parameter estimator covariance matrix from SCAM
+                        fit
+vis.scam                Visualization of SCAM objects

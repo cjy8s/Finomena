@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="generator" content="litedown 0.9">
+<title>mirai - Communications Backend for R</title>
+<style type="text/css">
+body {
+  font-family: sans-serif;
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 1.5;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+body, .abstract, code, .footnotes, footer, #refs, .caption { font-size: .9em; }
+li li { font-size: .95em; }
+ul:has(li > input[type="checkbox"]) { list-style: none; padding-left: 1em; }
+*, :before, :after { box-sizing: border-box; }
+a { color: steelblue; }
+pre, img { max-width: 100%; }
+pre { white-space: pre-wrap; word-break: break-word; }
+pre code { display: block; padding: 1em; overflow-x: auto; }
+code { font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace; }
+:not(pre, th) > code, code[class], div > .caption { background: #f8f8f8; }
+pre > code:is(:not([class]), .language-plain, .language-none, .plain), .box, .figure, .table { background: inherit; border: 1px solid #eee; }
+pre > code {
+  &.message { border-color: #9eeaf9; }
+  &.warning { background: #fff3cd; border-color: #fff3cd; }
+  &.error { background: #f8d7da; border-color: #f8d7da; }
+}
+.fenced-chunk { border-left: 1px solid #666; }
+.code-fence {
+  opacity: .4;
+  border: 1px dashed #666;
+  border-left: 2px solid;
+  &:hover { opacity: inherit; }
+}
+.box, .figure, .table, table { margin: 1em auto; }
+div > .caption { padding: 1px 1em; }
+.figure { p:has(img, svg), pre:has(svg) { text-align: center; } }
+.flex-col { display: flex; justify-content: space-between; }
+table {
+  &:only-child:not(.table > *) { margin: auto; }
+  th, td { padding: 5px; font-variant-numeric: tabular-nums; }
+  thead, tfoot, tr:nth-child(even) { background: whitesmoke; }
+  thead th { border-bottom: 1px solid #ddd; }
+  &:not(.datatable-table) {
+    border-top: 1px solid #666;
+    border-bottom: 1px solid #666;
+  }
+}
+blockquote {
+  color: #666;
+  margin: 0;
+  padding: 1px 1em;
+  border-left: .5em solid #eee;
+}
+hr, .footnotes::before { border: 1px dashed #ddd; }
+.frontmatter { text-align: center; }
+#TOC {
+  a { text-decoration: none; }
+  ul { list-style: none; padding-left: 1em; }
+  & > ul { padding: 0; }
+  ul ul { border-left: 1px solid lightsteelblue; }
+}
+.body h2 { border-bottom: 1px solid #666; }
+.body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
+.main-number::after { content: "."; }
+span[class^="ref-number-"] { font-weight: bold; }
+.ref-number-fig::after, .ref-number-tab::after { content: ":"; }
+.cross-ref-chp::before { content: "Chapter "; }
+.cross-ref-sec::before { content: "Section "; }
+.cross-ref-fig::before, .ref-number-fig::before { content: "Figure "; }
+.cross-ref-tab::before, .ref-number-tab::before { content: "Table "; }
+.cross-ref-eqn::before, .MathJax_ref:has(mjx-mtext > mjx-c + mjx-c)::before { content: "Equation "; }
+.abstract, #refs {
+  &::before { display: block; margin: 1em auto; font-weight: bold; }
+}
+.abstract::before { content: "Abstract"; text-align: center; }
+#refs::before { content: "Bibliography"; font-size: 1.5em; }
+.ref-paren-open::before { content: "("; }
+.ref-paren-close::after { content: ")"; }
+.ref-semicolon::after { content: "; "; }
+.ref-and::after { content: " and "; }
+.ref-et-al::after { content: " et al."; font-style: italic; }
+.footnote-ref a {
+  &::before { content: "["; }
+  &::after { content: "]"; }
+}
+section.footnotes {
+  margin-top: 2em;
+  &::before { content: ""; display: block; max-width: 20em; }
+}
+.fade {
+  background: repeating-linear-gradient(135deg, white, white 30px, #ddd 32px, #ddd 32px);
+  opacity: 0.6;
+}
+
+@media print {
+  body { max-width: 100%; }
+  tr, img { break-inside: avoid; }
+}
+@media only screen and (min-width: 992px) {
+  body:not(.pagesjs) pre:has(.line-numbers):not(:hover) { white-space: pre; }
+}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.61/css/prism-xcode.min.css">
+</head>
+<body>
+<div class="frontmatter">
+<div class="title"><h1>mirai - Communications Backend for R</h1></div>
+</div>
+<div class="body">
+<h3 id="sec:1-mirai-parallel-clusters">1. Mirai Parallel Clusters</h3>
+<p>mirai provides an alternative communications backend for R, developed to fulfill an R Core request at R Project Sprint 2023.</p>
+<p>‘miraiCluster’ is an official cluster type in R 4.5, created via <code>parallel::makeCluster(type = &quot;MIRAI&quot;)</code>. This calls <code>make_cluster()</code>, which can also create ‘miraiCluster’ directly.</p>
+<ul>
+<li>Specify ‘n’ to launch local nodes</li>
+<li>Specify ‘url’ to receive remote node connections</li>
+<li>Optionally specify ‘remote’ to launch remote daemons using configurations from <code>ssh_config()</code>, <code>cluster_config()</code> or <code>remote_config()</code></li>
+</ul>
+<p>Use clusters with any <code>parallel</code> package function (<code>clusterApply()</code>, <code>parLapply()</code>, <code>parLapplyLB()</code>, etc.):</p>
+<pre><code class="language-r">library(parallel)
+library(mirai)
+
+cl &lt;- makeCluster(6, type = &quot;MIRAI&quot;)
+cl
+#&gt; &lt; miraiCluster | ID: `6` nodes: 6 active: TRUE &gt;
+parLapply(cl, iris, mean)
+#&gt; $Sepal.Length
+#&gt; [1] 5.843333
+#&gt; 
+#&gt; $Sepal.Width
+#&gt; [1] 3.057333
+#&gt; 
+#&gt; $Petal.Length
+#&gt; [1] 3.758
+#&gt; 
+#&gt; $Petal.Width
+#&gt; [1] 1.199333
+#&gt; 
+#&gt; $Species
+#&gt; [1] NA
+</code></pre>
+<p>Call <code>status()</code> on a ‘miraiCluster’ to query connected nodes:</p>
+<pre><code class="language-r">status(cl)
+#&gt; $connections
+#&gt; [1] 6
+#&gt; 
+#&gt; $daemons
+#&gt; [1] &quot;abstract://5a335f57a7147dfa61e2a2e1&quot;
+stopCluster(cl)
+</code></pre>
+<p>Specifying ‘url’ without ‘remote’ prints shell commands for manual node deployment:</p>
+<pre><code class="language-r">cl &lt;- make_cluster(n = 2, url = host_url())
+#&gt; Shell commands for deployment on nodes:
+#&gt; 
+#&gt; [1]
+#&gt; Rscript -e 'mirai::daemon(&quot;tcp://192.168.1.71:32813&quot;,dispatcher=FALSE,cleanup=FALSE,rs=c(10407,-2017547658,214728319,548191924,-1363682779,426938530,-1028125765))'
+#&gt; 
+#&gt; [2]
+#&gt; Rscript -e 'mirai::daemon(&quot;tcp://192.168.1.71:32813&quot;,dispatcher=FALSE,cleanup=FALSE,rs=c(10407,-1867685510,-159147708,-691588212,540247216,961983403,-147487023))'
+stop_cluster(cl)
+</code></pre>
+<h3 id="sec:2-foreach-support">2. Foreach Support</h3>
+<p>Register ‘miraiCluster’ with <a href="https://cran.r-project.org/package=doParallel"><code>doParallel</code></a> for use with <a href="https://cran.r-project.org/package=foreach"><code>foreach</code></a>.</p>
+<p>Parallel <code>foreach()</code> examples:</p>
+<pre><code class="language-r">library(doParallel)
+library(foreach)
+
+cl &lt;- makeCluster(6, type = &quot;MIRAI&quot;)
+registerDoParallel(cl)
+
+# normalize the rows of a matrix
+m &lt;- matrix(rnorm(9), 3, 3)
+foreach(i = 1:nrow(m), .combine = rbind) %dopar%
+  (m[i, ] / mean(m[i, ]))
+#&gt;                 [,1]      [,2]        [,3]
+#&gt; result.1 -46.2302113 70.803471 -21.5732593
+#&gt; result.2  -5.8061198  6.682595   2.1235251
+#&gt; result.3   0.8150484  1.465484   0.7194677
+
+# simple parallel matrix multiply
+a &lt;- matrix(1:16, 4, 4)
+b &lt;- t(a)
+foreach(b = iterators::iter(b, by='col'), .combine = cbind) %dopar%
+  (a %*% b)
+#&gt;      [,1] [,2] [,3] [,4]
+#&gt; [1,]  276  304  332  360
+#&gt; [2,]  304  336  368  400
+#&gt; [3,]  332  368  404  440
+#&gt; [4,]  360  400  440  480
+
+stopCluster(cl)
+</code></pre>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>
+</body>
+</html>

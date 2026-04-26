@@ -1,0 +1,50 @@
+---
+title: "mirai - For Package Authors"
+vignette: >
+  %\VignetteIndexEntry{mirai - For Package Authors}
+  %\VignetteEngine{litedown::vignette}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+### 1. Developer Interfaces
+
+mirai provides these functions for package authors:
+
+1. `require_daemons()` - errors and prompts users to set daemons if not already set (with clickable function link if cli package available)
+2. `daemons_set()` - detects if daemons are set
+3. `on_daemon()` - detects if code runs on a daemon (within a `mirai()` call)
+4. `register_serial()` - registers custom serialization functions, automatically available for all subsequent `daemons()` calls
+5. `nextget()` - queries compute profile values like 'url' (see function documentation). Note: only specifically-documented values are supported interfaces.
+
+### 2. Guidance
+
+mirai supports transparent, inter-operable package use. Not relying on global options or environment variables minimizes conflicts between packages.
+
+**Important points:**
+
+1. **Leave `daemons()` settings to end-users.** As a package author, assume mirai run on whatever resources users have available. Don't anticipate whether users run code locally, distributed, or mixed.
+
+   - Point to `mirai::daemons()` documentation or re-export `daemons()` for convenience
+   - **Never call `daemons()` when using `mirai_map()`** to prevent accidental recursive daemon creation (e.g., if your function is used within another package's mirai-using function)
+     + **Exception**: Can provide a synchronous fallback if users haven't set daemons:
+       ```r
+       with(if (!daemons_set()) daemons(sync = TRUE), {
+         mirai_map(...)
+       })
+       ```
+   - **Exceptional case**: Use `daemons(n = 1, dispatcher = FALSE, .compute = ...)` for a single dedicated daemon only with a unique `.compute` value. Example: `logger::appender_async()` where logger's 'namespace' maps to mirai's 'compute profile'.
+
+2. **Don't use `status()` programmatically.** Its interface may change. Use `info()` instead.
+   - For `status()$daemons`, use `nextget("url")`
+
+3. **Use `info()` programmatically by name, not position.** Index by element name (e.g., `info()[["cumulative"]]`) not position (e.g., `info()[[2]]`) in case values are added later.
+
+4. **Use official test functions for mirai state.** Use `unresolved()`, `is_error_value()`, `is_mirai_error()`, and `is_mirai_interrupt()`.
+   - Don't rely on implementation characteristics (e.g., logical NA for 'unresolvedValue') as these may change
+
+5. **CRAN package rules:**
+   - Use only one daemon with `dispatcher = FALSE` (stays within 2-core limit)
+   - Always reset with `daemons(0)` at end of examples/test files, then sleep at least 1 second to ensure proper process exit
+   - Never modify `asyncdial` or `autoexit` defaults for `daemon()` (or functions passing arguments to it like `daemons()`). This ensures processes exit with the host process.

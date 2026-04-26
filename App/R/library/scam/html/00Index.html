@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head><title>R: Shape Constrained Additive Models</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<link rel="stylesheet" type="text/css" href="R.css">
+</head><body><div class="container">
+<h1> Shape Constrained Additive Models
+<img class="toplogo" src="../../../doc/html/Rlogo.svg" alt="[R logo]">
+</h1>
+<hr>
+<div style="text-align: center;">
+<a href="../../../doc/html/packages.html"><img class="arrow" src="../../../doc/html/left.jpg" alt="[Up]"></a>
+<a href="../../../doc/html/index.html"><img class="arrow" src="../../../doc/html/up.jpg" alt="[Top]"></a>
+</div><h2>Documentation for package &lsquo;scam&rsquo; version 1.2-22</h2>
+
+<ul><li><a href="../DESCRIPTION" type="text/plain">DESCRIPTION file</a>.</li>
+</ul>
+
+<h2>Help Pages</h2>
+
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="scam-package.html">scam-package</a></td>
+<td>Shape Constrained Additive Models</td></tr>
+<tr><td style="width: 25%;"><a href="logLik.scam.html">AIC.scam</a></td>
+<td>Log likelihood for a fitted SCAM, for AIC</td></tr>
+<tr><td style="width: 25%;"><a href="anova.scam.html">anova.scam</a></td>
+<td>Approximate hypothesis tests related to SCAM fits</td></tr>
+<tr><td style="width: 25%;"><a href="derivative.scam.html">derivative.scam</a></td>
+<td>Derivative of the univariate smooth model terms</td></tr>
+<tr><td style="width: 25%;"><a href="linear.functional.terms.html">function.predictors</a></td>
+<td>Linear functionals of a smooth in GAMs</td></tr>
+<tr><td style="width: 25%;"><a href="linear.functional.terms.html">linear.functional.terms</a></td>
+<td>Linear functionals of a smooth in GAMs</td></tr>
+<tr><td style="width: 25%;"><a href="logLik.scam.html">logLik.scam</a></td>
+<td>Log likelihood for a fitted SCAM, for AIC</td></tr>
+<tr><td style="width: 25%;"><a href="vis.scam.html">persp</a></td>
+<td>Visualization of SCAM objects</td></tr>
+<tr><td style="width: 25%;"><a href="plot.scam.html">plot.scam</a></td>
+<td>SCAM plotting</td></tr>
+<tr><td style="width: 25%;"><a href="predict.scam.html">predict.scam</a></td>
+<td>Prediction from fitted SCAM model</td></tr>
+<tr><td style="width: 25%;"><a href="anova.scam.html">print.anova.scam</a></td>
+<td>Approximate hypothesis tests related to SCAM fits</td></tr>
+<tr><td style="width: 25%;"><a href="print.scam.html">print.scam</a></td>
+<td>Print a SCAM object</td></tr>
+<tr><td style="width: 25%;"><a href="summary.scam.html">print.summary.scam</a></td>
+<td>Summary for a SCAM fit</td></tr>
+<tr><td style="width: 25%;"><a href="qq.scam.html">qq.scam</a></td>
+<td>QQ plots for scam model residuals</td></tr>
+<tr><td style="width: 25%;"><a href="residuals.scam.html">residuals.scam</a></td>
+<td>SCAM residuals</td></tr>
+<tr><td style="width: 25%;"><a href="scam.html">scam</a></td>
+<td>Shape constrained additive models (SCAM) and integrated smoothness selection</td></tr>
+<tr><td style="width: 25%;"><a href="scam.check.html">scam.check</a></td>
+<td>Some diagnostics for a fitted scam object</td></tr>
+<tr><td style="width: 25%;"><a href="scam.control.html">scam.control</a></td>
+<td>Setting SCAM fitting defaults</td></tr>
+<tr><td style="width: 25%;"><a href="shape.constrained.smooth.terms.html">shape.constrained.smooth.terms</a></td>
+<td>Shape preserving smooth terms in SCAM</td></tr>
+<tr><td style="width: 25%;"><a href="linear.functional.terms.html">signal.regression</a></td>
+<td>Linear functionals of a smooth in GAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.po.smooth.spec.html">smooth.construct.cpop.smooth.spec</a></td>
+<td>Constructor for SCOP-splines with positivity constraint</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.cv.smooth.spec.html">smooth.construct.cv.smooth.spec</a></td>
+<td>Constructor for concave P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.cv.smooth.spec.html">smooth.construct.cvBy.smooth.spec</a></td>
+<td>Constructor for concave P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.cx.smooth.spec.html">smooth.construct.cx.smooth.spec</a></td>
+<td>Constructor for convex P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.cx.smooth.spec.html">smooth.construct.cxBy.smooth.spec</a></td>
+<td>Constructor for convex P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.po.smooth.spec.html">smooth.construct.dpo.smooth.spec</a></td>
+<td>Constructor for SCOP-splines with positivity constraint</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.po.smooth.spec.html">smooth.construct.ipo.smooth.spec</a></td>
+<td>Constructor for SCOP-splines with positivity constraint</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.lmpi.smooth.spec.html">smooth.construct.lipl.smooth.spec</a></td>
+<td>Locally shape-constrained P-spline based constructor (LSCOP-spline): locally increasing splines up to a change point.</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.lmpi.smooth.spec.html">smooth.construct.lmpi.smooth.spec</a></td>
+<td>Locally shape-constrained P-spline based constructor (LSCOP-spline): locally increasing splines up to a change point.</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.mdcv.smooth.spec.html">smooth.construct.mdcv.smooth.spec</a></td>
+<td>Constructor for monotone decreasing and concave P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.mdcv.smooth.spec.html">smooth.construct.mdcvBy.smooth.spec</a></td>
+<td>Constructor for monotone decreasing and concave P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.mdcx.smooth.spec.html">smooth.construct.mdcx.smooth.spec</a></td>
+<td>Constructor for monotone decreasing and convex P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.mdcx.smooth.spec.html">smooth.construct.mdcxBy.smooth.spec</a></td>
+<td>Constructor for monotone decreasing and convex P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.micv.smooth.spec.html">smooth.construct.micv.smooth.spec</a></td>
+<td>Constructor for monotone increasing and concave P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.micv.smooth.spec.html">smooth.construct.micvBy.smooth.spec</a></td>
+<td>Constructor for monotone increasing and concave P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.micx.smooth.spec.html">smooth.construct.micx.smooth.spec</a></td>
+<td>Constructor for monotone increasing and convex P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.micx.smooth.spec.html">smooth.construct.micxBy.smooth.spec</a></td>
+<td>Constructor for monotone increasing and convex P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.mifo.smooth.spec.html">smooth.construct.mifo.smooth.spec</a></td>
+<td>Constructor for monotone increasing SCOP-splines with an additional 'finish at zero' constraint</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.miso.smooth.spec.html">smooth.construct.miso.smooth.spec</a></td>
+<td>Constructor for monotone increasing SCOP-splines with an additional 'start at zero' constraint</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.mpd.smooth.spec.html">smooth.construct.mpd.smooth.spec</a></td>
+<td>Constructor for monotone decreasing P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.mpd.smooth.spec.html">smooth.construct.mpdBy.smooth.spec</a></td>
+<td>Constructor for monotone decreasing P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.mpi.smooth.spec.html">smooth.construct.mpi.smooth.spec</a></td>
+<td>Constructor for monotone increasing P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.mpi.smooth.spec.html">smooth.construct.mpiBy.smooth.spec</a></td>
+<td>Constructor for monotone increasing P-splines in SCAMs</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.po.smooth.spec.html">smooth.construct.po.smooth.spec</a></td>
+<td>Constructor for SCOP-splines with positivity constraint</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.tecvcv.smooth.spec.html">smooth.construct.tecvcv.smooth.spec</a></td>
+<td>Tensor product smoothing constructor for bivariate function subject to double concavity constraint</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.tecxcv.smooth.spec.html">smooth.construct.tecxcv.smooth.spec</a></td>
+<td>Tensor product smoothing constructor for bivariate function subject to mixed constraints: convexity constraint wrt the first covariate and concavity wrt the second one</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.tecxcx.smooth.spec.html">smooth.construct.tecxcx.smooth.spec</a></td>
+<td>Tensor product smoothing constructor for bivariate function subject to double convexity constraint</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.tedecv.smooth.spec.html">smooth.construct.tedecv.smooth.spec</a></td>
+<td>Tensor product smoothing constructor for bivariate function subject to mixed constraints: monotone decreasing constraint wrt the first covariate and concavity wrt the second one</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.tedecx.smooth.spec.html">smooth.construct.tedecx.smooth.spec</a></td>
+<td>Tensor product smoothing constructor for bivariate function subject to mixed constraints: monotone decreasing constraint wrt the first covariate and convexity wrt the second one</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.tedmd.smooth.spec.html">smooth.construct.tedmd.smooth.spec</a></td>
+<td>Tensor product smoothing constructor for bivariate function subject to double monotone decreasing constraint</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.tedmi.smooth.spec.html">smooth.construct.tedmi.smooth.spec</a></td>
+<td>Tensor product smoothing constructor for bivariate function subject to double monotone increasing constraint</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.temicv.smooth.spec.html">smooth.construct.temicv.smooth.spec</a></td>
+<td>Tensor product smoothing constructor for bivariate function subject to mixed constraints: monotone increasing constraint wrt the first covariate and concavity wrt the second one</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.temicx.smooth.spec.html">smooth.construct.temicx.smooth.spec</a></td>
+<td>Tensor product smoothing constructor for bivariate function subject to mixed constraints: monotone increasing constraint wrt the first covariate and convexity wrt the second one</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.tescv.smooth.spec.html">smooth.construct.tescv.smooth.spec</a></td>
+<td>Tensor product smoothing constructor for a bivariate function concave in the second covariate</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.tescx.smooth.spec.html">smooth.construct.tescx.smooth.spec</a></td>
+<td>Tensor product smoothing constructor for a bivariate function convex in the second covariate</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.tesmd1.smooth.spec.html">smooth.construct.tesmd1.smooth.spec</a></td>
+<td>Tensor product smoothing constructor for a bivariate function monotone decreasing in the first covariate</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.tesmd2.smooth.spec.html">smooth.construct.tesmd2.smooth.spec</a></td>
+<td>Tensor product smoothing constructor for a bivariate function monotone decreasing in the second covariate</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.tesmi1.smooth.spec.html">smooth.construct.tesmi1.smooth.spec</a></td>
+<td>Tensor product smoothing constructor for a bivariate function monotone increasing in the first covariate</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.tesmi2.smooth.spec.html">smooth.construct.tesmi2.smooth.spec</a></td>
+<td>Tensor product smoothing constructor for a bivariate function monotone increasing in the second covariate</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.tismd.smooth.spec.html">smooth.construct.tismd.smooth.spec</a></td>
+<td>Tensor product interaction with decreasing constraint along the first covariate and unconstrained along the second covariate</td></tr>
+<tr><td style="width: 25%;"><a href="smooth.construct.tismi.smooth.spec.html">smooth.construct.tismi.smooth.spec</a></td>
+<td>Tensor product interaction with increasing constraint along the first covariate and unconstrained along the second covariate</td></tr>
+<tr><td style="width: 25%;"><a href="summary.scam.html">summary.scam</a></td>
+<td>Summary for a SCAM fit</td></tr>
+<tr><td style="width: 25%;"><a href="vcov.scam.html">vcov.scam</a></td>
+<td>Parameter estimator covariance matrix from SCAM fit</td></tr>
+<tr><td style="width: 25%;"><a href="vis.scam.html">vis.scam</a></td>
+<td>Visualization of SCAM objects</td></tr>
+</table>
+</div></body></html>

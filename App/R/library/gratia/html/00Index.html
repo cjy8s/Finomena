@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html>
+<head><title>R: Graceful 'ggplot'-Based Graphics and Other Functions for GAMs
+Fitted Using 'mgcv'</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<link rel="stylesheet" type="text/css" href="R.css">
+</head><body><div class="container">
+<h1> Graceful 'ggplot'-Based Graphics and Other Functions for GAMs
+Fitted Using 'mgcv'
+<img class="toplogo" src="../../../doc/html/Rlogo.svg" alt="[R logo]">
+</h1>
+<hr>
+<div style="text-align: center;">
+<a href="../../../doc/html/packages.html"><img class="arrow" src="../../../doc/html/left.jpg" alt="[Up]"></a>
+<a href="../../../doc/html/index.html"><img class="arrow" src="../../../doc/html/up.jpg" alt="[Top]"></a>
+</div><h2>Documentation for package &lsquo;gratia&rsquo; version 0.11.2</h2>
+
+<ul><li><a href="../DESCRIPTION" type="text/plain; charset=utf-8">DESCRIPTION file</a>.</li>
+<li><a href="../doc/index.html">User guides, package vignettes and other documentation.</a></li>
+<li><a href="../NEWS.md">Package NEWS</a>.</li>
+</ul>
+
+<h2>Help Pages</h2>
+
+
+<p style="text-align: center;">
+<a href="#A">A</a>
+<a href="#B">B</a>
+<a href="#C">C</a>
+<a href="#D">D</a>
+<a href="#E">E</a>
+<a href="#F">F</a>
+<a href="#G">G</a>
+<a href="#H">H</a>
+<a href="#I">I</a>
+<a href="#L">L</a>
+<a href="#M">M</a>
+<a href="#N">N</a>
+<a href="#O">O</a>
+<a href="#P">P</a>
+<a href="#Q">Q</a>
+<a href="#R">R</a>
+<a href="#S">S</a>
+<a href="#T">T</a>
+<a href="#U">U</a>
+<a href="#V">V</a>
+<a href="#W">W</a>
+<a href="#Z">Z</a>
+</p>
+
+
+<h2><a id="A">-- A --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="add_confint.html">add_confint</a></td>
+<td>Add a confidence interval to an existing object</td></tr>
+<tr><td style="width: 25%;"><a href="add_confint.html">add_confint.default</a></td>
+<td>Add a confidence interval to an existing object</td></tr>
+<tr><td style="width: 25%;"><a href="add_confint.html">add_confint.parametric_effects</a></td>
+<td>Add a confidence interval to an existing object</td></tr>
+<tr><td style="width: 25%;"><a href="add_confint.html">add_confint.smooth_estimates</a></td>
+<td>Add a confidence interval to an existing object</td></tr>
+<tr><td style="width: 25%;"><a href="add_constant.html">add_constant</a></td>
+<td>Add a constant to estimated values</td></tr>
+<tr><td style="width: 25%;"><a href="add_constant.html">add_constant.evaluated_parametric_term</a></td>
+<td>Add a constant to estimated values</td></tr>
+<tr><td style="width: 25%;"><a href="add_constant.html">add_constant.mgcv_smooth</a></td>
+<td>Add a constant to estimated values</td></tr>
+<tr><td style="width: 25%;"><a href="add_constant.html">add_constant.parametric_effects</a></td>
+<td>Add a constant to estimated values</td></tr>
+<tr><td style="width: 25%;"><a href="add_constant.html">add_constant.smooth_estimates</a></td>
+<td>Add a constant to estimated values</td></tr>
+<tr><td style="width: 25%;"><a href="add_constant.html">add_constant.smooth_samples</a></td>
+<td>Add a constant to estimated values</td></tr>
+<tr><td style="width: 25%;"><a href="add_constant.html">add_constant.tbl_df</a></td>
+<td>Add a constant to estimated values</td></tr>
+<tr><td style="width: 25%;"><a href="add_fitted.html">add_fitted</a></td>
+<td>Add fitted values from a model to a data frame</td></tr>
+<tr><td style="width: 25%;"><a href="add_fitted.gam.html">add_fitted.gam</a></td>
+<td>Add fitted values from a GAM to a data frame</td></tr>
+<tr><td style="width: 25%;"><a href="add_fitted_samples.html">add_fitted_samples</a></td>
+<td>Add posterior draws from a model to a data object</td></tr>
+<tr><td style="width: 25%;"><a href="add_partial_residuals.html">add_partial_residuals</a></td>
+<td>Add partial residuals</td></tr>
+<tr><td style="width: 25%;"><a href="add_partial_residuals.html">add_partial_residuals.gam</a></td>
+<td>Add partial residuals</td></tr>
+<tr><td style="width: 25%;"><a href="add_fitted_samples.html">add_posterior_samples</a></td>
+<td>Add posterior draws from a model to a data object</td></tr>
+<tr><td style="width: 25%;"><a href="add_fitted_samples.html">add_predicted_samples</a></td>
+<td>Add posterior draws from a model to a data object</td></tr>
+<tr><td style="width: 25%;"><a href="add_residuals.html">add_residuals</a></td>
+<td>Add residuals from a model to a data frame</td></tr>
+<tr><td style="width: 25%;"><a href="add_residuals.gam.html">add_residuals.gam</a></td>
+<td>Add residuals from a GAM to a data frame</td></tr>
+<tr><td style="width: 25%;"><a href="add_sizer.html">add_sizer</a></td>
+<td>Add indicators of significant change after SiZeR</td></tr>
+<tr><td style="width: 25%;"><a href="add_sizer.html">add_sizer.derivatives</a></td>
+<td>Add indicators of significant change after SiZeR</td></tr>
+<tr><td style="width: 25%;"><a href="add_sizer.html">add_sizer.smooth_estimates</a></td>
+<td>Add indicators of significant change after SiZeR</td></tr>
+<tr><td style="width: 25%;"><a href="add_fitted_samples.html">add_smooth_samples</a></td>
+<td>Add posterior draws from a model to a data object</td></tr>
+<tr><td style="width: 25%;"><a href="appraise.html">appraise</a></td>
+<td>Model diagnostic plots</td></tr>
+<tr><td style="width: 25%;"><a href="appraise.html">appraise.gam</a></td>
+<td>Model diagnostic plots</td></tr>
+<tr><td style="width: 25%;"><a href="appraise.html">appraise.lm</a></td>
+<td>Model diagnostic plots</td></tr>
+<tr><td style="width: 25%;"><a href="assemble.html">assemble</a></td>
+<td>Prepare plots via 'ggplot2' and assembles them as a list</td></tr>
+<tr><td style="width: 25%;"><a href="assemble.gam.html">assemble.gam</a></td>
+<td>Plot estimated smooths from a fitted GAM</td></tr>
+</table>
+
+<h2><a id="B">-- B --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="basis.html">basis</a></td>
+<td>Basis expansions for smooths</td></tr>
+<tr><td style="width: 25%;"><a href="basis.html">basis.default</a></td>
+<td>Basis expansions for smooths</td></tr>
+<tr><td style="width: 25%;"><a href="basis.html">basis.gam</a></td>
+<td>Basis expansions for smooths</td></tr>
+<tr><td style="width: 25%;"><a href="basis.html">basis.gamm</a></td>
+<td>Basis expansions for smooths</td></tr>
+<tr><td style="width: 25%;"><a href="basis.html">basis.gamm4</a></td>
+<td>Basis expansions for smooths</td></tr>
+<tr><td style="width: 25%;"><a href="basis.html">basis.scam</a></td>
+<td>Basis expansions for smooths</td></tr>
+<tr><td style="width: 25%;"><a href="basis_size.html">basis_size</a></td>
+<td>Extract basis dimension of a smooth</td></tr>
+<tr><td style="width: 25%;"><a href="basis_size.html">basis_size.gam</a></td>
+<td>Extract basis dimension of a smooth</td></tr>
+<tr><td style="width: 25%;"><a href="basis_size.html">basis_size.gamm</a></td>
+<td>Extract basis dimension of a smooth</td></tr>
+<tr><td style="width: 25%;"><a href="basis_size.html">basis_size.mgcv.smooth</a></td>
+<td>Extract basis dimension of a smooth</td></tr>
+<tr><td style="width: 25%;"><a href="bird_move.html">bird_move</a></td>
+<td>Simulated bird migration data</td></tr>
+<tr><td style="width: 25%;"><a href="boundary.html">boundary</a></td>
+<td>Extract the boundary of a soap film smooth</td></tr>
+<tr><td style="width: 25%;"><a href="boundary.html">boundary.gam</a></td>
+<td>Extract the boundary of a soap film smooth</td></tr>
+<tr><td style="width: 25%;"><a href="boundary.html">boundary.soap.film</a></td>
+<td>Extract the boundary of a soap film smooth</td></tr>
+<tr><td style="width: 25%;"><a href="is_by_smooth.html">by_level</a></td>
+<td>Tests for by variable smooths</td></tr>
+<tr><td style="width: 25%;"><a href="is_by_smooth.html">by_variable</a></td>
+<td>Tests for by variable smooths</td></tr>
+</table>
+
+<h2><a id="C">-- C --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="is_mgcv_smooth.html">check_is_mgcv_smooth</a></td>
+<td>Check if objects are smooths or are a particular type of smooth</td></tr>
+<tr><td style="width: 25%;"><a href="check_user_select_smooths.html">check_user_select_smooths</a></td>
+<td>Select smooths based on user's choices</td></tr>
+<tr><td style="width: 25%;"><a href="coef.scam.html">coef.scam</a></td>
+<td>Extract coefficients from a fitted 'scam' model.</td></tr>
+<tr><td style="width: 25%;"><a href="compare_smooths.html">compare_smooths</a></td>
+<td>Compare smooths across models</td></tr>
+<tr><td style="width: 25%;"><a href="model_concurvity.html">concrvity</a></td>
+<td>Concurvity of an estimated GAM</td></tr>
+<tr><td style="width: 25%;"><a href="conditional_values.html">conditional_values</a></td>
+<td>Conditional predictions from a GAM</td></tr>
+<tr><td style="width: 25%;"><a href="conditional_values.html">conditional_values.gam</a></td>
+<td>Conditional predictions from a GAM</td></tr>
+<tr><td style="width: 25%;"><a href="confint.fderiv.html">confint.fderiv</a></td>
+<td>Point-wise and simultaneous confidence intervals for derivatives of smooths</td></tr>
+<tr><td style="width: 25%;"><a href="confint.gam.html">confint.gam</a></td>
+<td>Point-wise and simultaneous confidence intervals for smooths</td></tr>
+<tr><td style="width: 25%;"><a href="confint.gam.html">confint.gamm</a></td>
+<td>Point-wise and simultaneous confidence intervals for smooths</td></tr>
+<tr><td style="width: 25%;"><a href="confint.gam.html">confint.list</a></td>
+<td>Point-wise and simultaneous confidence intervals for smooths</td></tr>
+</table>
+
+<h2><a id="D">-- D --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="data_combos.html">data_combos</a></td>
+<td>All combinations of factor levels plus typical values of continuous variables</td></tr>
+<tr><td style="width: 25%;"><a href="data_combos.html">data_combos.gam</a></td>
+<td>All combinations of factor levels plus typical values of continuous variables</td></tr>
+<tr><td style="width: 25%;"><a href="data_sim.html">data_sim</a></td>
+<td>Simulate example data for fitting GAMs</td></tr>
+<tr><td style="width: 25%;"><a href="data_slice.html">data_slice</a></td>
+<td>Prepare a data slice through model covariates</td></tr>
+<tr><td style="width: 25%;"><a href="data_slice.html">data_slice.data.frame</a></td>
+<td>Prepare a data slice through model covariates</td></tr>
+<tr><td style="width: 25%;"><a href="data_slice.html">data_slice.default</a></td>
+<td>Prepare a data slice through model covariates</td></tr>
+<tr><td style="width: 25%;"><a href="data_slice.html">data_slice.gam</a></td>
+<td>Prepare a data slice through model covariates</td></tr>
+<tr><td style="width: 25%;"><a href="data_slice.html">data_slice.gamm</a></td>
+<td>Prepare a data slice through model covariates</td></tr>
+<tr><td style="width: 25%;"><a href="data_slice.html">data_slice.list</a></td>
+<td>Prepare a data slice through model covariates</td></tr>
+<tr><td style="width: 25%;"><a href="data_slice.html">data_slice.scam</a></td>
+<td>Prepare a data slice through model covariates</td></tr>
+<tr><td style="width: 25%;"><a href="derivatives.html">derivatives</a></td>
+<td>Derivatives of estimated smooths via finite differences</td></tr>
+<tr><td style="width: 25%;"><a href="derivatives.html">derivatives.default</a></td>
+<td>Derivatives of estimated smooths via finite differences</td></tr>
+<tr><td style="width: 25%;"><a href="derivatives.html">derivatives.gam</a></td>
+<td>Derivatives of estimated smooths via finite differences</td></tr>
+<tr><td style="width: 25%;"><a href="derivatives.html">derivatives.gamm</a></td>
+<td>Derivatives of estimated smooths via finite differences</td></tr>
+<tr><td style="width: 25%;"><a href="derivative_samples.html">derivative_samples</a></td>
+<td>Posterior expectations of derivatives from an estimated model</td></tr>
+<tr><td style="width: 25%;"><a href="derivative_samples.html">derivative_samples.default</a></td>
+<td>Posterior expectations of derivatives from an estimated model</td></tr>
+<tr><td style="width: 25%;"><a href="derivative_samples.html">derivative_samples.gam</a></td>
+<td>Posterior expectations of derivatives from an estimated model</td></tr>
+<tr><td style="width: 25%;"><a href="derivative_samples.html">derivative_samples.gamm</a></td>
+<td>Posterior expectations of derivatives from an estimated model</td></tr>
+<tr><td style="width: 25%;"><a href="derivative_samples.html">derivative_samples.scam</a></td>
+<td>Posterior expectations of derivatives from an estimated model</td></tr>
+<tr><td style="width: 25%;"><a href="difference_smooths.html">difference_smooths</a></td>
+<td>Differences of factor smooth interactions</td></tr>
+<tr><td style="width: 25%;"><a href="difference_smooths.html">difference_smooths.gam</a></td>
+<td>Differences of factor smooth interactions</td></tr>
+<tr><td style="width: 25%;"><a href="dispersion.html">dispersion</a></td>
+<td>Dispersion parameter for fitted model</td></tr>
+<tr><td style="width: 25%;"><a href="dispersion.html">dispersion.gam</a></td>
+<td>Dispersion parameter for fitted model</td></tr>
+<tr><td style="width: 25%;"><a href="dispersion.html">dispersion.glm</a></td>
+<td>Dispersion parameter for fitted model</td></tr>
+<tr><td style="width: 25%;"><a href="draw.html">draw</a></td>
+<td>Generic plotting via 'ggplot2'</td></tr>
+<tr><td style="width: 25%;"><a href="draw.basis.html">draw.basis</a></td>
+<td>Plot basis functions</td></tr>
+<tr><td style="width: 25%;"><a href="draw.compare_smooths.html">draw.compare_smooths</a></td>
+<td>Plot comparisons of smooths</td></tr>
+<tr><td style="width: 25%;"><a href="draw.conditional_values.html">draw.conditional_values</a></td>
+<td>Plot conditional predictions</td></tr>
+<tr><td style="width: 25%;"><a href="draw.derivatives.html">draw.derivatives</a></td>
+<td>Plot derivatives of smooths</td></tr>
+<tr><td style="width: 25%;"><a href="draw.difference_smooth.html">draw.difference_smooth</a></td>
+<td>Plot differences of smooths</td></tr>
+<tr><td style="width: 25%;"><a href="draw.evaluated_parametric_term.html">draw.evaluated_parametric_term</a></td>
+<td>Plot estimated parametric effects</td></tr>
+<tr><td style="width: 25%;"><a href="draw.gam.html">draw.gam</a></td>
+<td>Plot estimated smooths from a fitted GAM</td></tr>
+<tr><td style="width: 25%;"><a href="draw.gamlss.html">draw.gamlss</a></td>
+<td>Plot smooths of a GAMLSS model estimated by 'GJRM::gamlss'</td></tr>
+<tr><td style="width: 25%;"><a href="draw.mgcv_smooth.html">draw.mgcv_smooth</a></td>
+<td>Plot basis functions</td></tr>
+<tr><td style="width: 25%;"><a href="draw.pairwise_concurvity.html">draw.overall_concurvity</a></td>
+<td>Plot concurvity measures</td></tr>
+<tr><td style="width: 25%;"><a href="draw.pairwise_concurvity.html">draw.pairwise_concurvity</a></td>
+<td>Plot concurvity measures</td></tr>
+<tr><td style="width: 25%;"><a href="draw.parametric_effects.html">draw.parametric_effects</a></td>
+<td>Plot estimated effects for model parametric terms</td></tr>
+<tr><td style="width: 25%;"><a href="draw.derivatives.html">draw.partial_derivatives</a></td>
+<td>Plot derivatives of smooths</td></tr>
+<tr><td style="width: 25%;"><a href="draw.penalty_df.html">draw.penalty_df</a></td>
+<td>Display penalty matrices of smooths using 'ggplot'</td></tr>
+<tr><td style="width: 25%;"><a href="draw.rootogram.html">draw.rootogram</a></td>
+<td>Draw a rootogram</td></tr>
+<tr><td style="width: 25%;"><a href="draw.smooth_estimates.html">draw.smooth_estimates</a></td>
+<td>Plot the result of a call to 'smooth_estimates()'</td></tr>
+<tr><td style="width: 25%;"><a href="draw.smooth_samples.html">draw.smooth_samples</a></td>
+<td>Plot posterior smooths</td></tr>
+</table>
+
+<h2><a id="E">-- E --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="edf.html">edf</a></td>
+<td>Effective degrees of freedom for smooths and GAMs</td></tr>
+<tr><td style="width: 25%;"><a href="edf.html">edf.gam</a></td>
+<td>Effective degrees of freedom for smooths and GAMs</td></tr>
+<tr><td style="width: 25%;"><a href="evaluate_parametric_term.html">evaluate_parametric_term</a></td>
+<td>Evaluate parametric model terms</td></tr>
+<tr><td style="width: 25%;"><a href="evaluate_parametric_term.html">evaluate_parametric_term.gam</a></td>
+<td>Evaluate parametric model terms</td></tr>
+<tr><td style="width: 25%;"><a href="evaluate_smooth.html">evaluate_smooth</a></td>
+<td>Evaluate a smooth</td></tr>
+<tr><td style="width: 25%;"><a href="eval_smooth.html">eval_smooth</a></td>
+<td>S3 methods to evaluate individual smooths</td></tr>
+<tr><td style="width: 25%;"><a href="eval_smooth.html">eval_smooth.fs.interaction</a></td>
+<td>S3 methods to evaluate individual smooths</td></tr>
+<tr><td style="width: 25%;"><a href="eval_smooth.html">eval_smooth.mgcv.smooth</a></td>
+<td>S3 methods to evaluate individual smooths</td></tr>
+<tr><td style="width: 25%;"><a href="eval_smooth.html">eval_smooth.mrf.smooth</a></td>
+<td>S3 methods to evaluate individual smooths</td></tr>
+<tr><td style="width: 25%;"><a href="eval_smooth.html">eval_smooth.random.effect</a></td>
+<td>S3 methods to evaluate individual smooths</td></tr>
+<tr><td style="width: 25%;"><a href="eval_smooth.html">eval_smooth.scam_smooth</a></td>
+<td>S3 methods to evaluate individual smooths</td></tr>
+<tr><td style="width: 25%;"><a href="eval_smooth.html">eval_smooth.soap.film</a></td>
+<td>S3 methods to evaluate individual smooths</td></tr>
+<tr><td style="width: 25%;"><a href="eval_smooth.html">eval_smooth.sz.interaction</a></td>
+<td>S3 methods to evaluate individual smooths</td></tr>
+<tr><td style="width: 25%;"><a href="eval_smooth.html">eval_smooth.t2.smooth</a></td>
+<td>S3 methods to evaluate individual smooths</td></tr>
+<tr><td style="width: 25%;"><a href="eval_smooth.html">eval_smooth.tensor.smooth</a></td>
+<td>S3 methods to evaluate individual smooths</td></tr>
+<tr><td style="width: 25%;"><a href="evenly.html">evenly</a></td>
+<td>Create a sequence of evenly-spaced values</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">extract_link</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">extract_link.family</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">extract_link.general.family</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+</table>
+
+<h2><a id="F">-- F --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="factor_combos.html">factor_combos</a></td>
+<td>All combinations of factor levels</td></tr>
+<tr><td style="width: 25%;"><a href="factor_combos.html">factor_combos.gam</a></td>
+<td>All combinations of factor levels</td></tr>
+<tr><td style="width: 25%;"><a href="family.gam.html">family.bam</a></td>
+<td>Extract family objects from models</td></tr>
+<tr><td style="width: 25%;"><a href="family.gam.html">family.gam</a></td>
+<td>Extract family objects from models</td></tr>
+<tr><td style="width: 25%;"><a href="family.gam.html">family.gamm</a></td>
+<td>Extract family objects from models</td></tr>
+<tr><td style="width: 25%;"><a href="family.gam.html">family.list</a></td>
+<td>Extract family objects from models</td></tr>
+<tr><td style="width: 25%;"><a href="family_name.html">family_name</a></td>
+<td>Name of family used to fit model</td></tr>
+<tr><td style="width: 25%;"><a href="family_type.html">family_type</a></td>
+<td>Extracts the type of family in a consistent way</td></tr>
+<tr><td style="width: 25%;"><a href="family_type.html">family_type.default</a></td>
+<td>Extracts the type of family in a consistent way</td></tr>
+<tr><td style="width: 25%;"><a href="family_type.html">family_type.family</a></td>
+<td>Extracts the type of family in a consistent way</td></tr>
+<tr><td style="width: 25%;"><a href="fitted_samples.html">fitted_samples</a></td>
+<td>Draw fitted values from the posterior distribution</td></tr>
+<tr><td style="width: 25%;"><a href="fitted_samples.html">fitted_samples.gam</a></td>
+<td>Draw fitted values from the posterior distribution</td></tr>
+<tr><td style="width: 25%;"><a href="fitted_samples.html">fitted_samples.scam</a></td>
+<td>Draw fitted values from the posterior distribution</td></tr>
+<tr><td style="width: 25%;"><a href="fitted_values.html">fitted_values</a></td>
+<td>Generate fitted values from a estimated GAM</td></tr>
+<tr><td style="width: 25%;"><a href="fitted_values.html">fitted_values.gam</a></td>
+<td>Generate fitted values from a estimated GAM</td></tr>
+<tr><td style="width: 25%;"><a href="fitted_values.html">fitted_values.gamm</a></td>
+<td>Generate fitted values from a estimated GAM</td></tr>
+<tr><td style="width: 25%;"><a href="fitted_values.html">fitted_values.scam</a></td>
+<td>Generate fitted values from a estimated GAM</td></tr>
+<tr><td style="width: 25%;"><a href="fixef.gam.html">fixed_effects</a></td>
+<td>Extract fixed effects estimates from a fitted GAM</td></tr>
+<tr><td style="width: 25%;"><a href="fixef.gam.html">fixed_effects.default</a></td>
+<td>Extract fixed effects estimates from a fitted GAM</td></tr>
+<tr><td style="width: 25%;"><a href="fixef.html">fixef</a></td>
+<td>Extract fixed effects estimates</td></tr>
+<tr><td style="width: 25%;"><a href="fixef.gam.html">fixef.gam</a></td>
+<td>Extract fixed effects estimates from a fitted GAM</td></tr>
+<tr><td style="width: 25%;"><a href="fixef.gam.html">fixef.gamm</a></td>
+<td>Extract fixed effects estimates from a fitted GAM</td></tr>
+<tr><td style="width: 25%;"><a href="fixef.gam.html">fixef.glm</a></td>
+<td>Extract fixed effects estimates from a fitted GAM</td></tr>
+<tr><td style="width: 25%;"><a href="fixef.gam.html">fixef.lm</a></td>
+<td>Extract fixed effects estimates from a fitted GAM</td></tr>
+<tr><td style="width: 25%;"><a href="fix_offset.html">fix_offset</a></td>
+<td>Fix the names of a data frame containing an offset variable.</td></tr>
+</table>
+
+<h2><a id="G">-- G --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="gaussian_draws.html">gaussian_draws</a></td>
+<td>Posterior samples using a simple Metropolis Hastings sampler</td></tr>
+<tr><td style="width: 25%;"><a href="gaussian_draws.html">gaussian_draws.gam</a></td>
+<td>Posterior samples using a simple Metropolis Hastings sampler</td></tr>
+<tr><td style="width: 25%;"><a href="gaussian_draws.html">gaussian_draws.scam</a></td>
+<td>Posterior samples using a simple Metropolis Hastings sampler</td></tr>
+<tr><td style="width: 25%;"><a href="post_draws.html">generate_draws</a></td>
+<td>Low-level Functions to generate draws from the posterior distribution of model coefficients</td></tr>
+<tr><td style="width: 25%;"><a href="post_draws.html">generate_draws.gam</a></td>
+<td>Low-level Functions to generate draws from the posterior distribution of model coefficients</td></tr>
+<tr><td style="width: 25%;"><a href="get_by_smooth.html">get_by_smooth</a></td>
+<td>Extract an factor-by smooth by name</td></tr>
+<tr><td style="width: 25%;"><a href="get_smooth.html">get_smooth</a></td>
+<td>Extract an mgcv smooth by name</td></tr>
+<tr><td style="width: 25%;"><a href="get_smooths_by_id.html">get_smooths_by_id</a></td>
+<td>Extract an mgcv smooth given its position in the model object</td></tr>
+<tr><td style="width: 25%;"><a href="get_smooths_by_id.html">get_smooths_by_id.gam</a></td>
+<td>Extract an mgcv smooth given its position in the model object</td></tr>
+<tr><td style="width: 25%;"><a href="get_smooths_by_id.html">get_smooths_by_id.gamm</a></td>
+<td>Extract an mgcv smooth given its position in the model object</td></tr>
+<tr><td style="width: 25%;"><a href="get_smooths_by_id.html">get_smooths_by_id.gamm4</a></td>
+<td>Extract an mgcv smooth given its position in the model object</td></tr>
+<tr><td style="width: 25%;"><a href="get_smooths_by_id.html">get_smooths_by_id.list</a></td>
+<td>Extract an mgcv smooth given its position in the model object</td></tr>
+<tr><td style="width: 25%;"><a href="get_smooths_by_id.html">get_smooths_by_id.scam</a></td>
+<td>Extract an mgcv smooth given its position in the model object</td></tr>
+<tr><td style="width: 25%;"><a href="gss_vocab.html">gss_vocab</a></td>
+<td>Data from the General Social Survey (GSS) from the National Opinion Research Center of the University of Chicago</td></tr>
+<tr><td style="width: 25%;"><a href="gw_functions.html">gw_f0</a></td>
+<td>Gu and Wahba test functions</td></tr>
+<tr><td style="width: 25%;"><a href="gw_functions.html">gw_f1</a></td>
+<td>Gu and Wahba test functions</td></tr>
+<tr><td style="width: 25%;"><a href="gw_functions.html">gw_f2</a></td>
+<td>Gu and Wahba test functions</td></tr>
+<tr><td style="width: 25%;"><a href="gw_functions.html">gw_f3</a></td>
+<td>Gu and Wahba test functions</td></tr>
+<tr><td style="width: 25%;"><a href="gw_functions.html">gw_functions</a></td>
+<td>Gu and Wahba test functions</td></tr>
+</table>
+
+<h2><a id="H">-- H --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="has_theta.html">has_theta</a></td>
+<td>Are additional parameters available for a GAM?</td></tr>
+</table>
+
+<h2><a id="I">-- I --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="link.html">inv_link</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">inv_link.bam</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">inv_link.family</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">inv_link.gam</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">inv_link.gamm</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">inv_link.glm</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">inv_link.list</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="is_by_smooth.html">is_by_smooth</a></td>
+<td>Tests for by variable smooths</td></tr>
+<tr><td style="width: 25%;"><a href="is_by_smooth.html">is_continuous_by_smooth</a></td>
+<td>Tests for by variable smooths</td></tr>
+<tr><td style="width: 25%;"><a href="is_by_smooth.html">is_factor_by_smooth</a></td>
+<td>Tests for by variable smooths</td></tr>
+<tr><td style="width: 25%;"><a href="is_factor_term.html">is_factor_term</a></td>
+<td>Is a model term a factor (categorical)?</td></tr>
+<tr><td style="width: 25%;"><a href="is_factor_term.html">is_factor_term.bam</a></td>
+<td>Is a model term a factor (categorical)?</td></tr>
+<tr><td style="width: 25%;"><a href="is_factor_term.html">is_factor_term.gam</a></td>
+<td>Is a model term a factor (categorical)?</td></tr>
+<tr><td style="width: 25%;"><a href="is_factor_term.html">is_factor_term.gamm</a></td>
+<td>Is a model term a factor (categorical)?</td></tr>
+<tr><td style="width: 25%;"><a href="is_factor_term.html">is_factor_term.list</a></td>
+<td>Is a model term a factor (categorical)?</td></tr>
+<tr><td style="width: 25%;"><a href="is_factor_term.html">is_factor_term.terms</a></td>
+<td>Is a model term a factor (categorical)?</td></tr>
+<tr><td style="width: 25%;"><a href="is_mgcv_family.html">is_mgcv_family</a></td>
+<td>Is an object one of mgcv's family objects?</td></tr>
+<tr><td style="width: 25%;"><a href="is_mgcv_smooth.html">is_mgcv_smooth</a></td>
+<td>Check if objects are smooths or are a particular type of smooth</td></tr>
+<tr><td style="width: 25%;"><a href="is_mgcv_smooth.html">is_mrf_smooth</a></td>
+<td>Check if objects are smooths or are a particular type of smooth</td></tr>
+<tr><td style="width: 25%;"><a href="is_multivariate_y.html">is_multivariate_y</a></td>
+<td>Is a model multivariate?</td></tr>
+<tr><td style="width: 25%;"><a href="is_offset.html">is_offset</a></td>
+<td>Is a model term an offset?</td></tr>
+</table>
+
+<h2><a id="L">-- L --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="ref_level.html">level</a></td>
+<td>Return the reference or specific level of a factor</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">link</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">link.bam</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">link.family</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">link.gam</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">link.gamm</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">link.glm</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="link.html">link.list</a></td>
+<td>Extract link and inverse link functions from models</td></tr>
+<tr><td style="width: 25%;"><a href="load_mgcv.html">load_mgcv</a></td>
+<td>Load mgcv quietly</td></tr>
+<tr><td style="width: 25%;"><a href="lp_matrix.html">lp_matrix</a></td>
+<td>Return the linear prediction matrix of a fitted GAM</td></tr>
+<tr><td style="width: 25%;"><a href="lp_matrix.html">lp_matrix.gam</a></td>
+<td>Return the linear prediction matrix of a fitted GAM</td></tr>
+</table>
+
+<h2><a id="M">-- M --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="mh_draws.html">mh_draws</a></td>
+<td>Posterior samples using a Gaussian approximation to the posterior distribution</td></tr>
+<tr><td style="width: 25%;"><a href="mh_draws.html">mh_draws.gam</a></td>
+<td>Posterior samples using a Gaussian approximation to the posterior distribution</td></tr>
+<tr><td style="width: 25%;"><a href="model_concurvity.html">model_concurvity</a></td>
+<td>Concurvity of an estimated GAM</td></tr>
+<tr><td style="width: 25%;"><a href="model_concurvity.html">model_concurvity.gam</a></td>
+<td>Concurvity of an estimated GAM</td></tr>
+<tr><td style="width: 25%;"><a href="model_constant.html">model_constant</a></td>
+<td>Extract the model constant term</td></tr>
+<tr><td style="width: 25%;"><a href="model_constant.html">model_constant.gam</a></td>
+<td>Extract the model constant term</td></tr>
+<tr><td style="width: 25%;"><a href="model_constant.html">model_constant.gamlss</a></td>
+<td>Extract the model constant term</td></tr>
+<tr><td style="width: 25%;"><a href="model_constant.html">model_constant.glm</a></td>
+<td>Extract the model constant term</td></tr>
+<tr><td style="width: 25%;"><a href="edf.html">model_edf</a></td>
+<td>Effective degrees of freedom for smooths and GAMs</td></tr>
+<tr><td style="width: 25%;"><a href="model_terms.html">model_terms</a></td>
+<td>Find the names of model terms</td></tr>
+<tr><td style="width: 25%;"><a href="model_terms.html">model_terms.gam</a></td>
+<td>Find the names of model terms</td></tr>
+<tr><td style="width: 25%;"><a href="model_terms.html">model_terms.gamm</a></td>
+<td>Find the names of model terms</td></tr>
+<tr><td style="width: 25%;"><a href="model_terms.html">model_terms.gamm4</a></td>
+<td>Find the names of model terms</td></tr>
+<tr><td style="width: 25%;"><a href="model_terms.html">model_terms.lm</a></td>
+<td>Find the names of model terms</td></tr>
+<tr><td style="width: 25%;"><a href="model_vars.html">model_vars</a></td>
+<td>List the variables involved in a model fitted with a formula</td></tr>
+<tr><td style="width: 25%;"><a href="model_vars.html">model_vars.bam</a></td>
+<td>List the variables involved in a model fitted with a formula</td></tr>
+<tr><td style="width: 25%;"><a href="model_vars.html">model_vars.default</a></td>
+<td>List the variables involved in a model fitted with a formula</td></tr>
+<tr><td style="width: 25%;"><a href="model_vars.html">model_vars.gam</a></td>
+<td>List the variables involved in a model fitted with a formula</td></tr>
+<tr><td style="width: 25%;"><a href="model_vars.html">model_vars.gamm</a></td>
+<td>List the variables involved in a model fitted with a formula</td></tr>
+<tr><td style="width: 25%;"><a href="model_vars.html">model_vars.gamm4</a></td>
+<td>List the variables involved in a model fitted with a formula</td></tr>
+<tr><td style="width: 25%;"><a href="model_vars.html">model_vars.list</a></td>
+<td>List the variables involved in a model fitted with a formula</td></tr>
+</table>
+
+<h2><a id="N">-- N --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="nb_theta.html">nb_theta</a></td>
+<td>Negative binomial parameter theta</td></tr>
+<tr><td style="width: 25%;"><a href="nb_theta.html">nb_theta.gam</a></td>
+<td>Negative binomial parameter theta</td></tr>
+<tr><td style="width: 25%;"><a href="null_deviance.html">null_deviance</a></td>
+<td>Extract the null deviance of a fitted model</td></tr>
+<tr><td style="width: 25%;"><a href="null_deviance.html">null_deviance.default</a></td>
+<td>Extract the null deviance of a fitted model</td></tr>
+<tr><td style="width: 25%;"><a href="n_eta.html">n_eta</a></td>
+<td>The Number of linear predictors in model</td></tr>
+<tr><td style="width: 25%;"><a href="n_eta.html">n_eta.gam</a></td>
+<td>The Number of linear predictors in model</td></tr>
+<tr><td style="width: 25%;"><a href="n_smooths.html">n_smooths</a></td>
+<td>How many smooths in a fitted model</td></tr>
+<tr><td style="width: 25%;"><a href="n_smooths.html">n_smooths.bam</a></td>
+<td>How many smooths in a fitted model</td></tr>
+<tr><td style="width: 25%;"><a href="n_smooths.html">n_smooths.default</a></td>
+<td>How many smooths in a fitted model</td></tr>
+<tr><td style="width: 25%;"><a href="n_smooths.html">n_smooths.gam</a></td>
+<td>How many smooths in a fitted model</td></tr>
+<tr><td style="width: 25%;"><a href="n_smooths.html">n_smooths.gamm</a></td>
+<td>How many smooths in a fitted model</td></tr>
+</table>
+
+<h2><a id="O">-- O --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="observed_fitted_plot.html">observed_fitted_plot</a></td>
+<td>Plot of fitted against observed response values</td></tr>
+<tr><td style="width: 25%;"><a href="overview.html">overview</a></td>
+<td>Provides an overview of a model and the terms in that model</td></tr>
+<tr><td style="width: 25%;"><a href="overview.html">overview.gam</a></td>
+<td>Provides an overview of a model and the terms in that model</td></tr>
+</table>
+
+<h2><a id="P">-- P --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="parametric_effects.html">parametric_effects</a></td>
+<td>Estimated values for parametric model terms</td></tr>
+<tr><td style="width: 25%;"><a href="parametric_effects.html">parametric_effects.gam</a></td>
+<td>Estimated values for parametric model terms</td></tr>
+<tr><td style="width: 25%;"><a href="parametric_terms.html">parametric_terms</a></td>
+<td>Names of any parametric terms in a GAM</td></tr>
+<tr><td style="width: 25%;"><a href="parametric_terms.html">parametric_terms.default</a></td>
+<td>Names of any parametric terms in a GAM</td></tr>
+<tr><td style="width: 25%;"><a href="parametric_terms.html">parametric_terms.gam</a></td>
+<td>Names of any parametric terms in a GAM</td></tr>
+<tr><td style="width: 25%;"><a href="partial_derivatives.html">partial_derivatives</a></td>
+<td>Partial derivatives of estimated multivariate smooths via finite differences</td></tr>
+<tr><td style="width: 25%;"><a href="partial_derivatives.html">partial_derivatives.default</a></td>
+<td>Partial derivatives of estimated multivariate smooths via finite differences</td></tr>
+<tr><td style="width: 25%;"><a href="partial_derivatives.html">partial_derivatives.gam</a></td>
+<td>Partial derivatives of estimated multivariate smooths via finite differences</td></tr>
+<tr><td style="width: 25%;"><a href="partial_derivatives.html">partial_derivatives.gamm</a></td>
+<td>Partial derivatives of estimated multivariate smooths via finite differences</td></tr>
+<tr><td style="width: 25%;"><a href="partial_residuals.html">partial_residuals</a></td>
+<td>Partial residuals</td></tr>
+<tr><td style="width: 25%;"><a href="partial_residuals.html">partial_residuals.gam</a></td>
+<td>Partial residuals</td></tr>
+<tr><td style="width: 25%;"><a href="penalty.html">penalty</a></td>
+<td>Extract and tidy penalty matrices</td></tr>
+<tr><td style="width: 25%;"><a href="penalty.html">penalty.default</a></td>
+<td>Extract and tidy penalty matrices</td></tr>
+<tr><td style="width: 25%;"><a href="penalty.html">penalty.gam</a></td>
+<td>Extract and tidy penalty matrices</td></tr>
+<tr><td style="width: 25%;"><a href="penalty.html">penalty.mgcv.smooth</a></td>
+<td>Extract and tidy penalty matrices</td></tr>
+<tr><td style="width: 25%;"><a href="penalty.html">penalty.re.smooth.spec</a></td>
+<td>Extract and tidy penalty matrices</td></tr>
+<tr><td style="width: 25%;"><a href="penalty.html">penalty.t2.smooth</a></td>
+<td>Extract and tidy penalty matrices</td></tr>
+<tr><td style="width: 25%;"><a href="penalty.html">penalty.tensor.smooth</a></td>
+<td>Extract and tidy penalty matrices</td></tr>
+<tr><td style="width: 25%;"><a href="posterior_samples.html">posterior_samples</a></td>
+<td>Draw samples from the posterior distribution of an estimated model</td></tr>
+<tr><td style="width: 25%;"><a href="posterior_samples.html">posterior_samples.gam</a></td>
+<td>Draw samples from the posterior distribution of an estimated model</td></tr>
+<tr><td style="width: 25%;"><a href="posterior_samples.html">posterior_samples.scam</a></td>
+<td>Draw samples from the posterior distribution of an estimated model</td></tr>
+<tr><td style="width: 25%;"><a href="post_draws.html">post_draws</a></td>
+<td>Low-level Functions to generate draws from the posterior distribution of model coefficients</td></tr>
+<tr><td style="width: 25%;"><a href="post_draws.html">post_draws.default</a></td>
+<td>Low-level Functions to generate draws from the posterior distribution of model coefficients</td></tr>
+<tr><td style="width: 25%;"><a href="predicted_samples.html">predicted_samples</a></td>
+<td>Draw new response values from the conditional distribution of the response</td></tr>
+<tr><td style="width: 25%;"><a href="predicted_samples.html">predicted_samples.default</a></td>
+<td>Draw new response values from the conditional distribution of the response</td></tr>
+<tr><td style="width: 25%;"><a href="predicted_samples.html">predicted_samples.gam</a></td>
+<td>Draw new response values from the conditional distribution of the response</td></tr>
+<tr><td style="width: 25%;"><a href="predicted_samples.html">predicted_samples.scam</a></td>
+<td>Draw new response values from the conditional distribution of the response</td></tr>
+</table>
+
+<h2><a id="Q">-- Q --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="qq_plot.html">qq_plot</a></td>
+<td>Quantile-quantile plot of model residuals</td></tr>
+<tr><td style="width: 25%;"><a href="qq_plot.html">qq_plot.default</a></td>
+<td>Quantile-quantile plot of model residuals</td></tr>
+<tr><td style="width: 25%;"><a href="qq_plot.html">qq_plot.gam</a></td>
+<td>Quantile-quantile plot of model residuals</td></tr>
+<tr><td style="width: 25%;"><a href="qq_plot.html">qq_plot.glm</a></td>
+<td>Quantile-quantile plot of model residuals</td></tr>
+<tr><td style="width: 25%;"><a href="qq_plot.html">qq_plot.lm</a></td>
+<td>Quantile-quantile plot of model residuals</td></tr>
+<tr><td style="width: 25%;"><a href="quantile_residuals.html">quantile_residuals</a></td>
+<td>Randomised residuals</td></tr>
+<tr><td style="width: 25%;"><a href="quantile_residuals.html">quantile_residuals.gam</a></td>
+<td>Randomised residuals</td></tr>
+<tr><td style="width: 25%;"><a href="quantile_residuals.html">quantile_residuals.glm</a></td>
+<td>Randomised residuals</td></tr>
+</table>
+
+<h2><a id="R">-- R --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="ref_level.html">ref_level</a></td>
+<td>Return the reference or specific level of a factor</td></tr>
+<tr><td style="width: 25%;"><a href="ref_sims.html">ref_sims</a></td>
+<td>Reference simulation data</td></tr>
+<tr><td style="width: 25%;"><a href="rep_first_factor_value.html">rep_first_factor_value</a></td>
+<td>Repeat the first level of a factor n times</td></tr>
+<tr><td style="width: 25%;"><a href="residuals_hist_plot.html">residuals_hist_plot</a></td>
+<td>Histogram of model residuals</td></tr>
+<tr><td style="width: 25%;"><a href="residuals_linpred_plot.html">residuals_linpred_plot</a></td>
+<td>Plot of residuals versus linear predictor values</td></tr>
+<tr><td style="width: 25%;"><a href="response_derivatives.html">response_derivatives</a></td>
+<td>Derivatives on the response scale from an estimated GAM</td></tr>
+<tr><td style="width: 25%;"><a href="response_derivatives.html">response_derivatives.default</a></td>
+<td>Derivatives on the response scale from an estimated GAM</td></tr>
+<tr><td style="width: 25%;"><a href="response_derivatives.html">response_derivatives.gam</a></td>
+<td>Derivatives on the response scale from an estimated GAM</td></tr>
+<tr><td style="width: 25%;"><a href="response_derivatives.html">response_derivatives.gamm</a></td>
+<td>Derivatives on the response scale from an estimated GAM</td></tr>
+<tr><td style="width: 25%;"><a href="response_derivatives.html">response_derivatives.scam</a></td>
+<td>Derivatives on the response scale from an estimated GAM</td></tr>
+<tr><td style="width: 25%;"><a href="rootogram.html">rootogram</a></td>
+<td>Rootograms to assess goodness of model fit</td></tr>
+<tr><td style="width: 25%;"><a href="rootogram.html">rootogram.gam</a></td>
+<td>Rootograms to assess goodness of model fit</td></tr>
+<tr><td style="width: 25%;"><a href="rtw.html">rtw</a></td>
+<td>Simulator for tweedie LSS models</td></tr>
+</table>
+
+<h2><a id="S">-- S --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="scale_fill_partial_effect.html">scale_fill_partial_effect</a></td>
+<td>Default diverging red-blue colour palette for partial effects</td></tr>
+<tr><td style="width: 25%;"><a href="evenly.html">seq_min_max</a></td>
+<td>Create a sequence of evenly-spaced values</td></tr>
+<tr><td style="width: 25%;"><a href="seq_min_max_eps.html">seq_min_max_eps</a></td>
+<td>Create a sequence of evenly-spaced values adjusted to accommodate a small adjustment</td></tr>
+<tr><td style="width: 25%;"><a href="shift_values.html">shift_values</a></td>
+<td>Shift numeric values in a data frame by an amount 'eps'</td></tr>
+<tr><td style="width: 25%;"><a href="simulate.html">simulate.gam</a></td>
+<td>Simulate from the posterior distribution of a GAM</td></tr>
+<tr><td style="width: 25%;"><a href="simulate.html">simulate.gamm</a></td>
+<td>Simulate from the posterior distribution of a GAM</td></tr>
+<tr><td style="width: 25%;"><a href="simulate.html">simulate.scam</a></td>
+<td>Simulate from the posterior distribution of a GAM</td></tr>
+<tr><td style="width: 25%;"><a href="smallAges.html">smallAges</a></td>
+<td>Lead-210 age-depth measurements for Small Water</td></tr>
+<tr><td style="width: 25%;"><a href="smooths.html">smooths</a></td>
+<td>Names of smooths in a GAM</td></tr>
+<tr><td style="width: 25%;"><a href="smooths.html">smooths.default</a></td>
+<td>Names of smooths in a GAM</td></tr>
+<tr><td style="width: 25%;"><a href="smooths.html">smooths.gamm</a></td>
+<td>Names of smooths in a GAM</td></tr>
+<tr><td style="width: 25%;"><a href="smooths.html">smooths.gamm4</a></td>
+<td>Names of smooths in a GAM</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_coefs.html">smooth_coefs</a></td>
+<td>Coefficients for a particular smooth</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_coefs.html">smooth_coefs.bam</a></td>
+<td>Coefficients for a particular smooth</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_coefs.html">smooth_coefs.gam</a></td>
+<td>Coefficients for a particular smooth</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_coefs.html">smooth_coefs.gamm</a></td>
+<td>Coefficients for a particular smooth</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_coefs.html">smooth_coefs.gamm4</a></td>
+<td>Coefficients for a particular smooth</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_coefs.html">smooth_coefs.list</a></td>
+<td>Coefficients for a particular smooth</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_coefs.html">smooth_coefs.mgcv.smooth</a></td>
+<td>Coefficients for a particular smooth</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_coefs.html">smooth_coefs.scam</a></td>
+<td>Coefficients for a particular smooth</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_coef_indices.html">smooth_coef_indices</a></td>
+<td>Indices of the parametric terms for a particular smooth</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_data.html">smooth_data</a></td>
+<td>Generate regular data over the covariates of a smooth</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_dim.html">smooth_dim</a></td>
+<td>Dimension of a smooth</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_dim.html">smooth_dim.gam</a></td>
+<td>Dimension of a smooth</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_dim.html">smooth_dim.gamm</a></td>
+<td>Dimension of a smooth</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_dim.html">smooth_dim.mgcv.smooth</a></td>
+<td>Dimension of a smooth</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_estimates.html">smooth_estimates</a></td>
+<td>Evaluate smooths at covariate values</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_estimates.html">smooth_estimates.gam</a></td>
+<td>Evaluate smooths at covariate values</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_label.html">smooth_label</a></td>
+<td>Extract the label for a smooth used by 'mgcv'</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_label.html">smooth_label.gam</a></td>
+<td>Extract the label for a smooth used by 'mgcv'</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_label.html">smooth_label.mgcv.smooth</a></td>
+<td>Extract the label for a smooth used by 'mgcv'</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_samples.html">smooth_samples</a></td>
+<td>Posterior draws for individual smooths</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_samples.html">smooth_samples.gam</a></td>
+<td>Posterior draws for individual smooths</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_terms.html">smooth_terms</a></td>
+<td>List the variables involved in smooths</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.Bspline.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.cpspline.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.cr.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.cs.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.cv.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.cx.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.cyclic.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.default</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.duchon.spline</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.fs.interaction</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.gp.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.mdcv.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.mdcx.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.micv.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.micx.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.mifo.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.miso.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.mpd.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.mpi.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.mrf.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.pspline.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.random.effect</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.sf</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.soap.film</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.sos.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.sw</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.sz.interaction</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.t2.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.tensor.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.tprs.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="smooth_type.html">smooth_type.ts.smooth</a></td>
+<td>Determine the type of smooth and return it n a human readable form</td></tr>
+<tr><td style="width: 25%;"><a href="spline_values.html">spline_values</a></td>
+<td>Evaluate a spline at provided covariate values</td></tr>
+<tr><td style="width: 25%;"><a href="is_mgcv_smooth.html">stop_if_not_mgcv_smooth</a></td>
+<td>Check if objects are smooths or are a particular type of smooth</td></tr>
+</table>
+
+<h2><a id="T">-- T --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="term_names.html">term_names</a></td>
+<td>Extract names of all variables needed to fit a GAM or a smooth</td></tr>
+<tr><td style="width: 25%;"><a href="term_names.html">term_names.gam</a></td>
+<td>Extract names of all variables needed to fit a GAM or a smooth</td></tr>
+<tr><td style="width: 25%;"><a href="term_names.html">term_names.gamm</a></td>
+<td>Extract names of all variables needed to fit a GAM or a smooth</td></tr>
+<tr><td style="width: 25%;"><a href="term_names.html">term_names.mgcv.smooth</a></td>
+<td>Extract names of all variables needed to fit a GAM or a smooth</td></tr>
+<tr><td style="width: 25%;"><a href="term_variables.html">term_variables</a></td>
+<td>Names of variables involved in a specified model term</td></tr>
+<tr><td style="width: 25%;"><a href="term_variables.html">term_variables.bam</a></td>
+<td>Names of variables involved in a specified model term</td></tr>
+<tr><td style="width: 25%;"><a href="term_variables.html">term_variables.gam</a></td>
+<td>Names of variables involved in a specified model term</td></tr>
+<tr><td style="width: 25%;"><a href="term_variables.html">term_variables.terms</a></td>
+<td>Names of variables involved in a specified model term</td></tr>
+<tr><td style="width: 25%;"><a href="theta.html">theta</a></td>
+<td>General extractor for additional parameters in mgcv models</td></tr>
+<tr><td style="width: 25%;"><a href="theta.html">theta.family</a></td>
+<td>General extractor for additional parameters in mgcv models</td></tr>
+<tr><td style="width: 25%;"><a href="theta.html">theta.gam</a></td>
+<td>General extractor for additional parameters in mgcv models</td></tr>
+<tr><td style="width: 25%;"><a href="tidy_basis.html">tidy_basis</a></td>
+<td>A tidy basis representation of a smooth object</td></tr>
+<tr><td style="width: 25%;"><a href="too_far.html">too_far</a></td>
+<td>Exclude values that lie too far from the support of data</td></tr>
+<tr><td style="width: 25%;"><a href="too_far_to_na.html">too_far_to_na</a></td>
+<td>Set rows of data to 'NA' if the lie too far from a reference set of values</td></tr>
+<tr><td style="width: 25%;"><a href="to_na.html">to_na</a></td>
+<td>Sets the elements of vector to 'NA'</td></tr>
+<tr><td style="width: 25%;"><a href="transform_fun.html">transform_fun</a></td>
+<td>Transform estimated values and confidence intervals by applying a function</td></tr>
+<tr><td style="width: 25%;"><a href="transform_fun.html">transform_fun.evaluated_parametric_term</a></td>
+<td>Transform estimated values and confidence intervals by applying a function</td></tr>
+<tr><td style="width: 25%;"><a href="transform_fun.html">transform_fun.mgcv_smooth</a></td>
+<td>Transform estimated values and confidence intervals by applying a function</td></tr>
+<tr><td style="width: 25%;"><a href="transform_fun.html">transform_fun.parametric_effects</a></td>
+<td>Transform estimated values and confidence intervals by applying a function</td></tr>
+<tr><td style="width: 25%;"><a href="transform_fun.html">transform_fun.smooth_estimates</a></td>
+<td>Transform estimated values and confidence intervals by applying a function</td></tr>
+<tr><td style="width: 25%;"><a href="transform_fun.html">transform_fun.smooth_samples</a></td>
+<td>Transform estimated values and confidence intervals by applying a function</td></tr>
+<tr><td style="width: 25%;"><a href="transform_fun.html">transform_fun.tbl_df</a></td>
+<td>Transform estimated values and confidence intervals by applying a function</td></tr>
+<tr><td style="width: 25%;"><a href="typical_values.html">typical_values</a></td>
+<td>Typical values of model covariates</td></tr>
+<tr><td style="width: 25%;"><a href="typical_values.html">typical_values.data.frame</a></td>
+<td>Typical values of model covariates</td></tr>
+<tr><td style="width: 25%;"><a href="typical_values.html">typical_values.gam</a></td>
+<td>Typical values of model covariates</td></tr>
+</table>
+
+<h2><a id="U">-- U --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="user_draws.html">user_draws</a></td>
+<td>Handle user-supplied posterior draws</td></tr>
+<tr><td style="width: 25%;"><a href="user_draws.html">user_draws.gam</a></td>
+<td>Handle user-supplied posterior draws</td></tr>
+</table>
+
+<h2><a id="V">-- V --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="variance_comp.html">variance_comp</a></td>
+<td>Variance components of smooths from smoothness estimates</td></tr>
+<tr><td style="width: 25%;"><a href="variance_comp.html">variance_comp.gam</a></td>
+<td>Variance components of smooths from smoothness estimates</td></tr>
+<tr><td style="width: 25%;"><a href="vars_from_label.html">vars_from_label</a></td>
+<td>Returns names of variables from a smooth label</td></tr>
+</table>
+
+<h2><a id="W">-- W --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="which_smooths.html">which_smooths</a></td>
+<td>Identify a smooth term by its label</td></tr>
+<tr><td style="width: 25%;"><a href="which_smooths.html">which_smooths.bam</a></td>
+<td>Identify a smooth term by its label</td></tr>
+<tr><td style="width: 25%;"><a href="which_smooths.html">which_smooths.default</a></td>
+<td>Identify a smooth term by its label</td></tr>
+<tr><td style="width: 25%;"><a href="which_smooths.html">which_smooths.gam</a></td>
+<td>Identify a smooth term by its label</td></tr>
+<tr><td style="width: 25%;"><a href="which_smooths.html">which_smooths.gamm</a></td>
+<td>Identify a smooth term by its label</td></tr>
+<tr><td style="width: 25%;"><a href="worm_plot.html">worm_plot</a></td>
+<td>Worm plot of model residuals</td></tr>
+<tr><td style="width: 25%;"><a href="worm_plot.html">worm_plot.gam</a></td>
+<td>Worm plot of model residuals</td></tr>
+<tr><td style="width: 25%;"><a href="worm_plot.html">worm_plot.glm</a></td>
+<td>Worm plot of model residuals</td></tr>
+<tr><td style="width: 25%;"><a href="worm_plot.html">worm_plot.lm</a></td>
+<td>Worm plot of model residuals</td></tr>
+</table>
+
+<h2><a id="Z">-- Z --</a></h2>
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="zooplankton.html">zooplankton</a></td>
+<td>Madison lakes zooplankton data</td></tr>
+</table>
+</div></body></html>

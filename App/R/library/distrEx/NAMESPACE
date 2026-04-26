@@ -1,0 +1,59 @@
+useDynLib("distrEx", .registration = TRUE, .fixes = "C_")
+importFrom("stats", "dnorm", "integrate", "optimize", "pbinom",
+             "pchisq", "pexp", "pnorm", "ppois", "qcauchy", "qnorm",
+             "uniroot", "dunif")
+importFrom("utils", "getFromNamespace", "object.size")
+import("methods")
+import("distr")
+importFrom("startupmsg", "buildStartupMessage")
+importFrom("startupmsg", "infoShow")
+
+exportClasses("Condition", "EuclCondition") 
+exportClasses("LMParameter")
+exportClasses("MultivariateDistribution", 
+              "DiscreteMVDistribution",
+              "UnivariateCondDistribution",
+              "DiscreteCondDistribution", 
+              "AbscontCondDistribution",
+              "PrognCondition")
+exportMethods("show", 
+              "plot", 
+              "coerce", 
+              "dim") 
+exportMethods("ConvexContamination", 
+              "ContaminationSize", 
+              "TotalVarDist", 
+              "AsymTotalVarDist", 
+              "OAsymTotalVarDist", 
+              "KolmogorovDist", 
+              "HellingerDist",
+              "CvMDist") 
+exportMethods("support",
+              "cond", 
+              "location", "location<-", 
+              "Range",
+              "scale", "scale<-",
+              "Min","shape", 
+              "Min<-","shape<-",
+              "+", "*",
+              "name", "name<-", 
+              "E", "var", "IQR", "skewness", "kurtosis", 
+              "sd", "median", "mad", 
+			  "m1df", "m2df",
+              "liesInSupport")
+export("EuclCondition") 
+export("LMParameter")
+export("DiscreteMVDistribution",
+       "EmpiricalMVDistribution",
+       "LMCondDistribution")
+export("ConvexContamination")
+export("GLIntegrate",
+       "distrExIntegrate") 
+export("distrExOptions", "getdistrExOption",
+       "distrExMASK", "distrExoptions", "distrExMOVED")
+export("make01","PrognCondDistribution",
+       "PrognCondition")
+export(".getIntbounds", ".qtlIntegrate", ".filterEargs", ".filterFunargs")
+export("print.DiagnosticClass", "showDiagnostic", "getDiagnostic", 
+      ".nmsToGather", ".showallNamesDiagnosticList", ".reorganizeDiagnosticList")
+S3method(print,"DiagnosticClass")

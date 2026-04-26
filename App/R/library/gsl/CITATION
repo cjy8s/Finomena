@@ -1,0 +1,18 @@
+citHeader("To cite the gsl package in publications use:")
+
+bibentry(bibtype = "Article",
+	 title = "{Special functions in R: introducing the gsl package}",
+	 author = person("Robin", "K. S. Hankin"),
+	 journal = "R News",
+         year = "2006",
+	 month = "October",
+	 volume = "6",
+	 issue = "4",
+	 textVersion = {
+             paste("R. K. S. Hankin",
+                   "2006.",
+                   "Special functions in R: introducing the gsl package. ",
+	     	   "R News",
+		   "6(4)"
+		   )
+         })

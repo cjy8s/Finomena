@@ -18,7 +18,7 @@ missing_pkgs  <- required_pkgs[!sapply(required_pkgs, requireNamespace, quietly 
 if (length(missing_pkgs) > 0) {
   stop(
     "Missing R packages: ", paste(missing_pkgs, collapse = ", "), "\n",
-    "Open the app, go to the BAM Analysis tab, and click 'Install R Packages'."
+    "Install them with:  Rscript App/R/install_packages.R"
   )
 }
 

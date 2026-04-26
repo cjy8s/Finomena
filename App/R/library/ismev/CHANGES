@@ -1,0 +1,22 @@
+The first version of the ismev package was Version 1.0,
+constructed on 2002/11/25. The changes that have occured
+in subsequent versions are given below.
+
+Vesion 1.2 (2006/03/10):
+
+The column name "Sea Level" in the portpirie and fremantle
+datasets has been changed to "SeaLevel" to prevent problems
+with inclusion in formula arguments to functions in other
+R packages. The Maintainer thanks Thomas Yee for this
+suggestion.
+ 
+The maintainer address has changed.
+
+Version 1.1 (2003/11/25):
+
+If the profile likelihood functions gev.prof or gev.profxi 
+calculated the likelihood at a point where the shape 
+parameter was at or very close to zero the functions would 
+error due to a mistake in the R port. This has been fixed.
+The Maintainer thanks Simon Brown for reporting this bug.  
+

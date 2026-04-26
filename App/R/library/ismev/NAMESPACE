@@ -1,0 +1,14 @@
+# Default NAMESPACE created by R
+# Remove the previous line if you edit this file
+
+# Export all names
+exportPattern(".")
+
+import( mgcv )
+
+importFrom("graphics", "abline", "hist", "lines", "par", "plot",
+             "points", "title")
+importFrom("stats", "aggregate", "as.formula", "ave", "fitted",
+             "optim", "predict", "qchisq", "qnorm", "quantile",
+             "uniroot", "update", "var")
+importFrom("utils", "setTxtProgressBar", "txtProgressBar")
