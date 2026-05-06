@@ -35,7 +35,6 @@ for _pkg in [
     'threadpoolctl',   # used by sklearn
     'PIL',             # 103 submodules (Pillow image codecs)
     'qdarktheme',      # 37 submodules
-    'pycatch22',       # small but has C extension
     'fitz',            # PyMuPDF C extension
     'PySide6',         # Qt GUI framework
     # ── Color palette packages ──
@@ -93,7 +92,7 @@ a = Analysis(
         # R scripts (small, bundled inside the app)
         ('R/scripts/TweedieAR1 BAM.R',  'R/scripts'),
         ('R/scripts/FamilySelection.R', 'R/scripts'),
-        # README (linked from Catch22 tab)
+        # README
         ('README.md', '.'),
     ] + _all_datas,
     hiddenimports=_all_hidden,

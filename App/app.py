@@ -7,7 +7,6 @@ Tab layout:
   1. Experimental Design  — plate layout + phases + conditions + reference controls
   2. Data Loading         — multi-directory input, Cell-4 preprocessing pipeline
   3. Analysis in R        — optional family selection + BAM analysis
-  4. Catch22 Clustering   — CATCH24 features → clustermaps → top drivers
 """
 
 import os
@@ -59,10 +58,9 @@ from dataframe_viewer import DataFrameViewerWidget
 print("[DBG] app.py: about to import data_loader", flush=True)
 from data_loader      import DataLoaderWidget
 print("[DBG] app.py: data_loader imported", flush=True)
-from bam_widget              import BamWidget
-from family_selection_widget import FamilySelectionWidget
+from bam_widget                import BamWidget
+from family_selection_widget   import FamilySelectionWidget
 from contrast_selection_widget import ContrastSelectionWidget
-from catch22_widget          import Catch22Widget
 print("[DBG] app.py: all widget imports done", flush=True)
 
 
@@ -177,10 +175,6 @@ class MainWindow(QMainWindow):
 
         self.main_tabs.addTab(r_analysis_tab, "Analysis in R")
 
-        # ── Tab 4: Catch22 Clustering ──────────────────────────────────────────
-        self.catch22_widget = Catch22Widget()
-        self.main_tabs.addTab(self.catch22_widget, "Catch22 Clustering")
-
         # ── Signal connections ─────────────────────────────────────────────────
 
         # Condition colors → plate format + data loader + metadata assignment
@@ -218,9 +212,6 @@ class MainWindow(QMainWindow):
         # Roles → plate format (for button labels)
         self.metadata_assignment.roles_updated.connect(
             self.plate_format_widget.update_roles
-        )
-        self.metadata_assignment.roles_updated.connect(
-            self.catch22_widget.set_roles
         )
         self.metadata_assignment.roles_updated.connect(
             self.bam_widget.set_roles
@@ -273,7 +264,6 @@ class MainWindow(QMainWindow):
     def _on_references_updated(self, variable_refs: dict, ref_condition: str):
         self.bam_widget.set_references(variable_refs, ref_condition)
         self.family_selection_widget.set_references(variable_refs, ref_condition)
-        self.catch22_widget.set_references(variable_refs, ref_condition)
 
     # ── Data fan-out ──────────────────────────────────────────────────────────
 
@@ -283,7 +273,6 @@ class MainWindow(QMainWindow):
             return
         self.bam_widget.load_data(df)
         self.family_selection_widget.load_data(df)
-        self.catch22_widget.load_data(df)
 
     # ── Save / Load config ────────────────────────────────────────────────────
 

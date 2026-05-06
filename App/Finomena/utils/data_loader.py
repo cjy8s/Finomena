@@ -1,7 +1,7 @@
 """
 Data Loader Widget
 ==================
-Ports Cell 4 of catch22 clustering.ipynb into a PySide6 GUI.
+Handles multi-directory data ingestion and preprocessing pipeline.
 
 Workflow:
   1. User configures plate layout in ExperimentalPlateWidget (painted wells).

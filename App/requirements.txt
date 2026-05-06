@@ -4,7 +4,6 @@ numpy<2
 matplotlib
 seaborn
 scikit-learn
-pycatch22
 PyMuPDF
 pyqtdarktheme
 jaraco.text
