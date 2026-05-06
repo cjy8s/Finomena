@@ -1,6 +1,3 @@
-import sys
-import os
-import pandas as pd
 from functools import partial
 from itertools import combinations
 import matplotlib.pyplot as plt
@@ -9,13 +6,12 @@ import seaborn as sns
 import numpy as np
 
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QFileDialog, QLabel, QMessageBox, QGroupBox,
-    QTreeWidget, QTreeWidgetItem, QHeaderView, QSplitter, QTableWidget, QTableWidgetItem,
-    QAbstractItemView, QTabWidget, QLineEdit, QCheckBox, QSpinBox, QColorDialog, QComboBox
+    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QGroupBox,
+    QHeaderView, QTableWidget, QTableWidgetItem, QLineEdit, QSpinBox,
+    QColorDialog, QComboBox,
 )
-from PySide6.QtCore import QDir, QDirIterator, Qt, Signal, QSize, QObject, QMetaMethod
-from PySide6.QtGui import QIntValidator, QColor, QPalette, QPixmap, QPainter, QIcon
+from PySide6.QtCore import Qt, Signal, QSize, QObject, QMetaMethod
+from PySide6.QtGui import QColor, QPixmap, QPainter, QIcon
 
 # =============================================================================
 #  EXPERIMENTAL DESIGN WIDGETS

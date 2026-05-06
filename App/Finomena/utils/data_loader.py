@@ -7,7 +7,7 @@ Workflow:
   1. User configures plate layout in ExperimentalPlateWidget (painted wells).
   2. User configures phases in ExperimentalSetupWidget (phase table).
   3. User adds one or more directories here — each directory = one plate replicate.
-  4. Click "Load & Process Data" → runs the Cell 4 pipeline → emits data_ready(full_df).
+  4. Click "Load & Process Data" → runs the preprocessing pipeline → emits data_ready(full_df).
 """
 
 import os
@@ -20,7 +20,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-from matplotlib.colors import to_rgba
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
@@ -526,7 +525,7 @@ class DataLoaderWidget(QWidget):
         t.start()
 
     def _worker(self, directories, per_directory_layouts, time_frame):
-        """Background thread: runs the Cell 4 preprocessing pipeline."""
+        """Background thread: runs the preprocessing pipeline."""
         try:
             self._progress_signal.emit(0, "Scanning directories…")
             plate_file_lists = []

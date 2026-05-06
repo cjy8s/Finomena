@@ -1,10 +1,7 @@
-import sys
-import pandas as pd
-from functools import partial
 from PySide6.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
+    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
     QMessageBox, QTableWidget, QTableWidgetItem, QHeaderView, QSplitter,
-    QComboBox, QAbstractItemView, QGridLayout, QFrame, QInputDialog
+    QComboBox, QAbstractItemView, QGridLayout, QInputDialog,
 )
 print("[DBG] plate_format: imports done", flush=True)
 from PySide6.QtCore import Qt, Signal
