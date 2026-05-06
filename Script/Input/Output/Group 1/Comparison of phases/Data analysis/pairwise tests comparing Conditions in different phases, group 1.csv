@@ -1,7 +1,0 @@
-"Condition","phase1","phase2","pseudo_median_difference","conf_int_lower","conf_int_upper","statistic","tails","p.value","method","data_name","p.adjusted","adjustment_method"
-"WT+DMSO","Dark","Light",26292.9227974049,19629.9999247777,36035.5000177368,528,"two.sided",7.95288414269275e-07,"Wilcoxon signed rank test","subset1 and subset2",4.77173048561565e-06,"holm"
-"Mut1","Dark","Light",21264.6038514346,12472.4999304426,31289.0000020488,525,"two.sided",1.05858385264859e-06,"Wilcoxon signed rank test","subset1 and subset2",4.77173048561565e-06,"holm"
-"Mut2","Dark","Light",25863.0641013864,14207.4999964578,39659.0000444154,528,"two.sided",7.95288414269275e-07,"Wilcoxon signed rank test","subset1 and subset2",4.77173048561565e-06,"holm"
-"Mut3","Dark","Light",30407.9906954004,19758.4999596887,45508.0000054698,528,"two.sided",7.95288414269275e-07,"Wilcoxon signed rank test","subset1 and subset2",4.77173048561565e-06,"holm"
-"Mut4","Dark","Light",26305.1804603055,17797.4999527708,40014.5000601777,528,"two.sided",7.95288414269275e-07,"Wilcoxon signed rank test","subset1 and subset2",4.77173048561565e-06,"holm"
-"MUT+DMSO","Dark","Light",22180.845616295,15530.4999568641,31899.500018677,527,"two.sided",8.75128034540771e-07,"Wilcoxon signed rank test","subset1 and subset2",4.77173048561565e-06,"holm"

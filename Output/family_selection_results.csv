@@ -1,4 +1,0 @@
-Family,AIC,BIC,Dispersion,Dev_Explained,Zero_Match,Shift_Applied
-Tweedie,1231212.6,1231360.2,78.048,21.6,Obs: 44.1% | Pred: 54.9%,0
-Gamma,1453824,1453961.8,3.757,12.2,N/A (shift of 1.0000 applied; Gamma requires >0),1
-NegBinomial,1281145.4,1281292.9,0.609,7.9,Obs: 44.1% | Pred: 36.2%,0
