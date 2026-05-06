@@ -32,7 +32,7 @@ from paths import resource_path, external_data_dir
 
 _APP_R_LIB            = os.path.join(external_data_dir(), "R", "library")
 _BUNDLED_RSCRIPT      = os.path.join(
-    external_data_dir(), "R", "bin",
+    external_data_dir(), "R", "runtime", "bin",
     "Rscript.exe" if sys.platform == "win32" else "Rscript"
 )
 _FAMILY_SELECTION_R   = resource_path("R", "scripts", "FamilySelection.R")
@@ -418,8 +418,8 @@ class FamilySelectionWidget(QWidget):
         env      = os.environ.copy()
         existing = env.get("R_LIBS", "")
         env["R_LIBS"] = _APP_R_LIB + (os.pathsep + existing if existing else "")
-        if os.path.isfile(_BUNDLED_RSCRIPT) and rscript_path == _BUNDLED_RSCRIPT:
-            env["R_HOME"] = os.path.dirname(os.path.dirname(rscript_path))
+        if rscript_path == _BUNDLED_RSCRIPT:
+            env["R_HOME"] = os.path.dirname(os.path.dirname(rscript_path))  # runtime/bin/../
         return env
 
     @staticmethod

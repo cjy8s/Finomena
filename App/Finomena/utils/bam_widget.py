@@ -41,9 +41,10 @@ from paths import resource_path, external_data_dir
 # R library lives alongside the executable (too large to bundle inside .exe)
 _APP_R_LIB = os.path.join(external_data_dir(), "R", "library")
 
-# If a bundled Rscript lives inside the project, prefer it over system R.
+# Bundled Rscript: lives at R/runtime/bin/ in both dev (App/) and frozen (dist/Finomena/) modes.
+# Populated by setup_dev.bat/.sh for development, and by the build scripts for distribution.
 _BUNDLED_RSCRIPT = os.path.join(
-    external_data_dir(), "R", "bin",
+    external_data_dir(), "R", "runtime", "bin",
     "Rscript.exe" if sys.platform == "win32" else "Rscript"
 )
 
@@ -599,10 +600,9 @@ class BamWidget(QWidget):
         env["R_LIBS"] = (
             _APP_R_LIB + (os.pathsep + existing if existing else "")
         )
-        # If using a bundled R, also set R_HOME so base packages resolve correctly
-        bundled_home = os.path.dirname(os.path.dirname(rscript_path))  # bin/../
-        if os.path.isfile(_BUNDLED_RSCRIPT) and rscript_path == _BUNDLED_RSCRIPT:
-            env["R_HOME"] = bundled_home
+        # If using the bundled R, set R_HOME so R finds its own base packages in runtime/library/
+        if rscript_path == _BUNDLED_RSCRIPT:
+            env["R_HOME"] = os.path.dirname(os.path.dirname(rscript_path))  # runtime/bin/../
         return env
 
     @staticmethod

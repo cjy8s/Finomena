@@ -1,55 +1,91 @@
 @echo off
-REM Build Finomena for Windows
-REM Prerequisites: pip install pyinstaller
+setlocal EnableDelayedExpansion
+
+REM ============================================================
+REM  Finomena — Windows build script
+REM  Output: Output\Finomena_Setup_Windows.exe
 REM
-REM This creates dist\Finomena\ with the .exe, a bundled portable R,
-REM and all dependencies — fully self-contained, no system R required.
+REM  Prerequisites (install once on your build machine):
+REM    pip install pyinstaller
+REM    Inno Setup 6  https://jrsoftware.org/isinfo.php
+REM
+REM  R 4.5.3 is downloaded automatically from CRAN on first run
+REM  and cached in %TEMP% for subsequent builds.
+REM ============================================================
 
-echo Building Finomena...
+set R_VERSION=4.5.3
+set R_URL=https://cran.r-project.org/bin/windows/base/R-%R_VERSION%-win.exe
+set R_INSTALLER=%TEMP%\R-%R_VERSION%-win.exe
+set R_RUNTIME=dist\Finomena\R\runtime
+set R_LIBRARY=dist\Finomena\R\library
+
+echo ============================================================
+echo  Building Finomena for Windows   (R %R_VERSION%)
+echo ============================================================
+
+REM ── Step 1: PyInstaller ─────────────────────────────────────
+echo.
+echo [1/4] Packaging Python app with PyInstaller...
 pyinstaller finomena.spec --noconfirm
+if errorlevel 1 ( echo. & echo ERROR: PyInstaller failed. & exit /b 1 )
 
-if errorlevel 1 (
-    echo Build failed.
-    exit /b 1
+REM ── Step 2: Download R installer (cached after first run) ───
+echo.
+echo [2/4] Setting up R %R_VERSION%...
+if exist "%R_INSTALLER%" (
+    echo   Using cached installer: %R_INSTALLER%
+) else (
+    echo   Downloading R %R_VERSION% from CRAN...
+    powershell -NoProfile -Command ^
+        "Invoke-WebRequest -Uri '%R_URL%' -OutFile '%R_INSTALLER%' -UseBasicParsing"
+    if errorlevel 1 ( echo. & echo ERROR: Download failed. & exit /b 1 )
+    echo   Saved to: %R_INSTALLER%
 )
 
-REM ── Bundle the full R installation ──────────────────────────────────────────
-REM Detect the system R installation directory.
-REM Prefer the newest version found in Program Files.
+REM Extract R into dist\Finomena\R\runtime\
+echo   Extracting R into %R_RUNTIME%\...
+if exist "%R_RUNTIME%" rmdir /s /q "%R_RUNTIME%"
+"%R_INSTALLER%" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR="%CD%\%R_RUNTIME%"
+if errorlevel 1 ( echo. & echo ERROR: R extraction failed. & exit /b 1 )
 
-set "R_SOURCE="
-for /d %%D in ("C:\Program Files\R\R-*") do set "R_SOURCE=%%D"
-if not defined R_SOURCE (
-    for /d %%D in ("C:\Program Files (x86)\R\R-*") do set "R_SOURCE=%%D"
+REM ── Step 3: Install app R packages into separate library ────
+echo.
+echo [3/4] Installing R packages into %R_LIBRARY%\...
+if not exist "%R_LIBRARY%" mkdir "%R_LIBRARY%"
+"%R_RUNTIME%\bin\Rscript.exe" R\install_packages.R "%CD%\%R_LIBRARY%"
+if errorlevel 1 ( echo. & echo ERROR: R package installation failed. & exit /b 1 )
+
+REM ── Step 4: Create installer with Inno Setup ────────────────
+echo.
+echo [4/4] Creating Windows installer with Inno Setup...
+set "ISCC="
+for %%P in (
+    "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
+    "%ProgramFiles%\Inno Setup 6\ISCC.exe"
+) do if exist %%P set "ISCC=%%P"
+
+if not defined ISCC (
+    echo.
+    echo   WARNING: Inno Setup 6 not found — skipping installer creation.
+    echo   Install from https://jrsoftware.org/isinfo.php then re-run.
+    echo   The unpackaged app is at dist\Finomena\Finomena.exe
+    goto :done
 )
 
-if not defined R_SOURCE (
-    echo ERROR: Could not find an R installation in Program Files.
-    echo        Install R from https://cran.r-project.org and rebuild.
-    exit /b 1
+if not exist Output mkdir Output
+"%ISCC%" finomena.iss
+if errorlevel 1 ( echo. & echo ERROR: Inno Setup failed. & exit /b 1 )
+
+:done
+echo.
+echo ============================================================
+echo  Build complete!
+if exist "Output\Finomena_Setup_Windows.exe" (
+    echo   Installer : Output\Finomena_Setup_Windows.exe
 )
-
-echo Found R at: %R_SOURCE%
-echo Copying full R installation into dist\Finomena\R\ ...
-
-REM Copy the R binaries, base packages, and configuration
-xcopy /E /I /Y "%R_SOURCE%\bin"     "dist\Finomena\R\bin"     >nul
-xcopy /E /I /Y "%R_SOURCE%\etc"     "dist\Finomena\R\etc"     >nul
-xcopy /E /I /Y "%R_SOURCE%\modules" "dist\Finomena\R\modules" >nul
-xcopy /E /I /Y "%R_SOURCE%\share"   "dist\Finomena\R\share"   >nul
-xcopy /E /I /Y "%R_SOURCE%\library" "dist\Finomena\R\library" >nul
-
-echo R installation bundled.
-
-REM ── Install app-specific R packages into the bundled library ────────────────
-echo Installing required R packages into bundled library...
-"dist\Finomena\R\bin\Rscript.exe" R\install_packages.R
-
+echo   App folder: dist\Finomena\Finomena.exe
+echo ============================================================
 echo.
-echo ========================================
-echo Build complete: dist\Finomena\
-echo ========================================
+echo Upload Output\Finomena_Setup_Windows.exe to a GitHub Release
+echo for direct download by end users.
 echo.
-echo To run:  dist\Finomena\Finomena.exe
-echo.
-echo The app includes a bundled R installation — no system R required.

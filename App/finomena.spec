@@ -90,8 +90,9 @@ a = Analysis(
     pathex=['Finomena/utils'],
     binaries=_extra_binaries,
     datas=[
-        # R script (small, bundled inside the app)
-        ('R/scripts/TweedieAR1 GAMM.R', 'R/scripts'),
+        # R scripts (small, bundled inside the app)
+        ('R/scripts/TweedieAR1 BAM.R',  'R/scripts'),
+        ('R/scripts/FamilySelection.R', 'R/scripts'),
         # README (linked from Catch22 tab)
         ('README.md', '.'),
     ] + _all_datas,
