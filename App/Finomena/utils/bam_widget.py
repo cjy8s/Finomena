@@ -111,6 +111,16 @@ class BamWidget(QWidget):
         """Reference to ContrastSelectionWidget; its kept pairs are read at run time."""
         self._contrast_widget = widget
 
+    def on_contrasts_changed(self):
+        """
+        Called when the user modifies the contrast selection. Marks any prior
+        BAM results as stale: clears the figure viewer, resets the status, and
+        shows a warning prompting the user to re-run.
+        """
+        self._figure_viewer.clear()
+        self._r_status_label.setText("")
+        self._stale_warning_label.show()
+
     def set_roles(self, roles: dict):
         """Stores the {condition_name: role_str} mapping."""
         self._roles = dict(roles)
@@ -204,6 +214,17 @@ class BamWidget(QWidget):
         self._family_label = QLabel("Family: <b>Tweedie (compound Poisson-Gamma)</b> — default")
         self._family_label.setStyleSheet("font-style: italic; color: #aaaaaa;")
         rg_layout.addWidget(self._family_label)
+
+        # Warning shown when contrast selection changes after a BAM run
+        self._stale_warning_label = QLabel(
+            "⚠ Contrasts changed since the last run — re-run the BAM analysis to refresh results."
+        )
+        self._stale_warning_label.setStyleSheet(
+            "color: #c0392b; font-weight: bold; padding: 4px;"
+        )
+        self._stale_warning_label.setWordWrap(True)
+        self._stale_warning_label.hide()
+        rg_layout.addWidget(self._stale_warning_label)
 
         run_row = QHBoxLayout()
         self._run_button = QPushButton("Run R Analysis")
@@ -391,6 +412,7 @@ class BamWidget(QWidget):
         self._stop_button.setEnabled(True)
         self._user_stopped = False
         self._r_status_label.setText("Running…")
+        self._stale_warning_label.hide()
         self._log_text.clear()
         self._append_log(f"Rscript: {rscript}")
         self._append_log(f"Script:  {_DEFAULT_R_SCRIPT}")

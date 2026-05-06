@@ -13,8 +13,7 @@ from PySide6.QtGui import QColor
 
 class ExperimentalPlateWidget(QWidget):
     """Sub-tab for assigning conditions to wells on a plate."""
-    plate_layout_applied = Signal(object) # Emits the updated DataFrame
-    layouts_changed      = Signal(list)   # Emits list of layout names when the library changes
+    layouts_changed = Signal(list)   # Emits list of layout names when the library changes
 
     PLATE_FORMATS = {
         "6-well": (2, 3),
@@ -28,7 +27,6 @@ class ExperimentalPlateWidget(QWidget):
     def __init__(self, parent=None):
         print("[DBG] ExperimentalPlateWidget.__init__ START", flush=True)
         super().__init__(parent)
-        self.df = None
         self.conditions = {}
         self.active_condition = None
         self.active_button = None
@@ -103,12 +101,7 @@ class ExperimentalPlateWidget(QWidget):
         action_layout = QGridLayout()
         self.clear_selection_button = QPushButton("Clear Plate Assignments")
         self.clear_selection_button.clicked.connect(self.clear_plate)
-        self.apply_button = QPushButton("✔ Apply Plate Layout to Data")
-        self.apply_button.clicked.connect(self.apply_layout_to_dataframe)
-        self.apply_button.setEnabled(False)
-        self.apply_button.setStyleSheet("background-color: #2a82da; color: white; font-weight: bold;")
         action_layout.addWidget(self.clear_selection_button, 0, 0)
-        action_layout.addWidget(self.apply_button, 0, 1)
 
 
         left_layout.addWidget(self.info_label)
@@ -142,13 +135,6 @@ class ExperimentalPlateWidget(QWidget):
         print("[DBG] plate_format: calling setup_plate_grid", flush=True)
         self.setup_plate_grid()
         print("[DBG] ExperimentalPlateWidget.__init__ END", flush=True)
-
-    def load_data(self, df):
-        """Receives the DataFrame from the file/plate assignment step."""
-        self.df = df.copy()
-        self.info_label.setText(f"{len(df)} data rows loaded. Assign conditions to the plate wells.")
-        self.apply_button.setEnabled(True)
-        print("ExperimentalPlateWidget received DataFrame.")
 
     def update_roles(self, roles: dict):
         """Receives {condition_name: role_string} and refreshes button labels."""
@@ -361,60 +347,6 @@ class ExperimentalPlateWidget(QWidget):
         for col in range(self.plate_table.columnCount()):
             self._apply_active_to_cell(self.plate_table.item(row_index, col))
 
-    def apply_condition_to_selection(self, name, color):
-        """Applies the selected condition's name and color to the selected wells."""
-        selected_items = self.plate_table.selectedItems()
-        if not selected_items:
-            QMessageBox.information(self, "No Selection", "Please select one or more wells in the grid first.")
-            return
-
-        q_color = QColor(color)
-        for item in selected_items:
-            item.setBackground(q_color)
-            item.setData(Qt.UserRole, name) # Store the condition name in the item
-        
-        self.plate_table.clearSelection() # Deselect after applying
-
-    def load_plate_config(self, format_name: str, well_condition_map: dict):
-        """
-        Restores plate format and well assignments from saved config.
-
-        Parameters
-        ----------
-        format_name : str
-            One of the keys in PLATE_FORMATS (e.g., "96-well").
-        well_condition_map : dict
-            {well_coord: condition_name}, e.g., {"A1": "WT+DMSO", ...}
-        """
-        # Set plate format (triggers setup_plate_grid)
-        idx = self.plate_format_combo.findText(format_name)
-        if idx >= 0:
-            self.plate_format_combo.setCurrentIndex(idx)
-
-        row_headers = [self.plate_table.verticalHeaderItem(r).text()
-                       for r in range(self.plate_table.rowCount())]
-
-        for well, condition_name in well_condition_map.items():
-            color = self.conditions.get(condition_name, "#cccccc")
-            # Parse well coord: letter(s) + number
-            # e.g., "A1" → row letter A, col 1
-            letter_part = ''.join(c for c in well if c.isalpha())
-            num_part    = ''.join(c for c in well if c.isdigit())
-            if not letter_part or not num_part:
-                continue
-            try:
-                row_idx = row_headers.index(letter_part)
-                col_idx = int(num_part) - 1
-            except (ValueError, IndexError):
-                continue
-            item = self.plate_table.item(row_idx, col_idx)
-            if item:
-                bg = QColor(color)
-                item.setBackground(bg)
-                item.setForeground(QColor(self._get_contrasting_text_color(color)))
-                item.setText(condition_name)
-                item.setData(Qt.UserRole, condition_name)
-
     def get_well_condition_map(self, name: str = None):
         """Returns {well_coord: condition_name}. Active layout reads from the grid;
         named inactive layout returns its stored map."""
@@ -450,55 +382,6 @@ class ExperimentalPlateWidget(QWidget):
             for c in range(self.plate_table.columnCount()):
                 self._clear_cell(self.plate_table.item(r, c))
 
-    def apply_layout_to_dataframe(self):
-        """Maps the plate layout to the DataFrame and emits the result."""
-        if self.df is None:
-            QMessageBox.warning(self, "No Data", "No data has been loaded to apply the layout to.")
-            return
-
-        if 'plate_notation' not in self.df.columns:
-            QMessageBox.critical(self, "Missing Column", "The required 'plate_notation' column was not found in the data. Please check the data binning step.")
-            return
-
-        well_to_condition_map = {}
-        well_to_color_map = {}
-        row_headers = [self.plate_table.verticalHeaderItem(r).text() for r in range(self.plate_table.rowCount())]
-        
-        for r in range(self.plate_table.rowCount()):
-            for c in range(self.plate_table.columnCount()):
-                item = self.plate_table.item(r, c)
-                condition_name = item.data(Qt.UserRole)
-                if condition_name:
-                    well_name = f"{row_headers[r]}{c + 1}"
-                    well_to_condition_map[well_name] = condition_name
-                    # Also get the color from our stored conditions dictionary
-                    well_to_color_map[well_name] = self.conditions.get(condition_name, "#ffffff") # Default to white if not found
-
-        if not well_to_condition_map:
-            QMessageBox.warning(self, "No Assignments", "No conditions have been assigned to any wells.")
-            return
-            
-        # Create the new columns by mapping the 'plate_notation' column
-        self.df['Condition'] = self.df['plate_notation'].map(well_to_condition_map)
-        self.df['Color'] = self.df['plate_notation'].map(well_to_color_map)
-        
-        # Fill any unmapped wells with default values
-        self.df['Condition'] = self.df['Condition'].fillna('Unassigned')
-        self.df['Color'] = self.df['Color'].fillna('#ffffff')
-
-        # Check how many rows were unassigned
-        unassigned_count = (self.df['Condition'] == 'Unassigned').sum()
-        
-        msg = (f"Successfully applied conditions to the data.\n\n"
-            f"{len(well_to_condition_map)} well assignments were mapped.\n"
-            f"{len(self.df) - unassigned_count} data rows were assigned a condition.\n"
-            f"{unassigned_count} rows had no matching well assignment and were marked as 'Unassigned'.")
-
-        QMessageBox.information(self, "Success", msg)
-
-        # Emit the updated dataframe for the next step in the pipeline
-        self.plate_layout_applied.emit(self.df)
-        print("Emitting DataFrame with 'Condition' and 'Color' columns.")
 
     # ── Multi-layout library ────────────────────────────────────────────────
 
@@ -655,9 +538,6 @@ class ExperimentalPlateWidget(QWidget):
         self._refresh_layout_combo()
         self._load_layout_into_grid(self._active_name)
         self.layouts_changed.emit(list(self._layouts.keys()))
-
-    def get_layout_names(self) -> list:
-        return list(self._layouts.keys())
 
     def get_all_layouts(self) -> dict:
         self._flush_active_to_layouts()

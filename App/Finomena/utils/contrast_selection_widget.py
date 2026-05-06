@@ -30,6 +30,16 @@ class ContrastSelectionWidget(QWidget):
         self._build_ui()
         self._update_summary()
 
+    # ── Public API ─────────────────────────────────────────────────────────
+
+    def on_bam_completed(self):
+        """
+        Called after BAM analysis completes successfully. Shows a persistent
+        warning so the user knows that any contrast change here will
+        invalidate the BAM results and require a re-run.
+        """
+        self._bam_run_warning_label.show()
+
     # ── UI ─────────────────────────────────────────────────────────────────
 
     def _build_ui(self):
@@ -44,6 +54,18 @@ class ContrastSelectionWidget(QWidget):
         )
         info.setWordWrap(True)
         layout.addWidget(info)
+
+        # Shown after a successful BAM run so the user knows that any contrast
+        # change here will invalidate those results and require a re-run.
+        self._bam_run_warning_label = QLabel(
+            "⚠ BAM has been run. Changing contrasts here will require re-running the BAM analysis."
+        )
+        self._bam_run_warning_label.setStyleSheet(
+            "color: #c0392b; font-weight: bold; padding: 4px;"
+        )
+        self._bam_run_warning_label.setWordWrap(True)
+        self._bam_run_warning_label.hide()
+        layout.addWidget(self._bam_run_warning_label)
 
         btn_row = QHBoxLayout()
         self._select_all_btn = QPushButton("Select All")

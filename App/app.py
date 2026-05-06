@@ -234,6 +234,16 @@ class MainWindow(QMainWindow):
             self.bam_widget.set_family
         )
 
+        # Contrast changes → mark BAM results stale
+        self.contrast_selection_widget.selection_changed.connect(
+            self.bam_widget.on_contrasts_changed
+        )
+
+        # BAM completion → warn on contrast tab that re-running is required
+        self.bam_widget.analysis_complete.connect(
+            lambda _output_dir: self.contrast_selection_widget.on_bam_completed()
+        )
+
         # Seed with initial conditions
         print("[DBG] seeding conditions", flush=True)
         self.conditions_format.emit_conditions_data()
