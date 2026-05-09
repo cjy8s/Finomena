@@ -97,8 +97,11 @@ label_with_role <- function(cond) {
 
 cat("Input CSV:        ", input_csv, "\n")
 cat("Output dir:       ", output_dir, "\n")
-cat("Variables (orig): ", paste(var_names_display, collapse = ", "), "\n")
-cat("Variables (R):    ", paste(var_names, collapse = ", "), "\n")
+cat("Variables:        ", paste(var_names_display, collapse = ", "), "\n")
+# Only show the make.names()-cleaned form if it actually differs from the original
+if (!identical(var_names_display, var_names)) {
+  cat("Variables (R):    ", paste(var_names, collapse = ", "), "\n")
+}
 cat("Reference values: ", paste(ref_map, collapse = ", "), "\n")
 cat("Ref Condition:    ", ref_condition, "\n")
 cat("Global correction:", global_correction, "\n")
@@ -301,6 +304,58 @@ all_contrasts_list <- list()
 for (g in as.character(sort(as.integer(names(models_by_group))))) {
 
   target_model <- models_by_group[[g]]
+  group_data   <- group_data_by_group[[g]]
+
+  # ── Reference-grid diagnostic and adaptive rg.limit ─────────────────────────
+  # emmeans builds a reference grid as the cartesian product of factors that
+  # it treats as fixed. With many conditions, this can exceed the default
+  # rg.limit of 10000, so we compute the realistic grid size, report it with
+  # an estimated memory cost, and bump rg.limit accordingly.
+  #
+  # Random-effect-like smooths (bs='fs' factor smooths and bs='re' random
+  # effects) are excluded from the grid by emmeans, so we exclude them here
+  # too to match its actual behaviour.
+  random_factor_names <- character(0)
+  for (sm in target_model$smooth) {
+    if (inherits(sm, "fs.interaction")) {
+      random_factor_names <- c(random_factor_names, sm$fterm)
+    } else if (inherits(sm, "random.effect")) {
+      random_factor_names <- c(random_factor_names, sm$term)
+    }
+  }
+  random_factor_names <- unique(random_factor_names)
+
+  candidate_factor_vars <- intersect(
+    c(var_names, "Condition_Combo", "animal_id"),
+    colnames(group_data)
+  )
+  factor_sizes <- vapply(candidate_factor_vars, function(v) {
+    if (is.factor(group_data[[v]])) nlevels(group_data[[v]]) else 1L
+  }, integer(1))
+
+  fixed_factor_vars  <- setdiff(candidate_factor_vars, random_factor_names)
+  fixed_factor_sizes <- factor_sizes[fixed_factor_vars]
+
+  n_coefs   <- length(coef(target_model))
+  grid_rows <- if (length(fixed_factor_sizes) > 0)
+                 prod(as.numeric(fixed_factor_sizes)) else 1
+  est_mb    <- grid_rows * n_coefs * 8 / 1e6
+
+  cat(sprintf("\n  [Group %s] Ref-grid fixed factors: %s\n", g,
+              if (length(fixed_factor_vars) > 0)
+                paste(sprintf("%s(%d)", fixed_factor_vars, fixed_factor_sizes),
+                      collapse = " × ")
+              else "(none)"))
+  if (length(random_factor_names) > 0) {
+    cat(sprintf("  [Group %s] Random factors (excluded by emmeans): %s\n", g,
+                paste(random_factor_names, collapse = ", ")))
+  }
+  cat(sprintf("  [Group %s] Estimated grid: %d rows × %d coefs ≈ %.1f MB\n",
+              g, as.integer(grid_rows), n_coefs, est_mb))
+
+  # Set rg.limit with 2x headroom over the estimate, with a 50k floor so
+  # small experiments don't get a tighter-than-default limit.
+  emm_options(rg.limit = max(50000, as.integer(grid_rows * 2)))
 
   # ── Per-variable effects (each variable vs reference, split by other variables) ──
   for (vi in seq_along(var_names)) {

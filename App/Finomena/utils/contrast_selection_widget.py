@@ -25,12 +25,33 @@ class ContrastSelectionWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._conditions: dict = {}         # {cond_name: hex_color}
+        self._roles: dict = {}              # {cond_name: role_string}
         self._pair_checkboxes: dict = {}    # {(condA, condB): QCheckBox}
         self._pending_excluded: set = set() # applied when pair list is (re)built
+        # Tracks whether the user has manually toggled a checkbox. Until True,
+        # arriving role info is allowed to re-apply role-based defaults.
+        self._user_has_interacted: bool = False
         self._build_ui()
         self._update_summary()
 
     # ── Public API ─────────────────────────────────────────────────────────
+
+    def set_roles(self, roles: dict):
+        """
+        Receives {condition_name: role_string} from the metadata assignment widget.
+        If the user hasn't manually toggled anything yet, re-applies the role-based
+        defaults to all existing pairs (Experimental vs Reference/Positive Control
+        are checked; everything else is unchecked).
+        """
+        self._roles = dict(roles)
+        if self._user_has_interacted or not self._pair_checkboxes:
+            return
+        for pair, cb in self._pair_checkboxes.items():
+            cb.blockSignals(True)
+            cb.setChecked(self._is_default_pair(pair))
+            cb.blockSignals(False)
+        self._update_summary()
+        self.selection_changed.emit()
 
     def on_bam_completed(self):
         """
@@ -188,14 +209,28 @@ class ContrastSelectionWidget(QWidget):
         }
 
     def load_config(self, data: dict):
-        """Restores excluded-pair set + posterior settings."""
+        """
+        Restores excluded-pair set + posterior settings.
+
+        If the saved config has no exclusions (empty list or missing key), the
+        role-based defaults stay in place — empty exclusions usually means
+        "user never customized contrasts", not "user explicitly wanted every
+        pair included". An explicit non-empty exclusion list is treated as a
+        deliberate user choice and locks future role updates out.
+        """
         excluded = {tuple(self._canon(p)) for p in data.get("excluded_pairs", [])}
-        self._pending_excluded = excluded
-        # If pairs already exist (conditions were loaded first), apply immediately
-        for pair, cb in self._pair_checkboxes.items():
-            cb.blockSignals(True)
-            cb.setChecked(pair not in excluded)
-            cb.blockSignals(False)
+        if excluded:
+            # Explicit user customization — apply exactly and lock defaults.
+            self._user_has_interacted = True
+            self._pending_excluded = excluded
+            for pair, cb in self._pair_checkboxes.items():
+                cb.blockSignals(True)
+                cb.setChecked(pair not in excluded)
+                cb.blockSignals(False)
+            self._update_summary()
+        else:
+            # No saved exclusions — leave role-based defaults from set_roles in place.
+            self._pending_excluded = set()
 
         pe = data.get("posterior_equivalence") or {}
         self._pe_enabled_cb.setChecked(bool(pe.get("enabled", False)))
@@ -222,6 +257,24 @@ class ContrastSelectionWidget(QWidget):
         a, b = pair
         return (a, b) if a <= b else (b, a)
 
+    # Roles considered "controls" for the default-checked logic.
+    _CONTROL_ROLES = ("Reference Control", "Positive Control")
+
+    def _is_default_pair(self, pair) -> bool:
+        """
+        Default-checked iff one side is Experimental and the other is a control
+        (Reference or Positive). When no role info is available, falls back to
+        True so behavior matches the old "all checked by default".
+        """
+        if not self._roles:
+            return True
+        r1 = self._roles.get(pair[0])
+        r2 = self._roles.get(pair[1])
+        return (
+            (r1 == "Experimental" and r2 in self._CONTROL_ROLES) or
+            (r2 == "Experimental" and r1 in self._CONTROL_ROLES)
+        )
+
     def _rebuild_pair_list(self):
         # Preserve current check state across rebuild (only for pairs that still exist)
         prior_state = {pair: cb.isChecked() for pair, cb in self._pair_checkboxes.items()}
@@ -242,13 +295,13 @@ class ContrastSelectionWidget(QWidget):
             # Precedence for initial state:
             #   1. prior state (if pair existed before rebuild)
             #   2. pending excluded (from load_config before conditions arrived)
-            #   3. default: checked
+            #   3. role-based default: experimental vs control → checked
             if pair in prior_state:
                 cb.setChecked(prior_state[pair])
             elif pair in self._pending_excluded:
                 cb.setChecked(False)
             else:
-                cb.setChecked(True)
+                cb.setChecked(self._is_default_pair(pair))
             cb.stateChanged.connect(self._on_checkbox_changed)
             self._scroll_layout.addWidget(cb)
             self._pair_checkboxes[pair] = cb
@@ -261,6 +314,7 @@ class ContrastSelectionWidget(QWidget):
         self._update_summary()
 
     def _on_checkbox_changed(self):
+        self._user_has_interacted = True
         self._update_summary()
         self.selection_changed.emit()
 
@@ -279,10 +333,12 @@ class ContrastSelectionWidget(QWidget):
         )
 
     def _select_all(self):
+        self._user_has_interacted = True
         for cb in self._pair_checkboxes.values():
             cb.setChecked(True)
 
     def _deselect_all(self):
+        self._user_has_interacted = True
         for cb in self._pair_checkboxes.values():
             cb.setChecked(False)
 

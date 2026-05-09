@@ -6,7 +6,7 @@ Main entry point for the rebuilt app.
 Tab layout:
   1. Experimental Design  — plate layout + phases + conditions + reference controls
   2. Data Loading         — multi-directory input, Cell-4 preprocessing pipeline
-  3. Analysis in R        — optional family selection + BAM analysis
+  3. Time Series BAM      — optional family selection + BAM analysis
 """
 
 import os
@@ -158,7 +158,7 @@ class MainWindow(QMainWindow):
 
         self.main_tabs.addTab(data_loading_tab, "Data Loading")
 
-        # ── Tab 3: Analysis in R ───────────────────────────────────────────────
+        # ── Tab 3: Time Series BAM ─────────────────────────────────────────────
         r_analysis_tab = QWidget()
         r_layout       = QVBoxLayout(r_analysis_tab)
         r_sub_tabs     = QTabWidget()
@@ -173,7 +173,7 @@ class MainWindow(QMainWindow):
         r_sub_tabs.addTab(self.contrast_selection_widget, "2. Contrast Selection")
         r_sub_tabs.addTab(self.bam_widget,               "3. BAM Analysis")
 
-        self.main_tabs.addTab(r_analysis_tab, "Analysis in R")
+        self.main_tabs.addTab(r_analysis_tab, "Time Series BAM")
 
         # ── Signal connections ─────────────────────────────────────────────────
 
@@ -215,6 +215,10 @@ class MainWindow(QMainWindow):
         )
         self.metadata_assignment.roles_updated.connect(
             self.bam_widget.set_roles
+        )
+        # Roles → contrast selection (drives default-checked: experimental vs control)
+        self.metadata_assignment.roles_updated.connect(
+            self.contrast_selection_widget.set_roles
         )
 
         # Plate layout library → data loader
@@ -283,6 +287,17 @@ class MainWindow(QMainWindow):
             return
         self.bam_widget.load_data(df)
         self.family_selection_widget.load_data(df)
+
+    # ── Window close ──────────────────────────────────────────────────────────
+
+    def closeEvent(self, event):
+        """Tear down any in-flight R subprocess trees before the app exits."""
+        for w in (self.bam_widget, self.family_selection_widget):
+            try:
+                w.request_termination()
+            except Exception:
+                pass
+        super().closeEvent(event)
 
     # ── Save / Load config ────────────────────────────────────────────────────
 

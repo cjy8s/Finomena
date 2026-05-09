@@ -14,6 +14,7 @@ BAM analysis (same as the original behaviour).
 import glob as _glob
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import threading
@@ -131,8 +132,7 @@ class FamilySelectionWidget(QWidget):
             "This test fits a simplified model with three candidate distributions and "
             "recommends the best fit based on AIC, BIC, dispersion, deviance explained, "
             "and zero-proportion matching (for families that support zeros).<br><br>"
-            "<i>If you skip this step, <b>Tweedie</b> is used by default — the same "
-            "behaviour as before this feature was added.</i>"
+            "<i>If you skip this step, <b>Tweedie</b> is used by default.</i>"
         )
         info.setWordWrap(True)
         info.setStyleSheet(
@@ -297,12 +297,19 @@ class FamilySelectionWidget(QWidget):
         kwargs = {}
         if sys.platform == "win32":
             kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+        else:
+            # Put the child in its own process group so killpg can take down
+            # the whole R subprocess tree (parallel workers etc.) on Stop or
+            # app close.
+            kwargs["start_new_session"] = True
 
         self._process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            encoding="utf-8",   # R emits UTF-8; Windows would otherwise default to cp1252
+            errors="replace",   # don't crash if R ever emits a stray non-UTF-8 byte
             bufsize=1,
             env=self._r_env(rscript),
             **kwargs
@@ -310,9 +317,45 @@ class FamilySelectionWidget(QWidget):
 
         threading.Thread(target=self._stream_output, daemon=True).start()
 
+    def request_termination(self) -> bool:
+        """
+        Force-kill the R process AND its descendants (silent, no UI updates).
+        See BamWidget.request_termination for rationale. Used by both the Stop
+        button and the MainWindow closeEvent so quitting the app tears down R
+        cleanly.
+        """
+        proc = self._process
+        if proc is None or proc.poll() is not None:
+            return False
+        if sys.platform == "win32":
+            try:
+                subprocess.run(
+                    ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                    capture_output=True, timeout=5,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                )
+            except Exception:
+                try:
+                    proc.terminate()
+                except Exception:
+                    pass
+        else:
+            try:
+                pgid = os.getpgid(proc.pid)
+                os.killpg(pgid, signal.SIGTERM)
+                try:
+                    proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    os.killpg(pgid, signal.SIGKILL)
+            except Exception:
+                try:
+                    proc.terminate()
+                except Exception:
+                    pass
+        return True
+
     def _on_stop(self):
-        if self._process:
-            self._process.terminate()
+        if self.request_termination():
             self._append_log("--- Stopped by user ---")
         self._run_button.setEnabled(True)
         self._stop_button.setEnabled(False)

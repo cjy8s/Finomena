@@ -416,14 +416,13 @@ class BamWidget(QWidget):
         self._log_text.clear()
         self._append_log(f"Rscript: {rscript}")
         self._append_log(f"Script:  {_DEFAULT_R_SCRIPT}")
-        self._append_log(f"Input:   {self._csv_path}")
-        self._append_log(f"Output:  {output_dir}")
+        self._append_log("-" * 60)
+        # The R script echoes the rest of the args (input, output, vars, refs,
+        # roles, family, etc.) on startup — no need to duplicate them here.
         var_names_str = ",".join(self._variable_names)
         ref_values_str = ",".join(
             self._variable_refs.get(v, "") for v in self._variable_names
         )
-        self._append_log(f"Vars:    {var_names_str}")
-        self._append_log(f"Refs:    {ref_values_str}  Condition={self._ref_condition!r}")
         # Build roles string: "WT+DMSO=RC,KO+DMSO=EXP,..."
         _ROLE_ABBREV = {
             "Reference Control": "RC",
@@ -436,13 +435,6 @@ class BamWidget(QWidget):
             for cond, role in self._roles.items()
             if role  # skip empty/unassigned
         )
-        self._append_log(
-            f"Stats:   Global={self._global_correction!r}  "
-            f"Contrast={self._contrast_correction!r}"
-        )
-        self._append_log(f"Roles:   {roles_str}")
-        self._append_log(f"R_LIBS:  {_APP_R_LIB}")
-        self._append_log("-" * 60)
 
         cmd = [
             rscript, _DEFAULT_R_SCRIPT,
@@ -466,6 +458,8 @@ class BamWidget(QWidget):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            encoding="utf-8",   # R emits UTF-8; Windows would otherwise default to cp1252
+            errors="replace",   # don't crash if R ever emits a stray non-UTF-8 byte
             bufsize=1,
             env=self._r_env(rscript),
             **kwargs
@@ -474,8 +468,9 @@ class BamWidget(QWidget):
         t = threading.Thread(target=self._stream_output, daemon=True)
         t.start()
 
-    def _on_stop(self):
-        """Force-kill the R process AND its descendants.
+    def request_termination(self) -> bool:
+        """
+        Force-kill the R process AND its descendants (silent, no UI updates).
 
         Plain Popen.terminate() is unreliable here:
           • Windows: it only ends the immediate Rscript.exe; any worker
@@ -484,15 +479,14 @@ class BamWidget(QWidget):
           • Linux/macOS: same problem unless we kill the whole process group.
         We use taskkill /F /T on Windows and SIGKILL on the process group on
         POSIX to guarantee the whole tree is gone.
+
+        Safe to call at any time. Returns True if a process was killed,
+        False if there was nothing running. Used by the Stop button AND by
+        the MainWindow closeEvent so quitting the app tears down R cleanly.
         """
-        self._user_stopped = True
         proc = self._process
         if proc is None or proc.poll() is not None:
-            self._stop_button.setEnabled(False)
-            return
-
-        self._append_log("--- Stopping R analysis (killing process tree) ---")
-
+            return False
         if sys.platform == "win32":
             try:
                 subprocess.run(
@@ -500,9 +494,11 @@ class BamWidget(QWidget):
                     capture_output=True, timeout=5,
                     creationflags=subprocess.CREATE_NO_WINDOW,
                 )
-            except Exception as e:
-                self._append_log(f"taskkill failed ({e}); falling back to terminate()")
-                proc.terminate()
+            except Exception:
+                try:
+                    proc.terminate()
+                except Exception:
+                    pass
         else:
             try:
                 pgid = os.getpgid(proc.pid)
@@ -511,10 +507,20 @@ class BamWidget(QWidget):
                     proc.wait(timeout=2)
                 except subprocess.TimeoutExpired:
                     os.killpg(pgid, signal.SIGKILL)
-            except Exception as e:
-                self._append_log(f"killpg failed ({e}); falling back to terminate()")
-                proc.terminate()
+            except Exception:
+                try:
+                    proc.terminate()
+                except Exception:
+                    pass
+        return True
 
+    def _on_stop(self):
+        """Stop button: tear down R and update the UI."""
+        self._user_stopped = True
+        if not self.request_termination():
+            self._stop_button.setEnabled(False)
+            return
+        self._append_log("--- Stopping R analysis (killing process tree) ---")
         self._run_button.setEnabled(True)
         self._stop_button.setEnabled(False)
         self._r_status_label.setText("Stopped.")

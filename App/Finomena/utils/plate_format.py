@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
     QMessageBox, QTableWidget, QTableWidgetItem, QHeaderView, QSplitter,
-    QComboBox, QAbstractItemView, QGridLayout, QInputDialog,
+    QComboBox, QAbstractItemView, QGridLayout, QInputDialog, QScrollArea,
 )
 print("[DBG] plate_format: imports done", flush=True)
 from PySide6.QtCore import Qt, Signal
@@ -91,11 +91,17 @@ class ExperimentalPlateWidget(QWidget):
         self.plate_format_combo.currentTextChanged.connect(self._on_format_changed)
         plate_format_layout.addWidget(self.plate_format_combo)
 
-        # Conditions container
+        # Conditions container — wrapped in a scroll area so a long list of
+        # condition buttons stays clickable instead of shrinking vertically.
         self.conditions_label = QLabel("<b>Click a Condition to Activate:</b>")
-        self.conditions_widget = QWidget() # A container for the buttons
+        self.conditions_widget = QWidget()  # holds the buttons inside the scroll area
         self.conditions_layout = QVBoxLayout(self.conditions_widget)
         self.conditions_layout.setAlignment(Qt.AlignTop)
+        self.conditions_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.conditions_scroll = QScrollArea()
+        self.conditions_scroll.setWidgetResizable(True)
+        self.conditions_scroll.setWidget(self.conditions_widget)
 
         # Action buttons
         action_layout = QGridLayout()
@@ -111,8 +117,7 @@ class ExperimentalPlateWidget(QWidget):
         left_layout.addLayout(plate_format_layout)
         left_layout.addSpacing(15)
         left_layout.addWidget(self.conditions_label)
-        left_layout.addWidget(self.conditions_widget)
-        left_layout.addStretch()
+        left_layout.addWidget(self.conditions_scroll, stretch=1)
         left_layout.addLayout(action_layout)
 
         # --- Right Panel (Plate Grid) ---
