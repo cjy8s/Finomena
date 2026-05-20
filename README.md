@@ -720,7 +720,8 @@ tab.
 
 | File | Description |
 |---|---|
-| `family_selection_results.csv` | Per-family AIC, BIC, dispersion, deviance explained, zero-proportion match. |
+| `family_selection_results.csv` | Per-family AIC, BIC, dispersion, deviance explained, zero-proportion match — aggregated across phase groups (AIC/BIC summed, dispersion/dev_explained n-weighted). |
+| `family_selection_by_group.csv` | Per-group × per-family breakdown of the same metrics. Useful for spotting groups where the family ranking disagrees with the overall winner. |
 | `family_selection_winner.csv` | The recommended family + any additive shift applied for Gamma. |
 
 ### From the BAM run

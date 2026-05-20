@@ -152,6 +152,7 @@ if (!all(var_names_display %in% colnames(full_df))) {
 gam_df <- full_df %>%
   mutate(
     animal_id = as.factor(paste(plate, location, sep = "_")),
+    plate     = as.factor(plate),
     # Combined condition factor for interaction smooths
     Condition_Combo = as.factor(Condition)
   )
@@ -177,6 +178,7 @@ formula_str <- paste0(
   "pxl_diff ~ ", parametric_str,
   " + s(time_in_group, k = k_start)",
   " + s(time_in_group, by = Condition_Combo, k = k_start)",
+  " + s(time_in_group, plate, bs = 'fs', m = 1)",
   " + s(time_in_group, animal_id, bs = 'fs', m = 1)"
 )
 cat("\nBAM formula:\n  ", formula_str, "\n\n")
@@ -770,9 +772,12 @@ write_csv(summary_table, "summary_statistics_by_group.csv")
       nd[[v]] <- factor(vars_list[[v]], levels = levels(group_data[[v]]))
     }
     nd$Condition_Combo <- factor(cond_str, levels = cond_levels)
-    # animal_id is required by predict() but excluded from the linear predictor.
+    # animal_id and plate are required by predict() but excluded from the
+    # linear predictor (population-level trajectories).
     nd$animal_id <- factor(group_data$animal_id[1],
                            levels = levels(group_data$animal_id))
+    nd$plate <- factor(group_data$plate[1],
+                       levels = levels(group_data$plate))
     nd
   }
   nd_lhs <- build_nd(lhs, lhs_vars)
@@ -780,7 +785,7 @@ write_csv(summary_table, "summary_statistics_by_group.csv")
 
   # Linear-predictor design matrices, excluding the per-animal random-effect
   # smooth so we get population-level (not animal-specific) trajectories.
-  excl <- "s(time_in_group,animal_id)"
+  excl <- c("s(time_in_group,animal_id)", "s(time_in_group,plate)")
   X_lhs <- predict(model, newdata = nd_lhs, type = "lpmatrix", exclude = excl)
   X_rhs <- predict(model, newdata = nd_rhs, type = "lpmatrix", exclude = excl)
   X_diff <- X_lhs - X_rhs                      # n_time × n_coef
