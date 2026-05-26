@@ -730,19 +730,23 @@ tab.
 |---|---|
 | `finomena_pre-processed_data.csv` | The full processed dataset that was sent to R. Contains `time_sec`, `location`, `loc_coord`, `pixel_diff`, `Condition`, `Phase`, `Group`, `animal_id`, `plate`. |
 | `contrast_selection.json` | Sidecar file listing the kept pairs and posterior-equivalence settings. R reads this to know which contrasts to compute. |
-| `forest_plot_<varname>_effect.pdf/png` | One forest plot per variable in your design (e.g., `forest_plot_drug_effect.pdf`, `forest_plot_genotype_effect.pdf`). Effect sizes vs the reference level, faceted by the other variable's levels. |
-| `forest_plot_interactions.pdf/png` | Forest plot of the kept pairwise interactions across all Groups. |
-| `heatmap_diverging_v1.pdf/png` | Heatmap of signed −log₁₀(corrected p) × sign(effect). Blue = decreased vs reference; red = increased. Effect sizes printed inside significant cells. |
-| `rescue_assessment_context_faceted.pdf/png` | (2-variable designs only) Line plots of effect sizes over Groups for the comparisons that matter for rescue assessment. |
-| `summary_statistics_by_group.csv` | Per Group: number of significant contrasts and mean absolute effect size, broken down by test family. Machine-readable. |
+| `master_results.csv` | The full per-contrast result table: `Test_Family`, `Group`, `Split_By`, `Tested_Level`, `estimate` (log₂ FC), `SE`, `p.value`, `Global_FDR_pvalue`. Source data for the **Visualizations** tab (volcano / top-N forest / beeswarm). |
+| `summary_statistics_by_group.csv` | Per Group × Test_Family: number of significant contrasts and mean absolute effect size. Machine-readable. |
+
+Interactive plots over `master_results.csv` are produced live in the
+**Visualizations** tab; figures are exported on demand to PNG / PDF / SVG from
+that tab rather than being pre-rendered by R.
 
 ### From Posterior Equivalence (if enabled)
 
 | File | Description |
 |---|---|
-| `posterior_equivalence_density.png` | Density plots of the posterior distribution of M for each kept pair, with δ marked as a vertical line. |
-| `posterior_equivalence_heatmap.png` | Heatmap of Pr(M < δ) for every kept pair × Group combination. |
-| `posterior_equivalence_summary.csv` | Machine-readable: per pair × Group, posterior mean of M, posterior SD, Pr(M < δ), and the δ used. |
+| `posterior_equivalence_summary.csv` | Machine-readable: per pair × Group, posterior median/CI of M, Pr(M < δ), and the δ used. |
+| `posterior_equivalence_draws.csv` | Long format raw draws (columns: `Group`, `pair`, `M_log2`). Source data for the **Posterior eq.: M density** plot type in the Visualizations tab. |
+
+Both PE plots (density of M, Pr(M < δ) heatmap) are now produced live in the
+**Visualizations** tab — pick *Posterior eq.: M density* or *Posterior eq.:
+Pr(M < δ)* in the plot-type dropdown. R no longer pre-renders PE PNGs.
 
 ---
 

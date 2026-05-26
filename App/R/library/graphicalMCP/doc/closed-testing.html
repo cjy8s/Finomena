@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Graphical multiple comparison procedures based on the closure principle</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+<style type="text/css">detaiks.chunk-details > summary.chunk-summary {
+text-align: right;
+}
+details.chunk-details[open] > summary.chunk-summary::after {
+content: "Hide";
+}
+details.chunk-details[open] > summary.chunk-summary > span.chunk-summary-text {
+display: none;
+}
+</style>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">
+/* for pandoc --citeproc since 2.11 */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Graphical multiple comparison procedures
+based on the closure principle</h1>
+
+
+
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gt)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gMCP)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lrstat)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(graphicalMCP)</span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+<div id="motivating-example" class="section level1">
+<h1>Motivating example</h1>
+<p>Consider a confirmatory clinical trial comparing a test treatment
+(treatment) against the control treatment (control) for a disease. There
+are two doses of treatment: the low dose and the high dose. There are
+three endpoints included in the multiplicity adjustment strategy, which
+are the primary endpoint (PE) and two secondary endpoints (SE1 and SE2).
+In total, there are six null hypotheses: <span class="math inline">\(H_1\)</span>, <span class="math inline">\(H_3\)</span> and <span class="math inline">\(H_5\)</span> are the primary hypothesis and two
+secondary hypotheses respectively for the low dose versus control; <span class="math inline">\(H_2\)</span>, <span class="math inline">\(H_4\)</span> and <span class="math inline">\(H_6\)</span> are the primary hypothesis and two
+secondary hypotheses respectively for the high dose versus control.</p>
+<p>There are clinical considerations which constrain the structure of
+multiple comparison procedures, and which can be flexibly incorporated
+using graphical approaches. First, the low and the high doses are
+considered equally important, which means that rejecting the primary
+hypothesis for either dose versus control leads to a successful trial.
+Regarding secondary hypotheses, each one is tested only if its
+corresponding primary hypothesis has been rejected. This means that
+<span class="math inline">\(H_3\)</span> and <span class="math inline">\(H_5\)</span> are tested only after <span class="math inline">\(H_1\)</span> has been rejected; <span class="math inline">\(H_4\)</span> and <span class="math inline">\(H_6\)</span> are tested only after <span class="math inline">\(H_2\)</span> has been rejected.</p>
+<p>In addition, there are some statistical considerations to complete
+the graph. The primary hypotheses <span class="math inline">\(H_1\)</span> and <span class="math inline">\(H_2\)</span> will have an equal hypothesis weight
+of 0.5. The secondary hypotheses have a hypothesis weight of 0. When a
+primary hypothesis has been rejected, its weight will propagate along
+three outgoing edges: one to the other primary hypothesis and two to its
+descendant secondary hypotheses. The edge to the other primary
+hypothesis will have a transition weight of 0.5; the two edges to the
+descendant secondary hypotheses will have an equal transition weight of
+0.25. Between the secondary hypotheses for each dose-control comparison,
+we will have an edge of a transition weight of 1 (or very close to 1 to
+allow <span class="math inline">\(\epsilon\)</span> edges). The
+hypothesis weights for a dose-control comparison group will be
+propagated to the primary hypothesis for the other dose-control
+comparison, but only after all hypotheses in the first dose-control
+comparison group have been deleted. With these specifications, we can
+create the following graph.</p>
+<div id="create-a-graph" class="section level2">
+<h2>Create a graph</h2>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>hypotheses <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>epsilon <span class="ot">&lt;-</span> <span class="fl">1e-5</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>transitions <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>, <span class="fl">0.25</span>, <span class="dv">0</span>, <span class="fl">0.25</span>, <span class="dv">0</span>),</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">0.25</span>, <span class="dv">0</span>, <span class="fl">0.25</span>),</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>),</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(epsilon, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span> <span class="sc">-</span> epsilon),</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">0</span>, epsilon, <span class="dv">1</span> <span class="sc">-</span> epsilon, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>),</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>hyp_names <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;H1&quot;</span>, <span class="st">&quot;H2&quot;</span>, <span class="st">&quot;H3&quot;</span>, <span class="st">&quot;H4&quot;</span>, <span class="st">&quot;H5&quot;</span>, <span class="st">&quot;H6&quot;</span>)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>g <span class="ot">&lt;-</span> <span class="fu">graph_create</span>(hypotheses, transitions, hyp_names)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>plot_layout <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="fl">0.15</span>, <span class="fl">0.5</span>),</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="fl">0.65</span>, <span class="fl">0.5</span>),</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>),</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="dv">0</span>),</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="fl">0.3</span>, <span class="dv">0</span>),</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="fl">0.8</span>, <span class="dv">0</span>)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  g,</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">layout =</span> plot_layout,</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">eps =</span> epsilon,</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">edge_curves =</span> <span class="fu">c</span>(<span class="at">pairs =</span> <span class="fl">0.8</span>),</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">vertex.size =</span> <span class="dv">35</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+</details>
+<p><img src="data:image/png;base64,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" style="display: block; margin: auto;" />C:5n8420812d74b3d-testing.R</p>
+</div>
+</div>
+<div id="perform-the-graphical-multiple-comparison-procedure-based-on-the-closure-principle" class="section level1">
+<h1>Perform the graphical multiple comparison procedure based on the
+closure principle</h1>
+<div id="bonferroni-tests" class="section level2">
+<h2>Bonferroni tests</h2>
+<p>Given a set of p-values for <span class="math inline">\(H_1, \ldots,
+H_6\)</span>, the graphical multiple comparison procedure can be
+performed to control the family-wise error rate (FWER) at the
+significance level <code>alpha</code>. For one-sided p-values,
+<code>alpha</code> is often set to 0.025 (default). First, we perform a
+Bonferroni-based procedure using the closure principle <span class="citation">(Bretz et al. 2009)</span>. After running the
+procedure, none of these hypotheses is rejected. These results are
+identical to using <code>graph_test_shortcut()</code>.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>p_values <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.015</span>, <span class="fl">0.013</span>, <span class="fl">0.01</span>, <span class="fl">0.007</span>, <span class="fl">0.1</span>, <span class="fl">0.0124</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>test_results <span class="ot">&lt;-</span> <span class="fu">graph_test_closure</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  g,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">p =</span> p_values,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.025</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">test_values =</span> <span class="cn">TRUE</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>test_results<span class="sc">$</span>outputs<span class="sc">$</span>adjusted_p</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    H1    H2    H3    H4    H5    H6 </span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.026 0.026 0.028 0.028 0.100 0.028</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>test_results<span class="sc">$</span>outputs<span class="sc">$</span>rejected</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    H1    H2    H3    H4    H5    H6 </span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; FALSE FALSE FALSE FALSE FALSE FALSE</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Same testing results as</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co"># &#39;graph_test_shortcut(g, p = p_values, alpha = 0.025)$outputs$rejected&#39;</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+<div id="obtain-the-closure" class="section level3">
+<h3>Obtain the closure</h3>
+<p>To investigate the closure and how every intersection hypothesis is
+rejected, one could obtain the detailed output by specifying
+<code>verbose = TRUE</code>. Because all hypotheses are tested using
+Bonferroni tests, the adjusted p-value for every intersection hypothesis
+is the same as the adjusted p-value for group 1 (meaning all hypotheses
+are in the same group for Bonferroni tests). An intersection hypothesis
+is rejected if its adjusted p-value is less than or equal to
+<code>alpha</code>.</p>
+<p>Adjusted p-values are initially calculated by groups of hypotheses.
+In this case there is only one group, which includes all hypotheses, but
+there can be more. The adjusted p-value for an intersection hypothesis
+is the minimum across groups within that intersection. Finally, the
+adjusted p-value for an individual hypothesis for the whole procedure is
+equal to the maximum of adjusted p-values across intersections involving
+that hypothesis.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>test_results_verbose <span class="ot">&lt;-</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">graph_test_closure</span>(</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    g,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">p =</span> p_values,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.025</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">verbose =</span> <span class="cn">TRUE</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(test_results_verbose<span class="sc">$</span>details<span class="sc">$</span>results)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Intersection  H1  H2 H3 H4 H5 H6 adj_p_grp1 adj_p_inter reject_intersection</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1       111111 0.5 0.5  0  0  0  0      0.026       0.026               FALSE</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2       111110 0.5 0.5  0  0  0 NA      0.026       0.026               FALSE</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3       111101 0.5 0.5  0  0 NA  0      0.026       0.026               FALSE</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4       111100 0.5 0.5  0  0 NA NA      0.026       0.026               FALSE</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5       111011 0.5 0.5  0 NA  0  0      0.026       0.026               FALSE</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6       111010 0.5 0.5  0 NA  0 NA      0.026       0.026               FALSE</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+<div id="obtain-adjusted-significance-levels" class="section level3">
+<h3>Obtain adjusted significance levels</h3>
+<p>An equivalent way to obtain rejections is via adjusting significance
+levels. A hypothesis is rejected if its p-value is less than or equal to
+its adjusted significance level. One can obtain adjusted significance
+levels for every hypothesis in every intersection hypothesis in the
+closure by specifying <code>test_values = TRUE</code>. A hypothesis is
+rejected by the closed testing procedure if <em>all</em> intersection
+hypotheses involving it have been rejected. An intersection hypothesis
+is rejected if <em>any</em> null hypotheses within it have been
+rejected.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>test_results_test_values <span class="ot">&lt;-</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">graph_test_closure</span>(</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    g,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">test_types =</span> <span class="st">&quot;b&quot;</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">p =</span> p_values,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.025</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">test_values =</span> <span class="cn">TRUE</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(test_results_test_values<span class="sc">$</span>test_values<span class="sc">$</span>results)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Intersection Hypothesis       Test      p Weight Alpha Inequality_holds</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1       111111         H1 bonferroni 0.0150    0.5 0.025            FALSE</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2       111111         H2 bonferroni 0.0130    0.5 0.025            FALSE</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3       111111         H3 bonferroni 0.0100    0.0 0.025            FALSE</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4       111111         H4 bonferroni 0.0070    0.0 0.025            FALSE</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5       111111         H5 bonferroni 0.1000    0.0 0.025            FALSE</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6       111111         H6 bonferroni 0.0124    0.0 0.025            FALSE</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+</div>
+<div id="mixed-procedures-for-graphical-approaches" class="section level2">
+<h2>Mixed procedures for graphical approaches</h2>
+<p>The framework of graphicalMCP allows a mixture of tests to improve
+the performance from the Bonferroni-based graphical approaches. We can
+group hypotheses into multiple subgroups and perform a separate test for
+every subgroup. Currently, graphicalMCP supports Bonferroni, parametric
+and Simes tests. To connect results from different subgroups of
+hypotheses, Bonferroni tests are used. Here, we will show two examples.
+The first example applies parametric tests to primary hypotheses <span class="citation">(Xi et al. 2017)</span>, and the second example applies
+Simes tests to two subgroups of secondary hypotheses in addition to
+parametric tests to primary hypotheses.</p>
+<div id="parametric-tests-for-primary-hypotheses" class="section level3">
+<h3>Parametric tests for primary hypotheses</h3>
+<p>In this example, we assume that the test statistics for primary
+hypotheses follow an asymptotic bivariate normal distribution. Under
+their null hypotheses <span class="math inline">\(H_1\)</span> and <span class="math inline">\(H_2\)</span>, the mean of the distribution is 0.
+The correlation between test statistics for <span class="math inline">\(H_1\)</span> and <span class="math inline">\(H_2\)</span> can be calculated as a function of
+sample size. Assume that the sample size for the control, the low and
+the high doses is <span class="math inline">\(n_0\)</span>, <span class="math inline">\(n_1\)</span> and <span class="math inline">\(n_2\)</span>, respectively. Then the correlation
+between test statistics for <span class="math inline">\(H_1\)</span> and
+<span class="math inline">\(H_2\)</span> is <span class="math inline">\(\rho_{12}=\left(\frac{n_1}{n_1+n_0}\right)^{1/2}\left(\frac{n_2}{n_2+n_0}\right)^{1/2}\)</span>.
+Under the equal randomization, this correlation is 0.5.</p>
+<p>For the intersection hypothesis <span class="math inline">\(H_1\cap
+H_2\cap H_3\cap H_4\cap H_5\cap H_6\)</span>, hypothesis weights are
+0.5, 0.5, 0, 0, 0, and 0, respectively for <span class="math inline">\(H_1,\ldots, H_6\)</span>. Assume one-sided
+p-values for these hypotheses are <span class="math inline">\(p_1,\ldots,p_6\)</span>, respectively. The
+intersection hypothesis is rejected by the Bonferroni test if <span class="math inline">\(p_1\leq 0.5\alpha\)</span> or <span class="math inline">\(p_2\leq 0.5\alpha\)</span>. Alternatively, a
+parametric test utilizes the correlation between test statistics <span class="math inline">\(t_1=\Phi^{-1}(1 - p_1)\)</span> and <span class="math inline">\(t_2=\Phi^{-1}(1 - p_2)\)</span>. The intersection
+hypothesis can be rejected if <span class="math inline">\(p_1\leq
+c\times 0.5\alpha\)</span> or <span class="math inline">\(p_2\leq
+c\times 0.5\alpha\)</span>, where the <span class="math inline">\(c\)</span> value is the adjustment due to the
+correlation between <span class="math inline">\(t_1\)</span> and <span class="math inline">\(t_2\)</span>. More specifically, <span class="math inline">\(c\)</span> can be solved as a solution to <span class="math inline">\(Pr\{(p_1\leq c\times 0.5\alpha)\cup (p_2\leq
+c\times 0.5\alpha)\}=\alpha\)</span>. For a given correlation <span class="math inline">\(\rho_{12}\)</span>, the <span class="math inline">\(c\)</span> value can be solved using the
+<code>uniroot</code> function and the <code>mvtnorm</code> package. For
+example, if <span class="math inline">\(\rho_{12}=0.5\)</span>, the
+<span class="math inline">\(c\)</span> value is 1.078. Then we can
+obtain the adjusted significance level for <span class="math inline">\(H_1\)</span> and <span class="math inline">\(H_2\)</span> as <span class="math inline">\(c\times 0.5\alpha\)</span>. Alternatively, we can
+calculate the adjusted p-value for <span class="math inline">\(H_1\cap
+H_2\cap H_3\cap H_4\cap H_5\cap H_6\)</span> as <span class="math inline">\(Pr\{(P_1\leq \min{\{p_1, p_2\}})\cup (P_2\leq
+\min{\{p_1, p_2\}})\}\)</span>.</p>
+<p>To implement this procedure, we need to create two subgroups: one for
+<span class="math inline">\(H_1\)</span> and <span class="math inline">\(H_2\)</span>, and one for the rest of the
+hypotheses. For the first subgroup of hypotheses, we apply parametric
+tests; for the second subgroup (and its subsets), we apply Bonferroni
+tests. Three additional inputs are needed: to specify the grouping
+information with <code>test_groups</code>, to identify the types of
+tests for every subgroup with <code>test_types</code>, and to provide
+the correlation matrix for parametric tests with <code>test_corr</code>.
+Assume the correlation is 0.5 between test statistics for primary
+hypotheses. The procedure rejects <span class="math inline">\(H_1\)</span> and <span class="math inline">\(H_2\)</span>, but no others. Compared with the
+Bonferroni-based graphical approach which didn’t rejected any
+hypothesis, this illustrates the power improvement of using parametric
+tests over Bonferroni tests.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>corr_12 <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fl">0.5</span>, <span class="at">nrow =</span> <span class="dv">2</span>, <span class="at">ncol =</span> <span class="dv">2</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">diag</span>(corr_12) <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>test_results_parametric <span class="ot">&lt;-</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">graph_test_closure</span>(</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    g,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">p =</span> p_values,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.025</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">test_groups =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="dv">3</span><span class="sc">:</span><span class="dv">6</span>),</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">test_types =</span> <span class="fu">c</span>(<span class="st">&quot;parametric&quot;</span>, <span class="st">&quot;bonferroni&quot;</span>),</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">test_corr =</span> <span class="fu">list</span>(corr_12, <span class="cn">NA</span>),</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">test_values =</span> <span class="cn">TRUE</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>test_results_parametric<span class="sc">$</span>outputs<span class="sc">$</span>adjusted_p</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         H1         H2         H3         H4         H5         H6 </span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.02413846 0.02413846 0.02800000 0.02800000 0.10000000 0.02800000</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>test_results_parametric<span class="sc">$</span>outputs<span class="sc">$</span>rejected</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    H1    H2    H3    H4    H5    H6 </span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  TRUE  TRUE FALSE FALSE FALSE FALSE</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(test_results_parametric<span class="sc">$</span>test_values<span class="sc">$</span>results)</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Intersection Hypothesis       Test      p      c_value Weight Alpha</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1       111111         H1 parametric 0.0150 1.0782936582    0.5 0.025</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2       111111         H2 parametric 0.0130 1.0782936582    0.5 0.025</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3       111111         H3 bonferroni 0.0100                 0.0 0.025</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4       111111         H4 bonferroni 0.0070                 0.0 0.025</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5       111111         H5 bonferroni 0.1000                 0.0 0.025</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6       111111         H6 bonferroni 0.0124                 0.0 0.025</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Inequality_holds</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1            FALSE</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2             TRUE</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3            FALSE</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4            FALSE</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5            FALSE</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6            FALSE</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+<div id="parametric-tests-for-primary-hypotheses-and-simes-tests-for-secondary-hypotheses" class="section level3">
+<h3>Parametric tests for primary hypotheses and Simes tests for
+secondary hypotheses</h3>
+<p>In addition to using parametric tests for primary hypotheses, there
+are other ways to improve the Bonferroni-based graphical approaches. One
+way is to apply Simes tests to secondary hypotheses<span class="citation">(Bretz et al. 2011; Lu 2016)</span>. Simes tests
+improve over Bonferroni tests because they may reject an intersection
+hypothesis if all p-values are relatively small, even if they’re larger
+than adjusted significance levels of Bonferroni tests.</p>
+<p>For the intersection hypothesis <span class="math inline">\(H_3\cap
+H_5\)</span>, hypothesis weights are 0.5 and 0.5, respectively for <span class="math inline">\(H_3\)</span> and <span class="math inline">\(H_5\)</span>. The intersection hypothesis is
+rejected by the Bonferroni test if <span class="math inline">\(p_3\leq
+0.5\alpha\)</span> or <span class="math inline">\(p_5\leq
+0.5\alpha\)</span>. In addition to these conditions, the Simes test can
+also reject the intersection hypothesis if both <span class="math inline">\(p_3\)</span> and <span class="math inline">\(p_5\)</span> are less than or equal to <span class="math inline">\(\alpha\)</span>. In order to control the Type I
+error for the Simes test, a distributional requirement is needed, which
+is called <span class="math inline">\(MTP_2\)</span> <span class="citation">(Sarkar 1998)</span>. In this case, it means that the
+correlation between test statistics for <span class="math inline">\(H_3\)</span> and <span class="math inline">\(H_5\)</span> should be non-negative.</p>
+<p>To illustrate the possibility of using mixed tests in this example,
+we keep parametric tests for primary hypotheses and apply Simes tests
+for secondary hypotheses. There are two sets of secondary hypotheses:
+<span class="math inline">\(H_3\)</span> and <span class="math inline">\(H_5\)</span> for the secondary hypotheses for the
+low dose versus control, and <span class="math inline">\(H_4\)</span>
+and <span class="math inline">\(H_6\)</span> for the secondary
+hypotheses for the high dose versus control. It is believed that the
+correlation between test statistics for <span class="math inline">\(H_3\)</span> and <span class="math inline">\(H_5\)</span> is non-negative and it is the same
+case for <span class="math inline">\(H_4\)</span> and <span class="math inline">\(H_6\)</span>. Thus one can apply Simes tests to
+<span class="math inline">\(H_3\)</span> and <span class="math inline">\(H_5\)</span>, and separately to <span class="math inline">\(H_4\)</span> and <span class="math inline">\(H_6\)</span>. Note that this is different from
+applying Simes tests to all <span class="math inline">\(H_3\ldots,H_6\)</span> which requires a stronger
+<span class="math inline">\(MTP_2\)</span> condition.</p>
+<p>To implement this procedure, we create three subgroups: one for <span class="math inline">\(H_1\)</span> and <span class="math inline">\(H_2\)</span>, one for <span class="math inline">\(H_3\)</span> and <span class="math inline">\(H_5\)</span>, and one for <span class="math inline">\(H_4\)</span> and <span class="math inline">\(H_6\)</span>. For the first subgroup of
+hypotheses, we apply the parametric tests; for the second and the third
+subgroups, we apply separate Simes tests. Assume the correlation is 0.5
+between test statistics for primary hypotheses. The procedure rejects
+<span class="math inline">\(H_1\)</span>, <span class="math inline">\(H_2\)</span>, <span class="math inline">\(H_4\)</span>, <span class="math inline">\(H_6\)</span>, and <span class="math inline">\(H_3\)</span>. Compared to the results of only
+using parametric tests for primary hypotheses (and Bonferroni tests for
+secondary hypotheses), <span class="math inline">\(H_3\)</span>, <span class="math inline">\(H_4\)</span> and <span class="math inline">\(H_6\)</span> are the additional hypotheses
+rejected because of using Simes tests, showing the power improvement of
+using Simes tests.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>test_results_parametric_simes <span class="ot">&lt;-</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">graph_test_closure</span>(</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    g,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">p =</span> p_values, <span class="at">alpha =</span> <span class="fl">0.025</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">test_groups =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">5</span>), <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">6</span>)),</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">test_types =</span> <span class="fu">c</span>(<span class="st">&quot;parametric&quot;</span>, <span class="st">&quot;simes&quot;</span>, <span class="st">&quot;simes&quot;</span>),</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">test_corr =</span> <span class="fu">list</span>(corr_12, <span class="cn">NA</span>, <span class="cn">NA</span>),</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">test_values =</span> <span class="cn">TRUE</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>test_results_parametric_simes<span class="sc">$</span>outputs<span class="sc">$</span>adjusted_p</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         H1         H2         H3         H4         H5         H6 </span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.02413846 0.02413846 0.02480008 0.02480000 0.10000000 0.02480008</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>test_results_parametric_simes<span class="sc">$</span>outputs<span class="sc">$</span>rejected</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    H1    H2    H3    H4    H5    H6 </span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  TRUE  TRUE  TRUE  TRUE FALSE  TRUE</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(test_results_parametric_simes<span class="sc">$</span>test_values<span class="sc">$</span>results)</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Intersection Hypothesis       Test      p      c_value Weight Alpha</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1       111111         H1 parametric 0.0150 1.0782936582    0.5 0.025</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2       111111         H2 parametric 0.0130 1.0782936582    0.5 0.025</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3       111111         H3      simes 0.0100                 0.0 0.025</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5       111111         H4      simes 0.0070                 0.0 0.025</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4       111111         H5      simes 0.1000                 0.0 0.025</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6       111111         H6      simes 0.0124                 0.0 0.025</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Inequality_holds</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1            FALSE</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2             TRUE</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3            FALSE</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5            FALSE</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4            FALSE</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6            FALSE</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+</div>
+<div id="power-calculation" class="section level2">
+<h2>Power calculation</h2>
+<p>Given the above graph, the trial team is often interested in the
+power of the trial. For a single null hypothesis, the power is the
+probability to reject the null hypothesis at the significance level
+<code>alpha</code> when the alternative hypothesis is true (i.e. a true
+positive). For multiple null hypotheses, there could be multiple version
+of power. For example, the power to reject at least one hypothesis and
+the power to reject all hypotheses, given the alternative hypotheses are
+true. With the graphical multiple comparison procedures, it is also
+important to understand the power to reject each hypothesis, given the
+multiplicity adjustment. Sometimes, a team may want to customize
+definitions of power to define success. Thus power calculation is an
+important aspect of trial design.</p>
+<div id="input-marginal-power-for-primary-hypotheses" class="section level3">
+<h3>Input: Marginal power for primary hypotheses</h3>
+<p>Assume that the primary endpoint is about the occurrence of an
+unfavorable clinical event. To evaluate the treatment effect, the
+proportion of patients with this event is calculated and it is the lower
+the better. Assume that the proportions are 0.181 for the low and the
+high doses, and 0.3 for control. Using the equal randomization among the
+three treatment groups, the clinical trial team chooses a total sample
+size of 600 with 200 per group. This leads to a marginal power of 80%
+for <span class="math inline">\(H_1\)</span> and <span class="math inline">\(H_2\)</span>, respectively, using the two-sample
+test for difference in proportions with unpooled variance each at
+one-sided significance level 0.025. In this calculation, we use the
+marginal power to combine the information from the treatment effect, any
+nuisance parameter, and sample sizes for each hypothesis. Note that the
+significance level used for the marginal power should be the same as
+<code>alpha</code> which is used in the power calculation as the
+significance level for the FWER control. In addition, the marginal power
+has a one-to-one relationship with the noncentrality parameter, which is
+illustrated below.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>alpha <span class="ot">&lt;-</span> <span class="fl">0.025</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>prop <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.3</span>, <span class="fl">0.181</span>, <span class="fl">0.181</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>sample_size <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">200</span>, <span class="dv">3</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>unpooled_variance <span class="ot">&lt;-</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  prop[<span class="sc">-</span><span class="dv">1</span>] <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> prop[<span class="sc">-</span><span class="dv">1</span>]) <span class="sc">/</span> sample_size[<span class="sc">-</span><span class="dv">1</span>] <span class="sc">+</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  prop[<span class="dv">1</span>] <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> prop[<span class="dv">1</span>]) <span class="sc">/</span> sample_size[<span class="dv">1</span>]</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>noncentrality_parameter_primary <span class="ot">&lt;-</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span>(prop[<span class="sc">-</span><span class="dv">1</span>] <span class="sc">-</span> prop[<span class="dv">1</span>]) <span class="sc">/</span> <span class="fu">sqrt</span>(unpooled_variance)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>marginal_power_primary <span class="ot">&lt;-</span> <span class="fu">pnorm</span>(</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">qnorm</span>(alpha, <span class="at">lower.tail =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> noncentrality_parameter_primary,</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd =</span> <span class="dv">1</span>,</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">lower.tail =</span> <span class="cn">FALSE</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(marginal_power_primary) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;H1&quot;</span>, <span class="st">&quot;H2&quot;</span>)</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>marginal_power_primary</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        H1        H2 </span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.8028315 0.8028315</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+<div id="input-marginal-power-for-secondary-hypotheses" class="section level3">
+<h3>Input: Marginal power for secondary hypotheses</h3>
+<p>Assume that the secondary endpoint (SE1) is about the change in total
+medication score from baseline, which is a continuous outcome. Also
+assume that the secondary endpoint (SE2) is about the change in another
+medication score from baseline, which is a continuous outcome and it
+contains fewer categories compared to SE1. To evaluate the treatment
+effect, the mean change is calculated and it is the more reduction the
+better. Assume that the mean change from baseline for SE1 is the
+reduction of 7.5 and 8.25, respectively for the low and the high doses,
+and 5 for control. Also assume that the mean change from baseline for
+SE2 is the reduction of 8 and 9, respectively for the low and the high
+doses, and 6 for control. Further assume a known common standard
+deviation of 10. Given the sample size of 200 per treatment group, the
+marginal power is 71% and 90% for <span class="math inline">\(H_3\)</span> and <span class="math inline">\(H_4\)</span>, respectively and 52% and 85% for
+<span class="math inline">\(H_5\)</span> and <span class="math inline">\(H_6\)</span>, respectively using the two-sample
+<span class="math inline">\(z\)</span>-test for the difference in means
+each at the one-sided significance level 0.025.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>mean_change_se1 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="fl">7.5</span>, <span class="fl">8.25</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>sd <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">10</span>, <span class="dv">3</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>variance <span class="ot">&lt;-</span> sd[<span class="sc">-</span><span class="dv">1</span>]<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> sample_size[<span class="sc">-</span><span class="dv">1</span>] <span class="sc">+</span> sd[<span class="dv">1</span>]<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> sample_size[<span class="dv">1</span>]</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>noncentrality_parameter_se1 <span class="ot">&lt;-</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  (mean_change_se1[<span class="sc">-</span><span class="dv">1</span>] <span class="sc">-</span> mean_change_se1[<span class="dv">1</span>]) <span class="sc">/</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sqrt</span>(variance)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>marginal_power_se1 <span class="ot">&lt;-</span> <span class="fu">pnorm</span>(</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">qnorm</span>(alpha, <span class="at">lower.tail =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> noncentrality_parameter_se1,</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd =</span> <span class="dv">1</span>,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">lower.tail =</span> <span class="cn">FALSE</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(marginal_power_se1) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;H3&quot;</span>, <span class="st">&quot;H4&quot;</span>)</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>marginal_power_se1</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        H3        H4 </span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.7054139 0.9014809</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>mean_change_se2 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">6</span>, <span class="dv">8</span>, <span class="dv">9</span>)</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>noncentrality_parameter_se2 <span class="ot">&lt;-</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>  (mean_change_se2[<span class="sc">-</span><span class="dv">1</span>] <span class="sc">-</span> mean_change_se2[<span class="dv">1</span>]) <span class="sc">/</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sqrt</span>(variance)</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>marginal_power_se2 <span class="ot">&lt;-</span> <span class="fu">pnorm</span>(</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">qnorm</span>(alpha, <span class="at">lower.tail =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> noncentrality_parameter_se2,</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd =</span> <span class="dv">1</span>,</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">lower.tail =</span> <span class="cn">FALSE</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(marginal_power_se2) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;H5&quot;</span>, <span class="st">&quot;H6&quot;</span>)</span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>marginal_power_se2</span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        H5        H6 </span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.5159678 0.8508384</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+<div id="input-correlation-structure-to-simulate-test-statistics" class="section level3">
+<h3>Input: Correlation structure to simulate test statistics</h3>
+<p>In addition to the marginal power, we also need to make assumptions
+about the joint distribution of test statistics. In this example, we
+assume that they follow a multivariate normal distribution which means
+they’re defined by the noncentrality parameters above and the
+correlation matrix <span class="math inline">\(R\)</span>. To obtain the
+correlations, it is helpful to understand that there are two types of
+correlations in this example. The correlation between two dose-control
+comparisons for the same endpoint and the correlation between endpoints.
+The former correlation can be calculated as a function of sample size.
+For example, the correlation between test statistics for <span class="math inline">\(H_1\)</span> and <span class="math inline">\(H_2\)</span> is <span class="math inline">\(\rho_{12}=\left(\frac{n_1}{n_1+n_0}\right)^{1/2}\left(\frac{n_2}{n_3+n_0}\right)^{1/2}\)</span>.
+Under the equal randomization, this correlation is 0.5. The correlation
+between test statistics for <span class="math inline">\(H_3\)</span> and
+<span class="math inline">\(H_4\)</span> and for <span class="math inline">\(H_5\)</span> and <span class="math inline">\(H_6\)</span> is the same as the above. On the
+other hand, the correlation between endpoints for the same dose-control
+comparison is often estimated based on prior knowledge or from previous
+trials. Without the information, we assume it to be <span class="math inline">\(\rho_{13}=\rho_{15}=\rho_{24}=\rho_{26}=\rho_{35}=\rho_{46}=0.5\)</span>.
+In practice, one could set this correlation as a parameter and try
+multiple values to assess the sensitivity of this assumption. Regarding
+the correlation between test statistics for <span class="math inline">\(H_1\)</span> and <span class="math inline">\(H_4
+(H_6)\)</span> and for <span class="math inline">\(H_2\)</span> and
+<span class="math inline">\(H_3 (H_5)\)</span>, they are even more
+difficult to estimate. Here we use a simple product rule, which means
+that this correlation is a product of correlations of the two previously
+assumed correlations. For example, <span class="math inline">\(\rho_{14}=\rho_{12}*\rho_{24}\)</span> and <span class="math inline">\(\rho_{23}=\rho_{12}*\rho_{13}\)</span>. In
+practice, further assumptions may be made and tested, instead of using
+the product rule.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>corr <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="at">nrow =</span> <span class="dv">6</span>, <span class="at">ncol =</span> <span class="dv">6</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>corr[<span class="dv">1</span>, <span class="dv">2</span>] <span class="ot">&lt;-</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  corr[<span class="dv">3</span>, <span class="dv">4</span>] <span class="ot">&lt;-</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  corr[<span class="dv">5</span>, <span class="dv">6</span>] <span class="ot">&lt;-</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sqrt</span>(</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    sample_size[<span class="dv">2</span>] <span class="sc">/</span> <span class="fu">sum</span>(sample_size[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]) <span class="sc">*</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>      sample_size[<span class="dv">3</span>] <span class="sc">/</span> <span class="fu">sum</span>(sample_size[<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>)])</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>rho <span class="ot">&lt;-</span> <span class="fl">0.5</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>corr[<span class="dv">1</span>, <span class="dv">3</span>] <span class="ot">&lt;-</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  corr[<span class="dv">1</span>, <span class="dv">5</span>] <span class="ot">&lt;-</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  corr[<span class="dv">2</span>, <span class="dv">4</span>] <span class="ot">&lt;-</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>  corr[<span class="dv">2</span>, <span class="dv">6</span>] <span class="ot">&lt;-</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  corr[<span class="dv">3</span>, <span class="dv">5</span>] <span class="ot">&lt;-</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  corr[<span class="dv">4</span>, <span class="dv">6</span>] <span class="ot">&lt;-</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  rho</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>corr[<span class="dv">1</span>, <span class="dv">4</span>] <span class="ot">&lt;-</span> corr[<span class="dv">1</span>, <span class="dv">6</span>] <span class="ot">&lt;-</span> corr[<span class="dv">2</span>, <span class="dv">3</span>] <span class="ot">&lt;-</span> corr[<span class="dv">2</span>, <span class="dv">5</span>] <span class="ot">&lt;-</span> corr[<span class="dv">1</span>, <span class="dv">2</span>] <span class="sc">*</span> rho</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>corr[<span class="dv">3</span>, <span class="dv">6</span>] <span class="ot">&lt;-</span> corr[<span class="dv">1</span>, <span class="dv">3</span>] <span class="sc">*</span> corr[<span class="dv">1</span>, <span class="dv">6</span>]</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>corr[<span class="dv">4</span>, <span class="dv">5</span>] <span class="ot">&lt;-</span> corr[<span class="dv">1</span>, <span class="dv">4</span>] <span class="sc">*</span> corr[<span class="dv">1</span>, <span class="dv">6</span>]</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>corr <span class="ot">&lt;-</span> corr <span class="sc">+</span> <span class="fu">t</span>(corr)</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="fu">diag</span>(corr) <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(corr) <span class="ot">&lt;-</span> hyp_names</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(corr) <span class="ot">&lt;-</span> hyp_names</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>corr</span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      H1   H2    H3     H4     H5    H6</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H1 1.00 0.50 0.500 0.2500 0.5000 0.250</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H2 0.50 1.00 0.250 0.5000 0.2500 0.500</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H3 0.50 0.25 1.000 0.5000 0.5000 0.125</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H4 0.25 0.50 0.500 1.0000 0.0625 0.500</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H5 0.50 0.25 0.500 0.0625 1.0000 0.500</span></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H6 0.25 0.50 0.125 0.5000 0.5000 1.000</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+<div id="user-defined-success-criteria" class="section level3">
+<h3>User-defined success criteria</h3>
+<p>As mentioned earlier, there are multiple versions of “power” when
+there are multiple hypotheses. Commonly used “power” definitions
+include: - Local power: The probability of each hypothesis being
+rejected (with multiplicity adjustment) - Expected no. of rejections:
+The expected number of rejections - Power to reject 1 or more: The
+probability to reject at least one hypothesis - Power to reject all: The
+probability to reject all hypotheses These are the default outputs from
+the <code>graph_calculate_power</code> function. In addition, an user
+could customize success criteria to define other versions of
+“power”.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>success_fns <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Probability to reject H1</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">H1 =</span> <span class="cf">function</span>(x) x[<span class="dv">1</span>],</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Expected number of rejections</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Expected no. of rejections</span><span class="st">`</span> <span class="ot">=</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">function</span>(x) x[<span class="dv">1</span>] <span class="sc">+</span> x[<span class="dv">2</span>] <span class="sc">+</span> x[<span class="dv">3</span>] <span class="sc">+</span> x[<span class="dv">4</span>] <span class="sc">+</span> x[<span class="dv">5</span>] <span class="sc">+</span> x[<span class="dv">6</span>],</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Probability to reject at least one hypothesis</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">AtLeast1</span><span class="st">`</span> <span class="ot">=</span> <span class="cf">function</span>(x) x[<span class="dv">1</span>] <span class="sc">|</span> x[<span class="dv">2</span>] <span class="sc">|</span> x[<span class="dv">3</span>] <span class="sc">|</span> x[<span class="dv">4</span>] <span class="sc">|</span> x[<span class="dv">5</span>] <span class="sc">|</span> x[<span class="dv">6</span>],</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Probability to reject all hypotheses</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">All</span><span class="st">`</span> <span class="ot">=</span> <span class="cf">function</span>(x) x[<span class="dv">1</span>] <span class="sc">&amp;</span> x[<span class="dv">2</span>] <span class="sc">&amp;</span> x[<span class="dv">3</span>] <span class="sc">&amp;</span> x[<span class="dv">4</span>] <span class="sc">&amp;</span> x[<span class="dv">5</span>] <span class="sc">&amp;</span> x[<span class="dv">6</span>],</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Probability to reject both H1 and H2</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">H1andH2</span><span class="st">`</span> <span class="ot">=</span> <span class="cf">function</span>(x) x[<span class="dv">1</span>] <span class="sc">&amp;</span> x[<span class="dv">2</span>],</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Probability to reject all hypotheses for the low dose or the high dose</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">(H1andH3andH5)or(H2andH4andH6)</span><span class="st">`</span> <span class="ot">&lt;-</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">function</span>(x) (x[<span class="dv">1</span>] <span class="sc">&amp;</span> x[<span class="dv">3</span>] <span class="sc">&amp;</span> x[<span class="dv">5</span>]) <span class="sc">|</span> (x[<span class="dv">2</span>] <span class="sc">&amp;</span> x[<span class="dv">4</span>] <span class="sc">&amp;</span> x[<span class="dv">6</span>])</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+<div id="output-calculate-power" class="section level3">
+<h3>Output: Calculate power</h3>
+<p>Given the above inputs, we can calculate power via simulation for the
+graphical multiple comparison procedure at one-sided significance level
+<code>alpha = 0.025</code> using <code>sim_n = 1e5</code> simulations
+and the random seed 1234. There are three procedures to compare: the
+Bonferroni-based procedure, the procedure using parametric tests for
+primary hypotheses, and the procedure using parametric tests for primary
+hypotheses and Simes tests for two sets of secondary hypotheses
+separately. The local power for hypotheses <span class="math inline">\(H_1, \ldots, H_6\)</span> is - 0.760, 0.752,
+0.510, 0.665, 0.391, and 0.625, respectively using the Bonferroni-based
+procedure, - 0.764, 0.756, 0.511, 0.668, 0.392, and 0.628, respectively
+using the procedure using parametric tests for primary hypotheses, -
+0.764, 0.757, 0.521, 0.673, 0.402, and 0.633, respectively using the
+procedure using parametric tests for primary hypotheses and Simes tests
+for two sets of secondary hypotheses separately. Note that the local
+power is improved for all hypotheses after parametric tests and Simes
+tests being applied over the Bonferroni-based procedure.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>power_bonferroni <span class="ot">&lt;-</span> <span class="fu">graph_calculate_power</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  g,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.025</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_corr =</span> corr,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_n =</span> <span class="fl">1e5</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">power_marginal =</span> <span class="fu">c</span>(</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    marginal_power_primary,</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    marginal_power_se1,</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    marginal_power_se2</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_success =</span> success_fns</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(power_bonferroni<span class="sc">$</span>power<span class="sc">$</span>power_local, <span class="dv">3</span>)</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    H1    H2    H3    H4    H5    H6 </span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.760 0.752 0.510 0.665 0.391 0.625</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>power_parametric <span class="ot">&lt;-</span> <span class="fu">graph_calculate_power</span>(</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>  g,</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.025</span>,</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_corr =</span> corr,</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_n =</span> <span class="fl">1e5</span>,</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">power_marginal =</span> <span class="fu">c</span>(</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>    marginal_power_primary,</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>    marginal_power_se1,</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>    marginal_power_se2</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">test_groups =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="dv">3</span><span class="sc">:</span><span class="dv">6</span>),</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">test_types =</span> <span class="fu">c</span>(<span class="st">&quot;parametric&quot;</span>, <span class="st">&quot;bonferroni&quot;</span>),</span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">test_corr =</span> <span class="fu">list</span>(corr_12, <span class="cn">NA</span>),</span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_success =</span> success_fns</span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(power_parametric<span class="sc">$</span>power<span class="sc">$</span>power_local, <span class="dv">3</span>)</span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    H1    H2    H3    H4    H5    H6 </span></span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.764 0.756 0.511 0.668 0.392 0.628</span></span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>power_parametric_simes <span class="ot">&lt;-</span> <span class="fu">graph_calculate_power</span>(</span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>  g,</span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.025</span>,</span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_corr =</span> corr,</span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_n =</span> <span class="fl">1e5</span>,</span>
+<span id="cb12-46"><a href="#cb12-46" aria-hidden="true" tabindex="-1"></a>  <span class="at">power_marginal =</span> <span class="fu">c</span>(</span>
+<span id="cb12-47"><a href="#cb12-47" aria-hidden="true" tabindex="-1"></a>    marginal_power_primary,</span>
+<span id="cb12-48"><a href="#cb12-48" aria-hidden="true" tabindex="-1"></a>    marginal_power_se1,</span>
+<span id="cb12-49"><a href="#cb12-49" aria-hidden="true" tabindex="-1"></a>    marginal_power_se2</span>
+<span id="cb12-50"><a href="#cb12-50" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb12-51"><a href="#cb12-51" aria-hidden="true" tabindex="-1"></a>  <span class="at">test_groups =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">5</span>), <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">6</span>)),</span>
+<span id="cb12-52"><a href="#cb12-52" aria-hidden="true" tabindex="-1"></a>  <span class="at">test_types =</span> <span class="fu">c</span>(<span class="st">&quot;parametric&quot;</span>, <span class="st">&quot;simes&quot;</span>, <span class="st">&quot;simes&quot;</span>),</span>
+<span id="cb12-53"><a href="#cb12-53" aria-hidden="true" tabindex="-1"></a>  <span class="at">test_corr =</span> <span class="fu">list</span>(corr_12, <span class="cn">NA</span>, <span class="cn">NA</span>),</span>
+<span id="cb12-54"><a href="#cb12-54" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_success =</span> success_fns</span>
+<span id="cb12-55"><a href="#cb12-55" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-56"><a href="#cb12-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-57"><a href="#cb12-57" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(power_parametric_simes<span class="sc">$</span>power<span class="sc">$</span>power_local, <span class="dv">3</span>)</span>
+<span id="cb12-58"><a href="#cb12-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    H1    H2    H3    H4    H5    H6 </span></span>
+<span id="cb12-59"><a href="#cb12-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.764 0.757 0.521 0.673 0.402 0.633</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+<p>To see the detailed outputs of all simulated p-values and rejection
+decisions for all hypotheses, we can specify
+<code>verbose = TRUE</code>. This will produce a lot of outputs. To
+allow flexible printing functions, a user can change the following: -
+The indented space with the default setting of <code>indent = 2</code> -
+The precision of numeric values (i.e., the number of decimal places)
+with the default setting of <code>precision = 6</code></p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>power_verbose_output_parametric_simes <span class="ot">&lt;-</span> <span class="fu">graph_calculate_power</span>(</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  g,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.025</span>,</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_corr =</span> corr,</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_n =</span> <span class="fl">1e5</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">power_marginal =</span> <span class="fu">c</span>(</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    marginal_power_primary,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    marginal_power_se1,</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    marginal_power_se2</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">test_groups =</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">5</span>), <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">6</span>)),</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">test_types =</span> <span class="fu">c</span>(<span class="st">&quot;parametric&quot;</span>, <span class="st">&quot;simes&quot;</span>, <span class="st">&quot;simes&quot;</span>),</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">test_corr =</span> <span class="fu">list</span>(corr_12, <span class="cn">NA</span>, <span class="cn">NA</span>),</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_success =</span> success_fns,</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="cn">TRUE</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(power_verbose_output_parametric_simes<span class="sc">$</span>details<span class="sc">$</span>p_sim, <span class="dv">10</span>)</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                 H1           H2           H3           H4           H5</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,] 0.0236514114 6.962444e-03 3.835101e-03 0.0615622415 0.0034034237</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,] 0.0367030430 4.681135e-02 6.857853e-02 0.0284812435 0.1496042440</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,] 0.0157541925 6.543826e-03 1.152738e-03 0.0007655046 0.0836186744</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,] 0.0053369856 8.699959e-07 9.952719e-03 0.0002429371 0.0369937655</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,] 0.0342665326 1.788794e-01 6.202961e-03 0.0305855529 0.0461642736</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,] 0.0011139852 1.783703e-02 6.083855e-02 0.0087065723 0.3865009844</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,] 0.2540774514 2.101193e-01 2.616673e-02 0.0277425681 0.0092489689</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,] 0.0908135583 4.433230e-02 1.903718e-01 0.0418782572 0.3996511810</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,] 0.0739568465 4.728371e-02 3.778643e-01 0.0296172396 0.4446759145</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,] 0.0003353917 1.048743e-03 1.246528e-05 0.0032298980 0.0001601294</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                 H6</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,] 0.0018417304</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,] 0.0552141940</span></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,] 0.0255279965</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,] 0.0001345536</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,] 0.0666051161</span></span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,] 0.0867387423</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,] 0.0297658510</span></span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,] 0.1097032475</span></span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,] 0.0620564532</span></span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,] 0.0114581872</span></span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(power_verbose_output_parametric_simes,</span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>  <span class="at">indent =</span> <span class="dv">4</span>,</span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>  <span class="at">precision =</span> <span class="dv">6</span></span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Test parameters ($inputs) ------------------------------------------------------</span></span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Initial graph</span></span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     --- Hypothesis weights ---</span></span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H1: 0.5</span></span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H2: 0.5</span></span>
+<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H3: 0.0</span></span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H4: 0.0</span></span>
+<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H5: 0.0</span></span>
+<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H6: 0.0</span></span>
+<span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     --- Transition weights ---</span></span>
+<span id="cb13-60"><a href="#cb13-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             H1      H2      H3      H4      H5      H6</span></span>
+<span id="cb13-61"><a href="#cb13-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H1 0.00000 0.50000 0.25000 0.00000 0.25000 0.00000</span></span>
+<span id="cb13-62"><a href="#cb13-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H2 0.50000 0.00000 0.00000 0.25000 0.00000 0.25000</span></span>
+<span id="cb13-63"><a href="#cb13-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H3 0.00000 0.00000 0.00000 0.00000 1.00000 0.00000</span></span>
+<span id="cb13-64"><a href="#cb13-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H4 0.00001 0.00000 0.00000 0.00000 0.00000 0.99999</span></span>
+<span id="cb13-65"><a href="#cb13-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H5 0.00000 0.00001 0.99999 0.00000 0.00000 0.00000</span></span>
+<span id="cb13-66"><a href="#cb13-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H6 0.00000 0.00000 0.00000 1.00000 0.00000 0.00000</span></span>
+<span id="cb13-67"><a href="#cb13-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-68"><a href="#cb13-68" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Alpha = 0.025</span></span>
+<span id="cb13-69"><a href="#cb13-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-70"><a href="#cb13-70" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Parametric testing correlation:     H1  H2</span></span>
+<span id="cb13-71"><a href="#cb13-71" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                     H1 1.0 0.5</span></span>
+<span id="cb13-72"><a href="#cb13-72" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                     H2 0.5 1.0</span></span>
+<span id="cb13-73"><a href="#cb13-73" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-74"><a href="#cb13-74" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Test types</span></span>
+<span id="cb13-75"><a href="#cb13-75" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     parametric: (H1, H2)</span></span>
+<span id="cb13-76"><a href="#cb13-76" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;          simes: (H3, H5)</span></span>
+<span id="cb13-77"><a href="#cb13-77" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;          simes: (H4, H6)</span></span>
+<span id="cb13-78"><a href="#cb13-78" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-79"><a href="#cb13-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Simulation parameters ($inputs) ------------------------------------------------</span></span>
+<span id="cb13-80"><a href="#cb13-80" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Testing 100,000 simulations with multivariate normal params:</span></span>
+<span id="cb13-81"><a href="#cb13-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-82"><a href="#cb13-82" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                           H1       H2       H3       H4       H5       H6</span></span>
+<span id="cb13-83"><a href="#cb13-83" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Marginal power: 0.802831 0.802831 0.705414 0.901481 0.515968 0.850838</span></span>
+<span id="cb13-84"><a href="#cb13-84" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-85"><a href="#cb13-85" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Correlation:        H1     H2     H3     H4     H5     H6</span></span>
+<span id="cb13-86"><a href="#cb13-86" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                  H1 1.0000 0.5000 0.5000 0.2500 0.5000 0.2500</span></span>
+<span id="cb13-87"><a href="#cb13-87" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                  H2 0.5000 1.0000 0.2500 0.5000 0.2500 0.5000</span></span>
+<span id="cb13-88"><a href="#cb13-88" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                  H3 0.5000 0.2500 1.0000 0.5000 0.5000 0.1250</span></span>
+<span id="cb13-89"><a href="#cb13-89" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                  H4 0.2500 0.5000 0.5000 1.0000 0.0625 0.5000</span></span>
+<span id="cb13-90"><a href="#cb13-90" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                  H5 0.5000 0.2500 0.5000 0.0625 1.0000 0.5000</span></span>
+<span id="cb13-91"><a href="#cb13-91" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                  H6 0.2500 0.5000 0.1250 0.5000 0.5000 1.0000</span></span>
+<span id="cb13-92"><a href="#cb13-92" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-93"><a href="#cb13-93" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Power calculation ($power) -----------------------------------------------------</span></span>
+<span id="cb13-94"><a href="#cb13-94" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                      H1      H2      H3      H4      H5      H6</span></span>
+<span id="cb13-95"><a href="#cb13-95" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                    Local power: 0.76437 0.75656 0.52086 0.67302 0.40234 0.63292</span></span>
+<span id="cb13-96"><a href="#cb13-96" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-97"><a href="#cb13-97" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Expected no. of rejections: 3.75007</span></span>
+<span id="cb13-98"><a href="#cb13-98" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      Power to reject 1 or more: 0.86277</span></span>
+<span id="cb13-99"><a href="#cb13-99" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            Power to reject all: 0.32537</span></span>
+<span id="cb13-100"><a href="#cb13-100" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-101"><a href="#cb13-101" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                Success measure   Power</span></span>
+<span id="cb13-102"><a href="#cb13-102" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                             H1 0.76437</span></span>
+<span id="cb13-103"><a href="#cb13-103" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Expected no. of rejections 3.75007</span></span>
+<span id="cb13-104"><a href="#cb13-104" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                       AtLeast1 0.86277</span></span>
+<span id="cb13-105"><a href="#cb13-105" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                            All 0.32537</span></span>
+<span id="cb13-106"><a href="#cb13-106" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                        H1andH2 0.65816</span></span>
+<span id="cb13-107"><a href="#cb13-107" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                0.63324</span></span>
+<span id="cb13-108"><a href="#cb13-108" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-109"><a href="#cb13-109" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Simulation details ($details) --------------------------------------------------</span></span>
+<span id="cb13-110"><a href="#cb13-110" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         p_sim_H1    p_sim_H2    p_sim_H3    p_sim_H4    p_sim_H5    p_sim_H6 rej_H1</span></span>
+<span id="cb13-111"><a href="#cb13-111" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      2.36514e-02 6.96244e-03 3.83510e-03 6.15622e-02 3.40342e-03 1.84173e-03  FALSE</span></span>
+<span id="cb13-112"><a href="#cb13-112" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      3.67030e-02 4.68113e-02 6.85785e-02 2.84812e-02 1.49604e-01 5.52142e-02  FALSE</span></span>
+<span id="cb13-113"><a href="#cb13-113" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      1.57542e-02 6.54383e-03 1.15274e-03 7.65505e-04 8.36187e-02 2.55280e-02   TRUE</span></span>
+<span id="cb13-114"><a href="#cb13-114" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      5.33699e-03 8.69996e-07 9.95272e-03 2.42937e-04 3.69938e-02 1.34554e-04   TRUE</span></span>
+<span id="cb13-115"><a href="#cb13-115" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      3.42665e-02 1.78879e-01 6.20296e-03 3.05856e-02 4.61643e-02 6.66051e-02  FALSE</span></span>
+<span id="cb13-116"><a href="#cb13-116" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      1.11399e-03 1.78370e-02 6.08385e-02 8.70657e-03 3.86501e-01 8.67387e-02   TRUE</span></span>
+<span id="cb13-117"><a href="#cb13-117" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      2.54077e-01 2.10119e-01 2.61667e-02 2.77426e-02 9.24897e-03 2.97659e-02  FALSE</span></span>
+<span id="cb13-118"><a href="#cb13-118" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      9.08136e-02 4.43323e-02 1.90372e-01 4.18783e-02 3.99651e-01 1.09703e-01  FALSE</span></span>
+<span id="cb13-119"><a href="#cb13-119" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      7.39568e-02 4.72837e-02 3.77864e-01 2.96172e-02 4.44676e-01 6.20565e-02  FALSE</span></span>
+<span id="cb13-120"><a href="#cb13-120" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      3.35392e-04 1.04874e-03 1.24653e-05 3.22990e-03 1.60129e-04 1.14582e-02   TRUE</span></span>
+<span id="cb13-121"><a href="#cb13-121" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      rej_H2 rej_H3 rej_H4 rej_H5 rej_H6</span></span>
+<span id="cb13-122"><a href="#cb13-122" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        TRUE  FALSE  FALSE  FALSE   TRUE</span></span>
+<span id="cb13-123"><a href="#cb13-123" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       FALSE  FALSE  FALSE  FALSE  FALSE</span></span>
+<span id="cb13-124"><a href="#cb13-124" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        TRUE   TRUE   TRUE  FALSE  FALSE</span></span>
+<span id="cb13-125"><a href="#cb13-125" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        TRUE   TRUE   TRUE  FALSE   TRUE</span></span>
+<span id="cb13-126"><a href="#cb13-126" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       FALSE  FALSE  FALSE  FALSE  FALSE</span></span>
+<span id="cb13-127"><a href="#cb13-127" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        TRUE  FALSE  FALSE  FALSE  FALSE</span></span>
+<span id="cb13-128"><a href="#cb13-128" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       FALSE  FALSE  FALSE  FALSE  FALSE</span></span>
+<span id="cb13-129"><a href="#cb13-129" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       FALSE  FALSE  FALSE  FALSE  FALSE</span></span>
+<span id="cb13-130"><a href="#cb13-130" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       FALSE  FALSE  FALSE  FALSE  FALSE</span></span>
+<span id="cb13-131"><a href="#cb13-131" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        TRUE   TRUE   TRUE   TRUE   TRUE</span></span>
+<span id="cb13-132"><a href="#cb13-132" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     ... (Use `print(x, rows = &lt;nn&gt;)` for more)</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+</div>
+</div>
+<div id="reference" class="section level1 unnumbered">
+<h1 class="unnumbered">Reference</h1>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-bretz-2009-graphical" class="csl-entry">
+Bretz, Frank, Willi Maurer, Werner Branath, and Martin Posch. 2009.
+<span>“A Graphical Approach to Sequentially Rejective Multiple Test
+Procedures.”</span> <em>Statistics in Medicine</em> 53 (4): 586–604. <a href="https://doi.org/10.1002/sim.3495">https://doi.org/10.1002/sim.3495</a>.
+</div>
+<div id="ref-bretz-2011-test" class="csl-entry">
+Bretz, Frank, Willi Maurer, and Gerhard Hommel. 2011. <span>“Test and
+Power Considerations for Multiple Endpoint Analyses Using Sequentially
+Rejective Graphical Procedures.”</span> <em>Statistics in Medicine</em>
+30 (13): 1489–1501. <a href="https://doi.org/10.1002/sim.3988">https://doi.org/10.1002/sim.3988</a>.
+</div>
+<div id="ref-bretz-2011-graphical" class="csl-entry">
+Bretz, Frank, Martin Posch, Ekkehard Glimm, Florian Klinglmueller, Willi
+Maurer, and Kornelius Rohmeyer. 2011. <span>“Graphical Approaches for
+Multiple Comparison Procedures Using Weighted Bonferroni, Simes, or
+Parametric Tests.”</span> <em>Biometrical Journal</em> 53 (6): 894–913.
+<a href="https://doi.org/10.1002/bimj.201000239">https://doi.org/10.1002/bimj.201000239</a>.
+</div>
+<div id="ref-lu-2016-graphical" class="csl-entry">
+Lu, Kaifeng. 2016. <span>“Graphical Approaches Using a Bonferroni
+Mixture of Weighted Simes Tests.”</span> <em>Statistics in Medicine</em>
+35 (22): 4041–55. <a href="https://doi.org/10.1002/sim.6985">https://doi.org/10.1002/sim.6985</a>.
+</div>
+<div id="ref-sarkar-1998-some" class="csl-entry">
+Sarkar, Sanat K. 1998. <span>“Some Probability Inequalities for Ordered
+Mtp2 Random Variables: A Proof of the Simes Conjecture.”</span>
+<em>Annals of Statistics</em> 26 (2): 494–504.
+</div>
+<div id="ref-xi-2017-unified" class="csl-entry">
+Xi, Dong, Ekkehard Glimm, Willi Maurer, and Frank Bretz. 2017. <span>“A
+Unified Framework for Weighted Parametric Multiple Test
+Procedures.”</span> <em>Biometrical Journal</em> 59 (5): 918–31. <a href="https://doi.org/10.1002/bimj.201600233">https://doi.org/10.1002/bimj.201600233</a>.
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

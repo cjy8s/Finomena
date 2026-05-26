@@ -92,6 +92,8 @@ a = Analysis(
         # R scripts (small, bundled inside the app)
         ('R/scripts/TweedieAR1 BAM.R',  'R/scripts'),
         ('R/scripts/FamilySelection.R', 'R/scripts'),
+        ('R/scripts/corrections.R',     'R/scripts'),
+        ('R/scripts/tree_metadata.R',   'R/scripts'),
         # README
         ('README.md', '.'),
     ] + _all_datas,

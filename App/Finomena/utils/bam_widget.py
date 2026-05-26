@@ -3,8 +3,9 @@ BAM Analysis Widget
 ===================
 Receives the preprocessed full_df from the Python pipeline,
 exports it to a CSV compatible with the adapted TweedieAR1 BAM.R script,
-runs Rscript as a subprocess with real-time log streaming,
-and displays the resulting PNG figures inline.
+runs Rscript as a subprocess with real-time log streaming. Interactive plots
+of the results live in the Visualizations tab (visualizations_widget.py),
+which reads master_results.csv that R writes alongside other outputs.
 
 R package isolation
 -------------------
@@ -26,14 +27,12 @@ import threading
 
 import pandas as pd
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont, QPixmap
+from PySide6.QtCore import Signal
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
-    QComboBox, QGroupBox, QHBoxLayout, QLabel, QMessageBox,
-    QPushButton, QSizePolicy, QSplitter, QTextEdit, QVBoxLayout, QWidget
+    QGroupBox, QHBoxLayout, QLabel, QMessageBox,
+    QPushButton, QTextEdit, QVBoxLayout, QWidget
 )
-
-from figure_viewer import FigureViewerWidget
 
 # ── Path resolution (works in dev and when frozen by PyInstaller) ─────────────
 from paths import resource_path, external_data_dir
@@ -51,14 +50,8 @@ _BUNDLED_RSCRIPT = os.path.join(
 # R script is small — bundled inside the app via resource_path
 _DEFAULT_R_SCRIPT = resource_path("R", "scripts", "TweedieAR1 BAM.R")
 
-# Expected output files from the R script (static ones; per-variable plots are discovered dynamically)
-_EXPECTED_PNGS_STATIC = [
-    "forest_plot_interactions.png",
-    "heatmap_diverging_v1.png",
-    "rescue_assessment_context_faceted.png",
-    "posterior_equivalence_density.png",
-    "posterior_equivalence_heatmap.png",
-]
+# Summary CSV that R writes — read at the end of a run so the run log shows
+# headline numbers per phase group.
 _EXPECTED_CSV = "summary_statistics_by_group.csv"
 
 
@@ -67,7 +60,7 @@ class BamWidget(QWidget):
     Tab widget for running the TweedieAR1 BAM R analysis.
     """
 
-    # Public signal
+    # Public signals
     analysis_complete = Signal(str)   # emits output_dir path on success
 
     # Analysis thread signals
@@ -84,11 +77,12 @@ class BamWidget(QWidget):
         self._variable_refs       = {}         # {var_name: ref_value}
         self._ref_condition       = ""
         self._roles               = {}         # {condition_name: role_str}
-        self._global_correction   = "BH"       # default global multiple-testing method
-        self._contrast_correction = "dunnett"  # default within-contrast adjustment
         self._family_name         = "Tweedie"  # distribution family (set by FamilySelectionWidget)
         self._shift_val           = 0.0        # additive shift applied before fitting
         self._contrast_widget     = None       # reference to ContrastSelectionWidget
+        self._correction_widget   = None       # reference to CorrectionWidget
+        # Correction strategy comes in via correction.json sidecar (Correction
+        # tab writes it). emmeans calls now always run with adjust = "none".
         self._user_stopped        = False      # set by Stop button so _on_run_finished skips the error dialog
 
         self._build_ui()
@@ -111,15 +105,29 @@ class BamWidget(QWidget):
         """Reference to ContrastSelectionWidget; its kept pairs are read at run time."""
         self._contrast_widget = widget
 
+    def set_correction_widget(self, widget):
+        """Reference to CorrectionWidget; its spec is serialized to
+        correction.json in the output dir right before the R subprocess
+        launches."""
+        self._correction_widget = widget
+
     def on_contrasts_changed(self):
         """
         Called when the user modifies the contrast selection. Marks any prior
-        BAM results as stale: clears the figure viewer, resets the status, and
-        shows a warning prompting the user to re-run.
+        BAM results as stale: resets the status, and shows a warning prompting
+        the user to re-run.
         """
-        self._figure_viewer.clear()
         self._r_status_label.setText("")
         self._stale_warning_label.show()
+
+    def reset_stale_warning(self):
+        """Hide the 'contrasts changed' warning.
+
+        Called by the app after loading an experiment config so the warning
+        does not flash up just from the cascade of signals fired while
+        restoring conditions/roles/contrast-selection state.
+        """
+        self._stale_warning_label.hide()
 
     def set_roles(self, roles: dict):
         """Stores the {condition_name: role_str} mapping."""
@@ -159,51 +167,19 @@ class BamWidget(QWidget):
     def _build_ui(self):
         layout = QVBoxLayout(self)
 
-        # ── 1. Statistical Correction Methods ────────────────────────────────
-        corr_group = QGroupBox("1. Statistical Correction Methods")
-        corr_outer = QHBoxLayout(corr_group)
-
-        # ── Left: Global correction ───────────────────────────────────────────
-        global_col = QVBoxLayout()
-        global_col.addWidget(QLabel("<b>Global Multiple-Testing Correction</b><br>"
-                                    "<small>Applied across all group × contrast results.</small>"))
-
-        self._global_combo = QComboBox()
-        self._global_combo.addItem("Benjamini-Hochberg (BH)  —  controls FDR", "BH")
-        self._global_combo.addItem("Holm  —  controls FWER (step-down Bonferroni)", "holm")
-        self._global_combo.currentIndexChanged.connect(self._on_global_correction_changed)
-        global_col.addWidget(self._global_combo)
-
-        self._global_desc = QLabel()
-        self._global_desc.setWordWrap(True)
-        self._global_desc.setStyleSheet("font-style: italic;")
-        global_col.addWidget(self._global_desc)
-        global_col.addStretch()
-        corr_outer.addLayout(global_col, stretch=1)
-
-        # ── Right: Contrast (within-emmeans) correction ───────────────────────
-        contrast_col = QVBoxLayout()
-        contrast_col.addWidget(QLabel("<b>Contrast Correction (Treatment vs. Reference)</b><br>"
-                                      "<small>Applied inside each emmeans contrast call.</small>"))
-
-        self._contrast_combo = QComboBox()
-        self._contrast_combo.addItem("Dunnett's Test", "dunnett")
-        self._contrast_combo.addItem("Dunnett-Šidák", "sidak")
-        self._contrast_combo.currentIndexChanged.connect(self._on_contrast_correction_changed)
-        contrast_col.addWidget(self._contrast_combo)
-
-        self._contrast_desc = QLabel()
-        self._contrast_desc.setWordWrap(True)
-        self._contrast_desc.setStyleSheet("font-style: italic;")
-        contrast_col.addWidget(self._contrast_desc)
-        contrast_col.addStretch()
-        corr_outer.addLayout(contrast_col, stretch=1)
-
-        layout.addWidget(corr_group)
-
-        # Populate description labels with initial text
-        self._on_global_correction_changed(0)
-        self._on_contrast_correction_changed(0)
+        # Correction method choice now lives in the dedicated Correction tab.
+        # The BAM widget only runs the model and reports it back; correction
+        # gets applied post-hoc against raw emmeans p-values. The within-
+        # emmeans Contrast Correction stage (Dunnett/Šidák) is gone entirely.
+        info_label = QLabel(
+            "<b>Multiple-testing correction:</b> configured in the "
+            "<i>Correction</i> tab. This stage produces raw emmeans p-values "
+            "that the chosen correction (flat BH/Holm or tree-based "
+            "TreeBH/graphicalMCP/Holm-gatekeeping) operates on."
+        )
+        info_label.setWordWrap(True)
+        info_label.setStyleSheet("padding: 6px; color: #aaaaaa;")
+        layout.addWidget(info_label)
 
         # ── 2: Run BAM Analysis ────────────────────────────────────────────────
         row_23 = QHBoxLayout()
@@ -244,9 +220,7 @@ class BamWidget(QWidget):
         row_23.addWidget(run_group, stretch=1)
         layout.addLayout(row_23)
 
-        # ── 4 + 5: Resizable splitter between log and figures ─────────────────
-        splitter = QSplitter(Qt.Vertical)
-
+        # ── 3. R Output Log (no figure viewer — see Visualizations tab) ───────
         log_group = QGroupBox("3. R Output Log")
         lg_layout = QVBoxLayout(log_group)
         self._log_text = QTextEdit()
@@ -254,72 +228,7 @@ class BamWidget(QWidget):
         mono_font = QFont("Courier New", 9)
         self._log_text.setFont(mono_font)
         lg_layout.addWidget(self._log_text)
-        splitter.addWidget(log_group)
-
-        results_group = QGroupBox("4. Results")
-        res_layout = QVBoxLayout(results_group)
-        self._figure_viewer = FigureViewerWidget(title="BAM Figures")
-        res_layout.addWidget(self._figure_viewer)
-        splitter.addWidget(results_group)
-
-        # Start with log ~25% and figures ~75%
-        splitter.setSizes([150, 450])
-        layout.addWidget(splitter, stretch=1)
-
-    # ── Correction method slots ───────────────────────────────────────────────
-
-    _GLOBAL_DESCRIPTIONS = {
-        "BH": (
-            "Benjamini-Hochberg (False Discovery Rate): among all comparisons you "
-            "call significant, at most 5% are expected to be false positives on "
-            "average. The chance of making even one false positive is typically "
-            "above 5%, but you gain more power to detect real effects. Best when "
-            "exploring many comparisons and accepting that a small fraction of "
-            "hits may be wrong — follow-up experiments will validate them."
-        ),
-        "holm": (
-            "Holm (step-down Bonferroni, Family-Wise Error Rate): the probability "
-            "of making even one false positive across all your comparisons is kept "
-            "below 5%. More conservative than BH — you will miss more real effects, "
-            "but nearly every result you call significant will be a true positive. "
-            "Best when a single false positive has serious consequences, such as "
-            "claiming a drug works when it does not."
-        ),
-    }
-
-    _CONTRAST_DESCRIPTIONS = {
-        "dunnett": (
-            "Dunnett's Test: designed specifically for the many-to-one design — "
-            "comparing multiple treatment groups against a single reference/control. "
-            "The probability of making even one false positive across all "
-            "treatment-vs-reference comparisons is kept below 5%. It exploits the "
-            "shared correlation structure (all comparisons involve the same "
-            "reference group), making it more powerful than Bonferroni or Holm "
-            "for this design. Gold standard for pharmacology dose-response "
-            "experiments comparing each drug condition to a vehicle control."
-        ),
-        "sidak": (
-            "Dunnett-Šidák: serves the same purpose as Dunnett's — all contrasts "
-            "compare treatments against the reference group only, and the "
-            "probability of even one false positive is kept below 5%. Uses the "
-            "Šidák inequality instead of the exact multivariate t-distribution, "
-            "making it very slightly more conservative (misses a marginally "
-            "larger fraction of true effects). The practical difference is "
-            "negligible for most datasets. Appropriate as a recognized alternative "
-            "to Dunnett's when you want an auditable, widely cited correction that "
-            "still anchors every comparison to the reference group."
-        ),
-    }
-
-    def _on_global_correction_changed(self, index: int):
-        key = self._global_combo.itemData(index)
-        self._global_correction = key
-        self._global_desc.setText(self._GLOBAL_DESCRIPTIONS.get(key, ""))
-
-    def _on_contrast_correction_changed(self, index: int):
-        key = self._contrast_combo.itemData(index)
-        self._contrast_correction = key
-        self._contrast_desc.setText(self._CONTRAST_DESCRIPTIONS.get(key, ""))
+        layout.addWidget(log_group, stretch=1)
 
     # ── Run R ─────────────────────────────────────────────────────────────────
 
@@ -390,6 +299,25 @@ class BamWidget(QWidget):
                     "R will fall back to full pairwise comparisons."
                 )
 
+        # Step 1c: Write correction.json sidecar from the Correction tab.
+        # Without this the R script falls back to flat BH per family at q=0.05.
+        if self._correction_widget is not None:
+            try:
+                self._correction_widget.set_output_dir(output_dir)
+                path = self._correction_widget.write_sidecar()
+                if not path:
+                    QMessageBox.warning(
+                        self, "Correction Sidecar",
+                        "Could not write correction.json — falling back to "
+                        "flat BH at q=0.05."
+                    )
+            except Exception as e:
+                QMessageBox.warning(
+                    self, "Correction Sidecar",
+                    f"Could not write correction.json:\n{e}\n\n"
+                    "R will fall back to flat BH at q=0.05."
+                )
+
         rscript = self._find_rscript()
         if rscript is None:
             QMessageBox.critical(
@@ -436,11 +364,16 @@ class BamWidget(QWidget):
             if role  # skip empty/unassigned
         )
 
+        # Correction method/contrast-adjust removed from the CLI: the R
+        # script always uses adjust = "none" on emmeans, and the correction
+        # strategy is read from correction.json (written by the Correction
+        # tab). Positional args kept for back-compat where the R script just
+        # ignores them now.
         cmd = [
             rscript, _DEFAULT_R_SCRIPT,
             self._csv_path, output_dir,
             var_names_str, ref_values_str, self._ref_condition,
-            self._global_correction, self._contrast_correction,
+            "BH", "none",            # legacy args, ignored by the R script
             roles_str,
             self._family_name, str(self._shift_val),
         ]
@@ -548,7 +481,7 @@ class BamWidget(QWidget):
             return
         if success:
             self._r_status_label.setText("Complete ✓")
-            self._load_output_figures()
+            self._load_summary()
             self.analysis_complete.emit(self._output_dir)
         else:
             self._r_status_label.setText("Error — see log")
@@ -559,52 +492,15 @@ class BamWidget(QWidget):
                 "The R script exited with an error.\n\nLast log output:\n\n" + detail
             )
 
-    # ── Load output figures ───────────────────────────────────────────────────
+    # ── Load summary CSV into the log ─────────────────────────────────────────
 
-    @staticmethod
-    def _make_r_name(name: str) -> str:
-        """Mimics R's make.names(): replaces non-alphanumeric chars with dots."""
-        import re
-        s = re.sub(r'[^A-Za-z0-9.]', '.', name)
-        if s and s[0].isdigit():
-            s = 'X' + s
-        return s
+    def _load_summary(self):
+        """Reads the per-group summary CSV and echoes it into the run log.
 
-    def _load_output_figures(self):
-        """Loads R's PNG outputs directly as QPixmap."""
-        # Build the full list: per-variable forest plots + static plots
-        # R uses make.names() + tolower() for filenames, so we must match
-        expected_pngs = []
-        for v in self._variable_names:
-            r_name = self._make_r_name(v).lower()
-            expected_pngs.append(f"forest_plot_{r_name}_effect.png")
-        expected_pngs.extend(_EXPECTED_PNGS_STATIC)
-
-        figures = []
-        for png_name in expected_pngs:
-            path = os.path.join(self._output_dir, png_name)
-            if not os.path.isfile(path):
-                self._append_log(f"[Not found] {png_name}")
-                continue
-            try:
-                pixmap = QPixmap(path)
-                if pixmap.isNull():
-                    self._append_log(f"[Error]     {png_name}: failed to load image")
-                    continue
-                figures.append({
-                    'pixmap':   pixmap,
-                    'title':    png_name,
-                    'filepath': path,
-                })
-                self._append_log(f"[Loaded]    {png_name}")
-            except Exception as exc:
-                self._append_log(f"[Error]     {png_name}: {exc}")
-
-        if figures:
-            self._figure_viewer.load_figures(figures)
-        else:
-            self._append_log("No figures were rendered inline.")
-
+        Interactive figures live in the Visualizations tab — this method only
+        surfaces headline counts/effects from summary_statistics_by_group.csv
+        so the user gets immediate feedback inline with the R log.
+        """
         csv_path = os.path.join(self._output_dir, _EXPECTED_CSV)
         if os.path.isfile(csv_path):
             try:
@@ -613,6 +509,15 @@ class BamWidget(QWidget):
                 self._append_log(summary.to_string())
             except Exception as exc:
                 self._append_log(f"Could not read summary CSV: {exc}")
+        else:
+            self._append_log(f"[Not found] {_EXPECTED_CSV}")
+
+        master_path = os.path.join(self._output_dir, "master_results.csv")
+        if os.path.isfile(master_path):
+            self._append_log(
+                "\nmaster_results.csv written — open the Visualizations tab "
+                "to explore the contrast results."
+            )
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 

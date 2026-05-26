@@ -61,6 +61,8 @@ print("[DBG] app.py: data_loader imported", flush=True)
 from bam_widget                import BamWidget
 from family_selection_widget   import FamilySelectionWidget
 from contrast_selection_widget import ContrastSelectionWidget
+from correction_widget         import CorrectionWidget
+from visualizations_widget     import VisualizationsWidget
 print("[DBG] app.py: all widget imports done", flush=True)
 
 
@@ -164,16 +166,23 @@ class MainWindow(QMainWindow):
         r_sub_tabs     = QTabWidget()
         r_layout.addWidget(r_sub_tabs)
 
-        self.family_selection_widget  = FamilySelectionWidget()
+        self.family_selection_widget   = FamilySelectionWidget()
         self.contrast_selection_widget = ContrastSelectionWidget()
-        self.bam_widget               = BamWidget()
+        self.correction_widget         = CorrectionWidget()
+        self.bam_widget                = BamWidget()
         self.bam_widget.set_contrast_selection_widget(self.contrast_selection_widget)
+        self.bam_widget.set_correction_widget(self.correction_widget)
 
         r_sub_tabs.addTab(self.family_selection_widget,  "1. Family Selection (Optional)")
         r_sub_tabs.addTab(self.contrast_selection_widget, "2. Contrast Selection")
-        r_sub_tabs.addTab(self.bam_widget,               "3. BAM Analysis")
+        r_sub_tabs.addTab(self.correction_widget,        "3. Correction")
+        r_sub_tabs.addTab(self.bam_widget,               "4. BAM Analysis")
 
         self.main_tabs.addTab(r_analysis_tab, "Time Series BAM")
+
+        # ── Tab 4: Visualizations ──────────────────────────────────────────────
+        self.visualizations_widget = VisualizationsWidget()
+        self.main_tabs.addTab(self.visualizations_widget, "Visualizations")
 
         # ── Signal connections ─────────────────────────────────────────────────
 
@@ -195,7 +204,7 @@ class MainWindow(QMainWindow):
             self._push_condition_variables
         )
 
-        # Variable names → metadata, bam, family selection, data loader
+        # Variable names → metadata, bam, family selection, data loader, correction
         self.conditions_format.variables_updated.connect(
             self.metadata_assignment.set_variable_names
         )
@@ -208,6 +217,9 @@ class MainWindow(QMainWindow):
         self.conditions_format.variables_updated.connect(
             self.data_loader.set_variable_names
         )
+        self.conditions_format.variables_updated.connect(
+            self.correction_widget.set_variable_names
+        )
 
         # Roles → plate format (for button labels)
         self.metadata_assignment.roles_updated.connect(
@@ -219,6 +231,10 @@ class MainWindow(QMainWindow):
         # Roles → contrast selection (drives default-checked: experimental vs control)
         self.metadata_assignment.roles_updated.connect(
             self.contrast_selection_widget.set_roles
+        )
+        # Roles → visualizations (used for [RC]/[EXP] tags on contrast labels)
+        self.metadata_assignment.roles_updated.connect(
+            self.visualizations_widget.set_roles
         )
 
         # Plate layout library → data loader
@@ -247,6 +263,10 @@ class MainWindow(QMainWindow):
         self.bam_widget.analysis_complete.connect(
             lambda _output_dir: self.contrast_selection_widget.on_bam_completed()
         )
+        # BAM completion → reload master_results.csv in the Visualizations tab
+        self.bam_widget.analysis_complete.connect(
+            self.visualizations_widget.on_bam_completed
+        )
 
         # Seed with initial conditions
         print("[DBG] seeding conditions", flush=True)
@@ -265,6 +285,9 @@ class MainWindow(QMainWindow):
         self._output_dir_label.setText(directory)
         self.bam_widget.set_output_dir(directory)
         self.family_selection_widget.set_output_dir(directory)
+        # Lets the Visualizations tab load a previous run's master_results.csv
+        # immediately, even before a fresh BAM run completes.
+        self.visualizations_widget.set_output_dir(directory)
 
     # ── Condition variable push ──────────────────────────────────────────────
 
@@ -278,6 +301,7 @@ class MainWindow(QMainWindow):
     def _on_references_updated(self, variable_refs: dict, ref_condition: str):
         self.bam_widget.set_references(variable_refs, ref_condition)
         self.family_selection_widget.set_references(variable_refs, ref_condition)
+        self.correction_widget.set_references(variable_refs, ref_condition)
 
     # ── Data fan-out ──────────────────────────────────────────────────────────
 
@@ -407,6 +431,13 @@ class MainWindow(QMainWindow):
                     self.metadata_assignment.load_roles_config(legacy_roles)
                 except Exception as e:
                     errors.append(f"Legacy reference controls: {e}")
+
+        # Restoring conditions/roles/contrasts fires a cascade of signals that
+        # naturally trips the BAM "contrasts changed — re-run" warning. After a
+        # full config load that warning is misleading (the user hasn't actually
+        # changed anything since the last run), so clear it. Subsequent real
+        # user edits will re-show it via on_contrasts_changed.
+        self.bam_widget.reset_stale_warning()
 
         if errors:
             QMessageBox.warning(

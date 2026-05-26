@@ -28,7 +28,7 @@ from PySide6.QtWidgets import (
     QMessageBox, QFileDialog, QScrollArea, QSizePolicy, QDoubleSpinBox
 )
 print("[DBG] data_loader: imports done", flush=True)
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QEvent, Signal
 from PySide6.QtGui import QPixmap, QImage
 
 
@@ -107,7 +107,11 @@ class DataLoaderWidget(QWidget):
         self._dir_table = QTableWidget(0, 2)
         self._dir_table.setHorizontalHeaderLabels(["Directory", "Plate Layout"])
         self._dir_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
-        self._dir_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        # Plate Layout column is sized to ~1/4 of the viewport width and kept
+        # proportional via the eventFilter installed below.
+        self._dir_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Fixed)
+        self._dir_table.setColumnWidth(1, 240)
+        self._dir_table.installEventFilter(self)
         self._dir_table.verticalHeader().setVisible(False)
         self._dir_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self._dir_table.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -443,6 +447,9 @@ class DataLoaderWidget(QWidget):
                 idx = combo.findData(entry["layout"])
                 if idx >= 0:
                     combo.setCurrentIndex(idx)
+            # Let the dropdown breathe so it doesn't collapse to the longest
+            # layout name; the column itself is sized to ~1/4 of the table.
+            combo.setMinimumWidth(200)
             combo.currentIndexChanged.connect(
                 lambda _idx, row=i: self._on_layout_combo_changed(row)
             )
@@ -455,6 +462,32 @@ class DataLoaderWidget(QWidget):
         if combo is None:
             return
         self._directories[row]["layout"] = combo.currentData()
+        # Clear the missing-layout error styling now that a layout is picked.
+        if combo.currentData() is not None:
+            self._set_combo_error(combo, False)
+
+    # ── Plate-layout column sizing + error highlighting ─────────────────────────
+
+    def eventFilter(self, obj, event):
+        """Keep the Plate Layout column at ~1/4 of the table viewport width."""
+        if obj is self._dir_table and event.type() == QEvent.Resize:
+            viewport_w = self._dir_table.viewport().width()
+            if viewport_w > 0:
+                self._dir_table.setColumnWidth(1, max(200, viewport_w // 4))
+        return super().eventFilter(obj, event)
+
+    @staticmethod
+    def _set_combo_error(combo: QComboBox, on: bool):
+        """Toggle a red-border highlight on a layout combo to flag a missing pick."""
+        if on:
+            combo.setStyleSheet(
+                "QComboBox {"
+                " border: 2px solid #e53935;"
+                " background-color: rgba(229, 57, 53, 0.18);"
+                "}"
+            )
+        else:
+            combo.setStyleSheet("")
 
     # ── Run pipeline ──────────────────────────────────────────────────────────
 
@@ -469,12 +502,18 @@ class DataLoaderWidget(QWidget):
                                 "Add at least one input directory first.")
             return
 
-        missing = [i + 1 for i, d in enumerate(self._directories) if not d["layout"]]
-        if missing:
+        missing_rows = [i for i, d in enumerate(self._directories) if not d["layout"]]
+        if missing_rows:
+            # Highlight every offending combo in red so the user can spot them
+            # at a glance instead of cross-referencing plate numbers from the dialog.
+            for row in missing_rows:
+                combo = self._dir_table.cellWidget(row, 1)
+                if combo is not None:
+                    self._set_combo_error(combo, True)
             QMessageBox.warning(
                 self, "Plate Layout Required",
                 "Please choose a plate layout for plate(s): "
-                f"{', '.join(map(str, missing))}.\n"
+                f"{', '.join(str(r + 1) for r in missing_rows)}.\n"
                 "Every directory must have a plate layout assigned before processing."
             )
             return

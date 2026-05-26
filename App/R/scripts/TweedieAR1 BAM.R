@@ -24,6 +24,15 @@ library(gratia)
 # Null-coalescing operator (used when reading optional sidecar fields)
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
+# Multiple-testing correction algorithms + tree metadata helpers
+.script_dir <- tryCatch({
+  args0 <- commandArgs(trailingOnly = FALSE)
+  fa <- grep("^--file=", args0, value = TRUE)
+  if (length(fa) > 0) dirname(sub("^--file=", "", fa[1])) else getwd()
+}, error = function(e) getwd())
+source(file.path(.script_dir, "corrections.R"))
+source(file.path(.script_dir, "tree_metadata.R"))
+
 # ── ARGUMENT PARSING ──────────────────────────────────────────────────────────
 # Called from the app as:
 #  Rscript "TweedieAR1 BAM.R" <input_csv> <output_dir> <var_names> <ref_values> <ref_condition> <global_corr> <contrast_adj> <roles> <family_name> <shift_val>
@@ -45,9 +54,13 @@ setwd(output_dir)
 var_names_raw <- if (length(args) >= 3 && !is.na(args[3]) && nchar(args[3]) > 0) args[3] else "Genotype,Drug"
 ref_values_raw <- if (length(args) >= 4 && !is.na(args[4]) && nchar(args[4]) > 0) args[4] else "WT,DMSO"
 ref_condition  <- if (length(args) >= 5 && !is.na(args[5]) && nchar(args[5]) > 0) args[5] else "WT+DMSO"
-global_correction <- if (length(args) >= 6 && !is.na(args[6]) && nchar(args[6]) > 0) args[6] else "BH"
-contrast_adjust   <- if (length(args) >= 7 && !is.na(args[7]) && nchar(args[7]) > 0) args[7] else "dunnett"
-roles_raw         <- if (length(args) >= 8 && !is.na(args[8]) && nchar(args[8]) > 0) args[8] else ""
+# Legacy positional args — the Python BAM widget still passes "BH"/"none" here
+# for back-compat with older R scripts, but the new correction architecture
+# drives every step from correction.json (read further down) instead. These
+# values aren't used by the analysis any more.
+.legacy_global_correction <- if (length(args) >= 6 && !is.na(args[6])) args[6] else "BH"
+.legacy_contrast_adjust   <- if (length(args) >= 7 && !is.na(args[7])) args[7] else "none"
+roles_raw                 <- if (length(args) >= 8 && !is.na(args[8]) && nchar(args[8]) > 0) args[8] else ""
 family_name       <- if (length(args) >= 9 && !is.na(args[9]) && nchar(args[9]) > 0) args[9] else "Tweedie"
 shift_val         <- if (length(args) >= 10 && !is.na(args[10]) && nchar(args[10]) > 0) as.numeric(args[10]) else 0
 
@@ -95,6 +108,11 @@ label_with_role <- function(cond) {
   if (!is.na(role)) paste0(cond, "\n[", role, "]") else cond
 }
 
+# Smooth-basis dimension (k) used for every time-series smooth in the formula.
+# Defined here (rather than just-in-time) so the run log can echo it back to
+# the user alongside the other run parameters.
+k_start <- 30
+
 cat("Input CSV:        ", input_csv, "\n")
 cat("Output dir:       ", output_dir, "\n")
 cat("Variables:        ", paste(var_names_display, collapse = ", "), "\n")
@@ -104,11 +122,13 @@ if (!identical(var_names_display, var_names)) {
 }
 cat("Reference values: ", paste(ref_map, collapse = ", "), "\n")
 cat("Ref Condition:    ", ref_condition, "\n")
-cat("Global correction:", global_correction, "\n")
-cat("Contrast adjust:  ", contrast_adjust, "\n")
+# emmeans contrasts now always run with adjust = "none"; multiple-testing
+# correction (flat BH/Holm or tree TreeBH/Holm-gatekeeping/graphicalMCP) is
+# applied post-hoc against the raw p-values via the correction.json sidecar.
 cat("Roles:            ", roles_raw, "\n")
 cat("Family:           ", family_name, "\n")
 cat("Shift applied:    ", shift_val, "\n")
+cat("k (smooth basis): ", k_start, "\n")
 
 # Find how many cores the computer has, and leave 1 free so the computer doesn't freeze
 usable_cores <- max(1, detectCores() - 1)
@@ -149,18 +169,42 @@ if (!all(var_names_display %in% colnames(full_df))) {
 # ---------------------------------------------------------
 # 1. FINAL DATA PREP FOR MGCV
 # ---------------------------------------------------------
+# Unified-model design:
+#   - One bam() fit across all phase groups, not one per group.
+#   - time_in_group resets at each phase boundary so per-(condition × phase)
+#     smooths live entirely inside their own phase.
+#   - time_sec is the global continuous-time variable used by the per-well
+#     and per-plate random-effect smooths so they span the whole recording.
+#   - Group_factor encodes phase identity as a categorical predictor for the
+#     parametric expansion and the by-interaction smooth.
+#   - start_event resets the AR(1) chain at BOTH well starts AND phase
+#     boundaries within wells — otherwise mgcv would attempt to correlate
+#     residuals across a discontinuous phase transition.
 gam_df <- full_df %>%
   mutate(
-    animal_id = as.factor(paste(plate, location, sep = "_")),
-    plate     = as.factor(plate),
-    # Combined condition factor for interaction smooths
-    Condition_Combo = as.factor(Condition)
-  )
+    animal_id       = as.factor(paste(plate, location, sep = "_")),
+    plate           = as.factor(plate),
+    Condition_Combo = as.factor(Condition),
+    Group_factor    = as.factor(Group)
+  ) %>%
+  group_by(Group) %>%
+  mutate(time_in_group = time_sec - min(time_sec)) %>%
+  ungroup() %>%
+  arrange(animal_id, Group, time_in_group) %>%
+  group_by(animal_id) %>%
+  mutate(start_event = (row_number() == 1) | (Group != lag(Group, default = -1L))) %>%
+  ungroup()
 
-# Convert each variable to factor
+# Convert each design variable to factor and set reference level globally
 for (v in var_names) {
   gam_df[[v]] <- as.factor(gam_df[[v]])
+  gam_df[[v]] <- relevel(gam_df[[v]], ref = ref_map[[v]])
 }
+gam_df$Condition_Combo <- relevel(gam_df$Condition_Combo, ref = ref_condition)
+
+unique_groups <- sort(unique(gam_df$Group))
+n_groups      <- length(unique_groups)
+cat("Phase groups detected:", n_groups, "  →  ", paste(unique_groups, collapse = ", "), "\n")
 
 # Apply shift to pxl_diff if requested (required when using Gamma family)
 if (shift_val != 0) {
@@ -169,105 +213,106 @@ if (shift_val != 0) {
 }
 
 # ---------------------------------------------------------
-# 2. BUILD DYNAMIC BAM FORMULA
+# 2. BUILD UNIFIED BAM FORMULA
 # ---------------------------------------------------------
-# Parametric: all main effects + all interactions  (Var1 * Var2 * ... * VarN)
-# Smooth: s(time_in_group) + s(time_in_group, by=Condition_Combo) + s(time_in_group, animal_id, bs="fs")
-parametric_str <- paste(var_names, collapse = " * ")
+# Parametric:   Var1 * Var2 * ... * VarN * Group_factor
+#               → all design-variable main effects + all interactions
+#                 INCLUDING phase-group interactions; captures per-(condition,
+#                 phase) intercept shifts and any cross-phase modulation.
+# Smooths:
+#   s(time_in_group, k = k_start)                                  — shared within-phase shape baseline
+#   s(time_in_group, by = interaction(Condition_Combo, Group_factor), k = k_start)
+#                                                                  — per-(condition × phase) trajectory deviation
+#   s(time_sec, plate,     bs = 'fs', m = 1)                       — plate random smooth across all time
+#   s(time_sec, animal_id, bs = 'fs', m = 1)                       — well random smooth across all time
+#
+# Transition spikes between phases are inferred from the early-time shape of
+# the next phase's per-(condition, phase) smooth plus the parametric phase
+# intercepts. The random-effect smooths over time_sec span the entire
+# recording so per-well / per-plate variance is estimated once jointly.
+n_plates <- length(unique(gam_df$plate))
+if (n_plates >= 2) {
+  plate_smooth_str <- " + s(time_sec, plate, bs = 'fs', m = 1)"
+} else {
+  plate_smooth_str <- ""
+  cat("Only ", n_plates, " plate(s) detected — omitting the plate factor smooth.\n",
+      sep = "")
+}
+
+parametric_str <- paste(c(var_names, "Group_factor"), collapse = " * ")
 formula_str <- paste0(
   "pxl_diff ~ ", parametric_str,
   " + s(time_in_group, k = k_start)",
-  " + s(time_in_group, by = Condition_Combo, k = k_start)",
-  " + s(time_in_group, plate, bs = 'fs', m = 1)",
-  " + s(time_in_group, animal_id, bs = 'fs', m = 1)"
+  " + s(time_in_group, by = interaction(Condition_Combo, Group_factor), k = k_start)",
+  plate_smooth_str,
+  " + s(time_sec, animal_id, bs = 'fs', m = 1)"
 )
-cat("\nBAM formula:\n  ", formula_str, "\n\n")
+cat("\nBAM formula (unified across all phase groups):\n  ", formula_str, "\n\n")
 
-models_by_group     <- list()
-group_data_by_group <- list()  # kept around for posterior-equivalence step
-unique_groups <- sort(unique(gam_df$Group))
-
-# Define k value before edf calculation
-k_start = 30
-
-# Parse the formula
 bam_formula <- as.formula(formula_str)
 
-for (g in unique_groups) {
-  cat("\n========================================\n")
-  cat("Processing Group:", g, "...\n")
+# ---------------------------------------------------------
+# B. PASS 1 — ESTIMATE AR(1) RHO FROM RESIDUALS
+# ---------------------------------------------------------
+# Fit a no-AR model, then compute lag-1 correlation of residuals within each
+# (animal_id, Group) segment. Averaging across segments gives a data-driven
+# rho estimate that Pass 2 plugs in. If anything goes wrong here, fall back
+# to a fixed default so the run still completes.
+cat("\n========================================\n")
+cat("Pass 1: fitting no-AR model to estimate autocorrelation (rho)...\n")
 
-  # A. Subset data and setup AR1 boundaries
-  group_data <- gam_df %>%
-    filter(Group == g) %>%
-    mutate(time_in_group = time_sec - min(time_sec)) %>%
-    arrange(animal_id, time_in_group) %>%
-    group_by(animal_id) %>%
-    mutate(start_event = row_number() == 1) %>%
-    ungroup()
-
-  # Ensure variables are factors and set reference levels
-  for (v in var_names) {
-    group_data[[v]] <- as.factor(group_data[[v]])
-    group_data[[v]] <- relevel(group_data[[v]], ref = ref_map[[v]])
-  }
-
-  # Combined condition factor with reference level
-  group_data$Condition_Combo <- as.factor(group_data$Condition_Combo)
-  group_data$Condition_Combo <- relevel(group_data$Condition_Combo, ref = ref_condition)
-
-  # ---------------------------------------------------------
-  # B. PASS 1: FIND THE OPTIMAL RHO
-  # ---------------------------------------------------------
-  cat("  -> Fitting initial model to estimate autocorrelation (rho)...\n")
-
+fallback_rho <- 0.20
+optimal_rho  <- tryCatch({
   model_no_ar <- bam(
-    formula = bam_formula,
-    data = group_data,
-    family = chosen_family,
-    select = TRUE,
-    method = "fREML",
+    formula  = bam_formula,
+    data     = gam_df,
+    family   = chosen_family,
+    select   = TRUE,
+    method   = "fREML",
     discrete = TRUE,
     nthreads = usable_cores
   )
-
-  # Extract residuals and calculate the lag-1 correlation securely within each animal
-  group_data$res <- resid(model_no_ar)
-
-  optimal_rho <- group_data %>%
-    group_by(animal_id) %>%
-    summarise(
-      animal_rho = cor(res, lag(res), use = "pairwise.complete.obs")
+  gam_df$res <- resid(model_no_ar)
+  rho_est <- gam_df %>%
+    dplyr::group_by(animal_id, Group) %>%
+    dplyr::summarise(
+      animal_rho = cor(res, dplyr::lag(res), use = "pairwise.complete.obs"),
+      .groups    = "drop"
     ) %>%
-    pull(animal_rho) %>%
+    dplyr::pull(animal_rho) %>%
     mean(na.rm = TRUE)
+  # Clamp to a sane range — degenerate AR1 (|rho|>=1) blows mgcv up.
+  rho_est <- max(min(rho_est, 0.95), -0.95)
+  gam_df$res <- NULL
+  rm(model_no_ar)
+  rho_est
+}, error = function(e) {
+  warning("Pass 1 failed (", conditionMessage(e),
+          ") — falling back to fixed rho = ", fallback_rho)
+  fallback_rho
+})
 
-  cat("  -> Calculated Optimal Rho:", round(optimal_rho, 3), "\n")
+cat(sprintf("Pass 1 estimated rho: %.4f\n", optimal_rho))
 
-  # ---------------------------------------------------------
-  # C. PASS 2: FIT THE FINAL MODEL
-  # ---------------------------------------------------------
-  cat("  -> Fitting final model with AR1 correction...\n")
+# ---------------------------------------------------------
+# C. PASS 2 — FIT THE MODEL WITH AR(1) CORRECTION
+# ---------------------------------------------------------
+cat(sprintf("\nPass 2: fitting unified model with AR1 correction (rho = %.4f)...\n",
+            optimal_rho))
 
-  final_model <- bam(
-    formula = bam_formula,
-    data = group_data,
-    family = chosen_family,
-    rho = optimal_rho,
-    AR.start = group_data$start_event,
-    select = TRUE,
-    method = "fREML",
-    discrete = TRUE,
-    nthreads = usable_cores
-  )
+final_model <- bam(
+  formula  = bam_formula,
+  data     = gam_df,
+  family   = chosen_family,
+  rho      = optimal_rho,
+  AR.start = gam_df$start_event,
+  select   = TRUE,
+  method   = "fREML",
+  discrete = TRUE,
+  nthreads = usable_cores
+)
 
-  # Store the final model + the group_data used to fit it (the latter is needed
-  # later for posterior-equivalence prediction grids)
-  models_by_group[[as.character(g)]]     <- final_model
-  group_data_by_group[[as.character(g)]] <- group_data
-
-  cat("Successfully fitted Group", g, "!\n")
-}
+cat("Unified model fitted across all", n_groups, "phase groups.\n")
 
 # ---------------------------------------------------------
 # 3. GLOBAL MULTIPLE COMPARISONS: ACROSS ALL PHASE GROUPS
@@ -303,426 +348,244 @@ if (file.exists(contrast_sidecar)) {
 
 all_contrasts_list <- list()
 
-for (g in as.character(sort(as.integer(names(models_by_group))))) {
-
-  target_model <- models_by_group[[g]]
-  group_data   <- group_data_by_group[[g]]
-
-  # ── Reference-grid diagnostic and adaptive rg.limit ─────────────────────────
-  # emmeans builds a reference grid as the cartesian product of factors that
-  # it treats as fixed. With many conditions, this can exceed the default
-  # rg.limit of 10000, so we compute the realistic grid size, report it with
-  # an estimated memory cost, and bump rg.limit accordingly.
-  #
-  # Random-effect-like smooths (bs='fs' factor smooths and bs='re' random
-  # effects) are excluded from the grid by emmeans, so we exclude them here
-  # too to match its actual behaviour.
-  random_factor_names <- character(0)
-  for (sm in target_model$smooth) {
-    if (inherits(sm, "fs.interaction")) {
-      random_factor_names <- c(random_factor_names, sm$fterm)
-    } else if (inherits(sm, "random.effect")) {
-      random_factor_names <- c(random_factor_names, sm$term)
-    }
-  }
-  random_factor_names <- unique(random_factor_names)
-
-  candidate_factor_vars <- intersect(
-    c(var_names, "Condition_Combo", "animal_id"),
-    colnames(group_data)
-  )
-  factor_sizes <- vapply(candidate_factor_vars, function(v) {
-    if (is.factor(group_data[[v]])) nlevels(group_data[[v]]) else 1L
-  }, integer(1))
-
-  fixed_factor_vars  <- setdiff(candidate_factor_vars, random_factor_names)
-  fixed_factor_sizes <- factor_sizes[fixed_factor_vars]
-
-  n_coefs   <- length(coef(target_model))
-  grid_rows <- if (length(fixed_factor_sizes) > 0)
-                 prod(as.numeric(fixed_factor_sizes)) else 1
-  est_mb    <- grid_rows * n_coefs * 8 / 1e6
-
-  cat(sprintf("\n  [Group %s] Ref-grid fixed factors: %s\n", g,
-              if (length(fixed_factor_vars) > 0)
-                paste(sprintf("%s(%d)", fixed_factor_vars, fixed_factor_sizes),
-                      collapse = " × ")
-              else "(none)"))
-  if (length(random_factor_names) > 0) {
-    cat(sprintf("  [Group %s] Random factors (excluded by emmeans): %s\n", g,
-                paste(random_factor_names, collapse = ", ")))
-  }
-  cat(sprintf("  [Group %s] Estimated grid: %d rows × %d coefs ≈ %.1f MB\n",
-              g, as.integer(grid_rows), n_coefs, est_mb))
-
-  # Set rg.limit with 2x headroom over the estimate, with a 50k floor so
-  # small experiments don't get a tighter-than-default limit.
-  emm_options(rg.limit = max(50000, as.integer(grid_rows * 2)))
-
-  # ── Per-variable effects (each variable vs reference, split by other variables) ──
-  for (vi in seq_along(var_names)) {
-    focal_var   <- var_names[vi]
-    other_vars  <- var_names[-vi]
-    ref_val     <- ref_map[[focal_var]]
-
-    # Build emmeans spec: ~ FocalVar | OtherVar1 + OtherVar2 + ...
-    if (length(other_vars) > 0) {
-      spec_str <- paste0("~ ", focal_var, " | ", paste(other_vars, collapse = " + "))
-    } else {
-      spec_str <- paste0("~ ", focal_var)
-    }
-    spec_formula <- as.formula(spec_str)
-
-    emm_base <- emmeans(target_model, specs = spec_formula)
-    emm_contrasts <- contrast(emm_base, method = "trt.vs.ctrl", ref = ref_val, adjust = contrast_adjust)
-
-    df_contrasts <- as.data.frame(emm_contrasts) %>%
-      mutate(
-        Group = g,
-        Test_Family = paste0(focal_var, "_Effect"),
-        Tested_Level = as.character(contrast)
-      )
-
-    # Rename the "other vars" columns to a generic Split_By for stacking
-    if (length(other_vars) > 0) {
-      # Create a combined Split_By column from other variable columns
-      split_cols <- intersect(other_vars, colnames(df_contrasts))
-      if (length(split_cols) > 0) {
-        df_contrasts$Split_By <- apply(df_contrasts[, split_cols, drop = FALSE], 1,
-                                        function(x) paste(x, collapse = " + "))
-        df_contrasts <- df_contrasts %>% select(-all_of(split_cols))
-      } else {
-        df_contrasts$Split_By <- "All"
-      }
-    } else {
-      df_contrasts$Split_By <- "All"
-    }
-
-    all_contrasts_list[[paste0(g, "_", focal_var)]] <- df_contrasts
-  }
-
-  # ── Full interaction: pairwise condition comparisons ──
-  # Build the full interaction spec: ~ Var1 * Var2 * ... * VarN
-  inter_spec_str <- paste0("~ ", paste(var_names, collapse = " * "))
-  inter_spec <- as.formula(inter_spec_str)
-
-  emm_inter_base <- emmeans(target_model, specs = inter_spec)
-
-  # Build the contrast set, optionally trimmed by the sidecar JSON.
-  emm_inter_contrasts <- NULL
-  if (!is.null(contrast_spec)) {
-    kept_pairs <- contrast_spec$kept_pairs
-    if (length(kept_pairs) == 0) {
-      cat("  Group ", g, ": Full_Interaction skipped (no pairs selected).\n", sep = "")
-    } else {
-      # Reconstruct the Python-side condition string ("WT+DMSO") for each grid row
-      grid <- emm_inter_base@grid
-      cond_strs <- apply(grid[, var_names, drop = FALSE], 1,
-                         function(r) paste(as.character(r), collapse = "+"))
-
-      custom_contrasts <- list()
-      missing <- c()
-      for (pair in kept_pairs) {
-        lhs <- pair[[1]]; rhs <- pair[[2]]
-        lhs_i <- which(cond_strs == lhs)
-        rhs_i <- which(cond_strs == rhs)
-        if (length(lhs_i) == 1L && length(rhs_i) == 1L) {
-          v <- numeric(length(cond_strs))
-          v[lhs_i] <-  1
-          v[rhs_i] <- -1
-          custom_contrasts[[paste(lhs, "-", rhs)]] <- v
-        } else {
-          missing <- c(missing, paste(lhs, "vs", rhs))
-        }
-      }
-      if (length(missing) > 0) {
-        warning("Group ", g, ": couldn't locate pair(s) in emmeans grid: ",
-                paste(missing, collapse = "; "))
-      }
-      if (length(custom_contrasts) > 0) {
-        emm_inter_contrasts <- contrast(emm_inter_base,
-                                        method = custom_contrasts,
-                                        adjust = contrast_adjust)
-      }
-    }
-  } else {
-    emm_inter_contrasts <- contrast(emm_inter_base, method = "pairwise")
-  }
-
-  if (!is.null(emm_inter_contrasts)) {
-    df_inter <- as.data.frame(emm_inter_contrasts) %>%
-      mutate(
-        Group = g,
-        Test_Family = "Full_Interaction",
-        Tested_Level = as.character(contrast),
-        Split_By = "None"
-      )
-    all_contrasts_list[[paste0(g, "_interaction")]] <- df_inter
+# ── Reference-grid sizing ───────────────────────────────────────────────────
+# Single unified model: the grid now expands across (var levels × Group_factor).
+# Bump rg.limit to accommodate.
+random_factor_names <- character(0)
+for (sm in final_model$smooth) {
+  if (inherits(sm, "fs.interaction")) {
+    random_factor_names <- c(random_factor_names, sm$fterm)
+  } else if (inherits(sm, "random.effect")) {
+    random_factor_names <- c(random_factor_names, sm$term)
   }
 }
+random_factor_names <- unique(random_factor_names)
 
-# ---------------------------------------------------------
-# COMBINE AND APPLY GLOBAL PENALTY
-# ---------------------------------------------------------
-master_results_df <- bind_rows(all_contrasts_list)
+candidate_factor_vars <- intersect(
+  c(var_names, "Condition_Combo", "Group_factor", "animal_id"),
+  colnames(gam_df)
+)
+factor_sizes <- vapply(candidate_factor_vars, function(v) {
+  if (is.factor(gam_df[[v]])) nlevels(gam_df[[v]]) else 1L
+}, integer(1))
+fixed_factor_vars  <- setdiff(candidate_factor_vars, random_factor_names)
+fixed_factor_sizes <- factor_sizes[fixed_factor_vars]
+grid_rows <- if (length(fixed_factor_sizes) > 0)
+               prod(as.numeric(fixed_factor_sizes)) else 1
+cat(sprintf("\nRef-grid fixed factors: %s\n",
+            paste(sprintf("%s(%d)", fixed_factor_vars, fixed_factor_sizes),
+                  collapse = " × ")))
+cat(sprintf("Estimated emmeans grid: %d rows\n", as.integer(grid_rows)))
+emm_options(rg.limit = max(50000, as.integer(grid_rows * 2)))
 
-# Convert effect sizes from natural-log (log_e) fold change — the scale produced
-# by emmeans on log-link models — to log_2 fold change. Dividing both estimate
-# and SE by log(2) preserves t-statistics, p-values, and CI shape; only the
-# axis units change (log_2 doublings/halvings instead of natural-log units).
-final_master_table <- master_results_df %>%
-  group_by(Test_Family) %>%
-  mutate(
-    Global_FDR_pvalue = p.adjust(p.value, method = global_correction),
-    estimate = estimate / log(2),
-    SE       = SE       / log(2),
-    Group    = as.integer(Group)   # convert from character so sorting is numerical
-  ) %>%
-  ungroup() %>%
-  select(Test_Family, Group, Split_By, Tested_Level, estimate, SE, p.value, Global_FDR_pvalue) %>%
-  arrange(Test_Family, Group)
-
-cat("\n--- CLEAN MASTER TABLE ---\n")
-print(final_master_table, n=nrow(final_master_table))
-
-# =============================================================================
-# Visualizations
-# =============================================================================
-
-# Labels that reflect the chosen global correction method
-correction_label     <- if (global_correction == "BH") "FDR-corrected p-value" else "FWER-corrected p-value"
-correction_sig_label <- if (global_correction == "BH") "FDR < 0.05" else "FWER < 0.05"
-
-# ---------------------------------------------------------
-# FOREST PLOTS: One per variable effect + one for interaction
-# ---------------------------------------------------------
-
-# Helper: annotate condition names within a comparison label (e.g. "WT DMSO - KO DMSO")
-# Condition names in emmeans output use spaces between variable levels (not "+")
-# so we need to match against the "+" form from our role_map
-annotate_comparison <- function(label) {
-  if (length(role_map) == 0) return(label)
-  # emmeans pairwise labels separate conditions with " - "
-  parts <- str_split(label, " - ", n = 2)[[1]]
-  annotated <- sapply(parts, function(p) {
-    p <- trimws(p)
-    # Try matching: emmeans uses space-separated, role_map uses "+" separated
-    cond_plus <- gsub(" ", "+", p)
-    role <- role_map[cond_plus]
-    if (!is.na(role)) paste0(p, " [", role, "]") else p
-  }, USE.NAMES = FALSE)
-  paste(annotated, collapse = " - ")
-}
-
-forest_plot_data <- final_master_table %>%
-  mutate(
-    CI_lower = estimate - 1.96 * SE,
-    CI_upper = estimate + 1.96 * SE,
-    sig_star = case_when(
-      Global_FDR_pvalue < 0.001 ~ "***",
-      Global_FDR_pvalue < 0.01 ~ "**",
-      Global_FDR_pvalue < 0.05 ~ "*",
-      TRUE ~ ""
-    ),
-    Tested_Level_Annotated = sapply(Tested_Level, annotate_comparison),
-    Tested_Level_Clean = str_replace_all(Tested_Level_Annotated, " - ", "\nvs\n"),
-    Group_Label = paste("Group", Group),
-    sig_category = case_when(
-      Global_FDR_pvalue < 0.05 ~ "Significant",
-      TRUE ~ "Not significant"
-    )
-  )
-
-# Per-variable forest plots
+# ── Per-variable effects ────────────────────────────────────────────────────
+# Group_factor joins the conditioning so the same trt-vs-ref contrast is
+# produced once per (other-vars × Group) cell from the single unified model.
 for (vi in seq_along(var_names)) {
-  focal_var    <- var_names[vi]
-  display_var  <- var_display_map[[focal_var]]
-  ref_val      <- ref_map[[focal_var]]
-  family_name  <- paste0(focal_var, "_Effect")
+  focal_var   <- var_names[vi]
+  other_vars  <- var_names[-vi]
+  ref_val     <- ref_map[[focal_var]]
 
-  plot_data <- forest_plot_data %>% filter(Test_Family == family_name)
-  if (nrow(plot_data) == 0) next
+  cond_vars <- c(other_vars, "Group_factor")
+  spec_str  <- paste0("~ ", focal_var, " | ", paste(cond_vars, collapse = " + "))
+  spec_formula <- as.formula(spec_str)
 
-  p <- plot_data %>%
-    ggplot(aes(x = estimate, y = interaction(Group, Split_By), color = sig_category)) +
-    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50", linewidth = 0.8) +
-    geom_errorbar(aes(xmin = CI_lower, xmax = CI_upper), width = 0.3, linewidth = 0.8, orientation = "y") +
-    geom_point(size = 3) +
-    geom_text(aes(label = sig_star, x = CI_upper), hjust = -0.5, size = 4, show.legend = FALSE) +
-    scale_color_manual(
-      values = c("Significant" = "#D55E00", "Not significant" = "gray60"),
-      name = correction_label
-    ) +
-    facet_grid(Split_By ~ ., scales = "free_y", space = "free_y") +
-    labs(
-      title = paste0(display_var, " Effect (vs. ", ref_val, ")"),
-      x = expression("Effect Size (log"[2]*" fold change in pixel difference)"),
-      y = NULL,
-      caption = "Significance: * p < 0.05   ** p < 0.01   *** p < 0.001"
-    ) +
-    theme_minimal(base_size = 12) +
-    theme(
-      legend.position = "bottom",
-      panel.grid.major.y = element_blank(),
-      panel.grid.minor = element_blank(),
-      strip.text.y = element_text(angle = 0, face = "bold"),
-      axis.text.y = element_text(size = 10),
-      plot.caption = element_text(hjust = 1, face = "italic", size = 10)
-    )
+  emm_base <- emmeans(final_model, specs = spec_formula)
+  emm_contrasts <- contrast(emm_base, method = "trt.vs.ctrl",
+                            ref = ref_val, adjust = "none")
 
-  fname <- paste0("forest_plot_", tolower(focal_var), "_effect.png")
-  ggsave(fname, p, width = 10, height = 8, dpi = 300)
-  cat("Saved:", fname, "\n")
-}
-
-# Interaction forest plot
-inter_plot_data <- forest_plot_data %>% filter(Test_Family == "Full_Interaction")
-if (nrow(inter_plot_data) > 0) {
-  p3_interaction <- inter_plot_data %>%
-    ggplot(aes(x = estimate, y = factor(Group), color = sig_category)) +
-    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50", linewidth = 0.8) +
-    geom_errorbar(aes(xmin = CI_lower, xmax = CI_upper), width = 0.3, linewidth = 0.8, orientation = "y") +
-    geom_point(size = 3) +
-    geom_text(aes(label = sig_star, x = CI_upper), hjust = -0.5, size = 3.5, show.legend = FALSE) +
-    scale_color_manual(
-      values = c("Significant" = "#D55E00", "Not significant" = "gray60"),
-      name = correction_label
-    ) +
-    facet_wrap(~Tested_Level_Annotated, ncol = 3, scales = "free_x") +
-    labs(
-      title = paste0("Full Interaction (", paste(var_names_display, collapse = " x "), ")"),
-      x = expression("Effect Size (log"[2]*" fold change in pixel difference)"),
-      y = "Group",
-      caption = "Significance: * p < 0.05   ** p < 0.01   *** p < 0.001"
-    ) +
-    theme_minimal(base_size = 11) +
-    theme(
-      legend.position = "bottom",
-      panel.grid.minor = element_blank(),
-      strip.text = element_text(size = 9, face = "bold"),
-      plot.caption = element_text(hjust = 1, face = "italic", size = 9)
-    )
-
-  ggsave("forest_plot_interactions.png", p3_interaction, width = 14, height = 6, dpi = 300)
-  cat("Saved: forest_plot_interactions.png\n")
-}
-
-# ---------------------------------------------------------
-# HEATMAP OF SIGNIFICANCE ACROSS GROUPS
-# ---------------------------------------------------------
-
-heatmap_data_diverging <- final_master_table %>%
-  mutate(
-    Tested_Level_Annotated = sapply(Tested_Level, annotate_comparison),
-    signed_sig = -log10(Global_FDR_pvalue) * sign(estimate),
-    signed_sig_capped = pmax(pmin(signed_sig, 5), -5),
-    row_label = case_when(
-      Split_By != "None" ~ paste(Split_By, ":", str_trunc(Tested_Level_Annotated, width = 50)),
-      TRUE ~ str_trunc(Tested_Level_Annotated, width = 55)
-    )
-  )
-
-p_heatmap_diverging_v1 <- heatmap_data_diverging %>%
-  ggplot(aes(x = factor(Group, levels = sort(unique(Group))), y = row_label, fill = signed_sig_capped)) +
-  geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = ifelse(abs(signed_sig) > 1.3,  # p < 0.05
-                               sprintf("%.2f", estimate),
-                               "")),
-            size = 2.3, color = "gray20", fontface = "bold") +
-  scale_fill_gradient2(
-    low = "#2166AC",      # Blue = negative effect
-    mid = "gray95",       # Gray = not significant
-    high = "#B2182B",     # Red = positive effect
-    midpoint = 0,
-    name = expression("Signed -log"[10]*"(p)"),
-    breaks = c(-5, -2, 0, 2, 5),
-    labels = c("Decrease\np<0.00001", "p<0.01", "ns", "p<0.01", "Increase\np<0.00001"),
-    limits = c(-5, 5)
-  ) +
-  facet_grid(Test_Family ~ ., scales = "free_y", space = "free_y") +
-  labs(
-    title = "Effect Direction and Significance Across Groups",
-    subtitle = "Blue = decreased activity | Red = increased activity | Color intensity = significance",
-    x = "Group (Experimental Phase)",
-    y = NULL
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    axis.text.x = element_text(size = 11, face = "bold"),
-    axis.text.y = element_text(size = 8),
-    strip.text.y = element_text(angle = 0, face = "bold", size = 10),
-    legend.position = "right",
-    panel.grid = element_blank(),
-    legend.key.height = unit(1.5, "cm")
-  )
-
-ggsave("heatmap_diverging_v1.png", p_heatmap_diverging_v1, width = 12, height = 14, dpi = 300)
-
-# ---------------------------------------------------------
-# RESCUE LINE PLOTS (only for 2-variable designs with rescue roles)
-# ---------------------------------------------------------
-# This plot is most meaningful for the classic Genotype+Drug rescue paradigm.
-# It is generated only when exactly 2 variables are present and the reference
-# condition can form meaningful rescue comparisons.
-
-if (n_vars == 2) {
-  cat("Generating rescue assessment plot (2-variable design)...\n")
-
-  rescue_context_data <- final_master_table %>%
-    filter(Test_Family == "Full_Interaction") %>%
+  df_contrasts <- as.data.frame(emm_contrasts) %>%
     mutate(
-      Tested_Level_Annotated = sapply(Tested_Level, annotate_comparison),
-      CI_lower = estimate - 1.96 * SE,
-      CI_upper = estimate + 1.96 * SE,
-      Group = as.numeric(Group),
-      is_sig = Global_FDR_pvalue < 0.05
-    )
+      Test_Family  = paste0(focal_var, "_Effect"),
+      Tested_Level = as.character(contrast),
+      Group        = as.integer(as.character(Group_factor))
+    ) %>%
+    select(-Group_factor)
 
-  if (nrow(rescue_context_data) > 0) {
-    p_rescue_context_faceted <- rescue_context_data %>%
-      ggplot(aes(x = Group, y = estimate)) +
-      geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
-      geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, group = Tested_Level),
-                  alpha = 0.2, fill = "gray70") +
-      geom_line(aes(group = Tested_Level), linewidth = 1.2, color = "gray30") +
-      geom_point(aes(color = is_sig), size = 3.5) +
-      scale_color_manual(
-        values = c("TRUE" = "#D55E00", "FALSE" = "gray60"),
-        labels = c("ns", correction_sig_label),
-        name = NULL
-      ) +
-      scale_x_continuous(breaks = sort(unique(rescue_context_data$Group))) +
-      facet_wrap(~Tested_Level_Annotated, ncol = 2, scales = "free_y") +
-      labs(
-        title = "Effect Size Rescue Assessment",
-        subtitle = "Each panel shows a different comparison. Shaded areas = 95% CI",
-        x = "Group (Experimental Phase)",
-        y = "Effect Size (+/- 95% CI)"
-      ) +
-      theme_minimal(base_size = 12) +
-      theme(
-        legend.position = "bottom",
-        panel.grid.minor = element_blank(),
-        strip.text = element_text(face = "bold", size = 10),
-        panel.spacing = unit(1, "lines")
-      )
+  # Collapse remaining other-variable columns into a single Split_By string
+  split_cols <- intersect(other_vars, colnames(df_contrasts))
+  if (length(split_cols) > 0) {
+    df_contrasts$Split_By <- apply(df_contrasts[, split_cols, drop = FALSE], 1,
+                                    function(x) paste(x, collapse = " + "))
+    df_contrasts <- df_contrasts %>% select(-all_of(split_cols))
+  } else {
+    df_contrasts$Split_By <- "All"
+  }
 
-    ggsave("rescue_assessment_context_faceted.png", p_rescue_context_faceted, width = 12, height = 8, dpi = 300)
-    cat("Saved: rescue_assessment_context_faceted.png\n")
+  all_contrasts_list[[focal_var]] <- df_contrasts
+}
+
+# ── Full interaction: pairwise condition comparisons by Group ───────────────
+# Use the DESIGN variables (Var1 * Var2 * ...) — NOT Condition_Combo — because
+# emmeans detects Condition_Combo's levels as nested in the parametric
+# Genotype*Drug*Group_factor expansion and strips it out of the reference
+# grid. Asking for Condition_Combo by name then errors with
+#   "No variable named Condition_Combo in the reference grid".
+# Building the spec from the design variables sidesteps the nesting issue
+# entirely; we reconstruct the "+"-joined condition string from the grid
+# columns for matching against the sidecar's kept_pairs entries.
+inter_spec <- as.formula(paste0(
+  "~ ", paste(var_names, collapse = " * "), " | Group_factor"
+))
+emm_inter_base <- emmeans(final_model, specs = inter_spec)
+
+# Pull a single by-level's sub-grid to learn the within-group row ordering;
+# the weight vectors built below have length = nrow(that sub-grid) and are
+# replayed by emmeans across every Group_factor level via by="Group_factor".
+full_inter_grid <- emm_inter_base@grid
+first_group     <- levels(gam_df$Group_factor)[1]
+within_grid     <- full_inter_grid[
+  as.character(full_inter_grid$Group_factor) == first_group,
+  var_names, drop = FALSE
+]
+cond_strs <- apply(within_grid, 1,
+                   function(r) paste(as.character(r), collapse = "+"))
+
+emm_inter_contrasts <- NULL
+if (!is.null(contrast_spec)) {
+  kept_pairs <- contrast_spec$kept_pairs
+  if (length(kept_pairs) == 0) {
+    cat("Full_Interaction skipped (no pairs selected).\n")
+  } else {
+    custom_contrasts <- list()
+    missing <- c()
+    for (pair in kept_pairs) {
+      lhs <- pair[[1]]; rhs <- pair[[2]]
+      lhs_i <- which(cond_strs == lhs)
+      rhs_i <- which(cond_strs == rhs)
+      if (length(lhs_i) == 1L && length(rhs_i) == 1L) {
+        v <- numeric(length(cond_strs))
+        v[lhs_i] <-  1
+        v[rhs_i] <- -1
+        custom_contrasts[[paste(lhs, "-", rhs)]] <- v
+      } else {
+        missing <- c(missing, paste(lhs, "vs", rhs))
+      }
+    }
+    if (length(missing) > 0) {
+      warning("Couldn't locate pair(s) in the design-variable grid: ",
+              paste(missing, collapse = "; "))
+    }
+    if (length(custom_contrasts) > 0) {
+      emm_inter_contrasts <- contrast(emm_inter_base,
+                                      method = custom_contrasts,
+                                      by = "Group_factor",
+                                      adjust = "none")
+    }
   }
 } else {
-  cat("Skipping rescue assessment plot (designed for 2-variable experiments).\n")
+  # Legacy fallback (no contrast_selection.json sidecar): all-pairs.
+  emm_inter_contrasts <- contrast(emm_inter_base,
+                                  method = "pairwise",
+                                  by = "Group_factor",
+                                  adjust = "none")
+}
+
+if (!is.null(emm_inter_contrasts)) {
+  df_inter <- as.data.frame(emm_inter_contrasts) %>%
+    mutate(
+      Test_Family  = "Full_Interaction",
+      Tested_Level = as.character(contrast),
+      Split_By     = "None",
+      Group        = as.integer(as.character(Group_factor))
+    ) %>%
+    select(-Group_factor)
+  all_contrasts_list[["interaction"]] <- df_inter
 }
 
 # ---------------------------------------------------------
-# BONUS: CREATE A SUMMARY TABLE FOR QUICK REFERENCE
+# COMBINE + APPLY MULTIPLE-TESTING CORRECTION
+# ---------------------------------------------------------
+# The contrast loop above produced RAW p-values (emmeans `adjust = "none"`).
+# Now apply the user's chosen correction method to those raw values per the
+# correction.json sidecar:
+#   - strategy   = "flat" | "tree"
+#   - error_rate = "FDR"  | "FWER"
+#   - contrast_set = "all_pairs" | "ref_only"   (affects graphicalMCP vs Holm)
+#   - threshold  = q (FDR) or alpha (FWER), default 0.05
+#   - tree       = list of level specs (only used when strategy=="tree")
+#
+# If no sidecar is present, default to flat BH per Test_Family at q = 0.05
+# (matches the historical behaviour from before the new architecture).
+master_results_df <- bind_rows(all_contrasts_list)
+
+final_master_table <- master_results_df %>%
+  mutate(
+    raw_pvalue = p.value,
+    estimate   = estimate / log(2),
+    SE         = SE       / log(2),
+    Group      = as.integer(Group)
+  ) %>%
+  select(Test_Family, Group, Split_By, Tested_Level, estimate, SE, raw_pvalue) %>%
+  arrange(Test_Family, Group)
+
+# Read correction.json if present
+correction_sidecar <- file.path(output_dir, "correction.json")
+correction_spec <- if (file.exists(correction_sidecar)) {
+  tryCatch(
+    fromJSON(correction_sidecar, simplifyVector = FALSE),
+    error = function(e) {
+      warning("Could not parse correction.json: ", conditionMessage(e),
+              " — falling back to flat BH at q=0.05.")
+      NULL
+    }
+  )
+} else NULL
+
+if (is.null(correction_spec)) {
+  # Default: flat BH per-family at q=0.05
+  correction_spec <- list(
+    strategy   = "flat",
+    error_rate = "FDR",
+    threshold  = 0.05,
+    scope      = "per_family"
+  )
+  cat("\nNo correction.json sidecar — using default: flat BH per family at q=0.05.\n")
+} else {
+  cat("\nCorrection.json found: strategy=", correction_spec$strategy %||% "flat",
+      " error_rate=", correction_spec$error_rate %||% "FDR",
+      " threshold=", correction_spec$threshold %||% 0.05, "\n", sep = "")
+}
+
+# If a tree strategy, annotate rows with tree metadata BEFORE correction.
+if (identical(correction_spec$strategy, "tree")) {
+  tree_spec <- correction_spec$tree
+  if (is.null(tree_spec) || length(tree_spec) == 0) {
+    cat("Tree strategy chosen but no tree spec provided — using default rescue tree.\n")
+    tree_spec <- default_rescue_tree_spec(var_names, ref_map)
+  }
+  final_master_table <- assign_tree_metadata(final_master_table, tree_spec)
+}
+
+final_master_table <- apply_correction(final_master_table, correction_spec)
+
+# Tidy up column order — tree columns may not have been added by flat methods
+# but they're always present after apply_correction (NAs are fine).
+final_master_table <- final_master_table %>%
+  select(Test_Family, Group, Split_By, Tested_Level,
+         estimate, SE,
+         raw_pvalue, adjusted_pvalue, correction_method,
+         tidyselect::any_of(c("tree_id", "tree_level",
+                              "tree_parent_id", "tree_status")))
+
+cat("\n--- CLEAN MASTER TABLE ---\n")
+# Print via as.data.frame to avoid a partial-arg-matching crash when the
+# table is a plain data.frame (mgcv select() loses the tibble class).
+print(as.data.frame(final_master_table), row.names = FALSE)
+
+# Persist the per-contrast results for downstream visualisation.
+write_csv(final_master_table, "master_results.csv")
+cat("Saved: master_results.csv\n")
+
+# ---------------------------------------------------------
+# SUMMARY TABLE FOR QUICK REFERENCE
 # ---------------------------------------------------------
 
 summary_table <- final_master_table %>%
   group_by(Test_Family, Group) %>%
   summarise(
     n_total = n(),
-    n_sig = sum(Global_FDR_pvalue < 0.05),
+    n_sig = sum(adjusted_pvalue < 0.05, na.rm = TRUE),
     mean_effect = mean(abs(estimate)),
     .groups = "drop"
   ) %>%
@@ -746,14 +609,18 @@ write_csv(summary_table, "summary_statistics_by_group.csv")
 # Implementation uses mgcv's lpmatrix posterior + MASS::mvrnorm coefficient
 # draws. (gratia is loaded for users who want to do additional posterior work.)
 
-# Helper: for one (model, group_data, lhs, rhs), return the posterior of M.
-.posterior_equivalence_pair <- function(model, group_data, lhs, rhs, var_names,
-                                        delta_log2, n_draws,
+# Helper: for one (model, full_df, lhs, rhs, group_id), return the posterior of M.
+# Unified model produces per-(pair × group) draws by varying Condition_Combo
+# AND Group_factor in the newdata frame.
+.posterior_equivalence_pair <- function(model, full_df, lhs, rhs, var_names,
+                                        group_id, delta_log2, n_draws,
                                         n_time = 200, seed = 42) {
-  cond_levels <- levels(group_data$Condition_Combo)
-  if (!(lhs %in% cond_levels) || !(rhs %in% cond_levels)) {
-    return(NULL)   # condition not present in this phase group
-  }
+  cond_levels  <- levels(full_df$Condition_Combo)
+  group_levels <- levels(full_df$Group_factor)
+  group_str    <- as.character(group_id)
+  if (!(lhs %in% cond_levels) || !(rhs %in% cond_levels)) return(NULL)
+  if (!(group_str %in% group_levels))                     return(NULL)
+
   parse_cond <- function(cond_str) {
     parts <- strsplit(cond_str, "+", fixed = TRUE)[[1]]
     if (length(parts) != length(var_names)) {
@@ -765,27 +632,41 @@ write_csv(summary_table, "summary_statistics_by_group.csv")
   lhs_vars <- parse_cond(lhs)
   rhs_vars <- parse_cond(rhs)
 
-  time_grid <- seq(0, max(group_data$time_in_group), length.out = n_time)
+  # Use the time_in_group range for THIS phase group so the trajectory is
+  # built only over the phase the comparison lives in.
+  group_rows <- full_df[full_df$Group == group_id, ]
+  if (nrow(group_rows) == 0) return(NULL)
+  time_grid <- seq(0, max(group_rows$time_in_group), length.out = n_time)
+  # time_sec is needed for the random-effect smooths even though those are
+  # excluded from the linear predictor below — predict() still requires the
+  # column to exist. Anchor it at the midpoint of the group's range.
+  time_sec_anchor <- mean(range(group_rows$time_sec))
+
   build_nd <- function(cond_str, vars_list) {
-    nd <- data.frame(time_in_group = time_grid)
+    nd <- data.frame(
+      time_in_group = time_grid,
+      time_sec      = time_sec_anchor
+    )
     for (v in var_names) {
-      nd[[v]] <- factor(vars_list[[v]], levels = levels(group_data[[v]]))
+      nd[[v]] <- factor(vars_list[[v]], levels = levels(full_df[[v]]))
     }
-    nd$Condition_Combo <- factor(cond_str, levels = cond_levels)
+    nd$Condition_Combo <- factor(cond_str,  levels = cond_levels)
+    nd$Group_factor    <- factor(group_str, levels = group_levels)
     # animal_id and plate are required by predict() but excluded from the
     # linear predictor (population-level trajectories).
-    nd$animal_id <- factor(group_data$animal_id[1],
-                           levels = levels(group_data$animal_id))
-    nd$plate <- factor(group_data$plate[1],
-                       levels = levels(group_data$plate))
+    nd$animal_id <- factor(full_df$animal_id[1],
+                           levels = levels(full_df$animal_id))
+    nd$plate <- factor(full_df$plate[1],
+                       levels = levels(full_df$plate))
     nd
   }
   nd_lhs <- build_nd(lhs, lhs_vars)
   nd_rhs <- build_nd(rhs, rhs_vars)
 
-  # Linear-predictor design matrices, excluding the per-animal random-effect
-  # smooth so we get population-level (not animal-specific) trajectories.
-  excl <- c("s(time_in_group,animal_id)", "s(time_in_group,plate)")
+  # Linear-predictor design matrices, excluding the random-effect smooths so
+  # we get population-level (not animal- or plate-specific) trajectories.
+  # Random-effect smooths now live on time_sec (not time_in_group).
+  excl <- c("s(time_sec,animal_id)", "s(time_sec,plate)")
   X_lhs <- predict(model, newdata = nd_lhs, type = "lpmatrix", exclude = excl)
   X_rhs <- predict(model, newdata = nd_rhs, type = "lpmatrix", exclude = excl)
   X_diff <- X_lhs - X_rhs                      # n_time × n_coef
@@ -825,18 +706,20 @@ if (!is.null(contrast_spec) &&
   pe_summary_rows <- list()
   pe_draws_named  <- list()
 
-  for (g_str in as.character(sort(as.integer(names(models_by_group))))) {
+  # Unified-model PE: iterate over (group, pair) directly against the single
+  # final_model. Prediction grids carry both Condition_Combo and Group_factor.
+  for (g in unique_groups) {
+    g_str <- as.character(g)
     cat(sprintf("Group %s: posterior equivalence...\n", g_str))
-    final_model <- models_by_group[[g_str]]
-    g_data      <- group_data_by_group[[g_str]]
 
     for (i in seq_along(contrast_spec$kept_pairs)) {
       pair <- contrast_spec$kept_pairs[[i]]
       lhs <- pair[[1]]; rhs <- pair[[2]]
 
       pe <- tryCatch(
-        .posterior_equivalence_pair(final_model, g_data, lhs, rhs, var_names,
-                                    delta_log2, n_draws, seed = 42L + i),
+        .posterior_equivalence_pair(final_model, gam_df, lhs, rhs, var_names,
+                                    group_id = g, delta_log2 = delta_log2,
+                                    n_draws = n_draws, seed = 42L + i),
         error = function(e) {
           warning(sprintf("Group %s, %s vs %s: %s", g_str, lhs, rhs,
                           conditionMessage(e)))
@@ -866,13 +749,13 @@ if (!is.null(contrast_spec) &&
       arrange(Group, pair) %>%
       as_tibble()
     cat("\n--- POSTERIOR EQUIVALENCE SUMMARY ---\n")
-    # Use plain data.frame print: works whether bind_rows returned a tibble or a
-    # data.frame, and avoids tibble's `n=` partial-matching to print.default's
-    # `na.print` (which throws "invalid 'na.print' specification").
+    # Print via as.data.frame to avoid a partial-arg-matching crash when the
+    # table is a plain data.frame instead of a tibble.
     print(as.data.frame(pe_summary_df), row.names = FALSE)
     write_csv(pe_summary_df, "posterior_equivalence_summary.csv")
 
-    # Long form for density plot
+    # Long form of the raw posterior draws — persisted so the Python
+    # Visualisations tab can render the PE density and heatmap interactively.
     draws_df <- bind_rows(lapply(seq_along(pe_draws_named), function(j) {
       key <- names(pe_draws_named)[j]
       m <- regmatches(key, regexec("^g(.+?)__(.+?)__(.+)$", key))[[1]]
@@ -882,47 +765,10 @@ if (!is.null(contrast_spec) &&
         M_log2 = pe_draws_named[[j]],
         stringsAsFactors = FALSE
       )
-    })) %>% mutate(Group_lbl = paste0("Group ", Group))
-
-    p_density <- ggplot(draws_df,
-                        aes(x = M_log2, color = Group_lbl, fill = Group_lbl)) +
-      geom_density(alpha = 0.3) +
-      geom_vline(xintercept = delta_log2, linetype = "dashed",
-                 color = "red", linewidth = 0.8) +
-      facet_wrap(~ pair, scales = "free_y") +
-      labs(
-        title = "Posterior distribution of maximum absolute trajectory difference (M)",
-        subtitle = sprintf(
-          "Red dashed line: equivalence margin delta = %.2f (log_2). Mass left of delta = Pr(M < delta).",
-          delta_log2
-        ),
-        x = expression("M (log"[2]*" fold change)"),
-        y = "Posterior density",
-        fill = "Phase Group", color = "Phase Group"
-      ) +
-      theme_bw()
-    ggsave("posterior_equivalence_density.png", p_density,
-           width = 12, height = 8, dpi = 150)
-
-    p_heatmap <- ggplot(pe_summary_df,
-                        aes(x = factor(Group), y = pair, fill = Pr_equiv)) +
-      geom_tile(color = "white") +
-      geom_text(aes(label = sprintf("%.2f", Pr_equiv)),
-                color = "black", size = 3.5) +
-      scale_fill_gradient(low = "#fff5e6", high = "steelblue",
-                          limits = c(0, 1),
-                          name = expression(Pr(M < delta))) +
-      labs(
-        title = "Posterior Pr(M < delta) by pair x phase group",
-        subtitle = sprintf(
-          "delta = %.2f (log_2). Higher = more evidence the two trajectories never differ by more than +/- delta.",
-          delta_log2
-        ),
-        x = "Phase Group", y = "Pair"
-      ) +
-      theme_bw()
-    ggsave("posterior_equivalence_heatmap.png", p_heatmap,
-           width = 9, height = 6, dpi = 150)
+    }))
+    write_csv(draws_df, "posterior_equivalence_draws.csv")
+    cat("Saved: posterior_equivalence_draws.csv (",
+        nrow(draws_df), " draws total)\n", sep = "")
   } else {
     cat("No posterior-equivalence results were produced (all pairs skipped).\n")
   }

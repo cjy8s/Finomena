@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Sequentially rejective graphical multiple comparison procedures based on Bonferroni tests</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+<style type="text/css">detaiks.chunk-details > summary.chunk-summary {
+text-align: right;
+}
+details.chunk-details[open] > summary.chunk-summary::after {
+content: "Hide";
+}
+details.chunk-details[open] > summary.chunk-summary > span.chunk-summary-text {
+display: none;
+}
+</style>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">
+/* for pandoc --citeproc since 2.11 */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Sequentially rejective graphical multiple
+comparison procedures based on Bonferroni tests</h1>
+
+
+
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gt)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(graphicalMCP)</span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+<div id="motivating-example" class="section level1">
+<h1>Motivating example</h1>
+<p>Consider a confirmatory clinical trial comparing a test treatment
+(treatment) against the control treatment (control) for a disease. There
+are two doses of treatment: the low dose and the high dose. There are
+two endpoints included in the multiplicity adjustment strategy, which
+are the primary endpoint (PE) and the secondary endpoint (SE). In total,
+there are four null hypotheses: <span class="math inline">\(H_1\)</span>
+and <span class="math inline">\(H_3\)</span> are the primary and the
+secondary hypotheses respectively for the low dose versus control; <span class="math inline">\(H_2\)</span> and <span class="math inline">\(H_4\)</span> are the primary and the secondary
+hypotheses respectively for the high dose versus control.</p>
+<p>There are clinical considerations which constrain the structure of
+multiple comparison procedures, and which can be flexibly incorporated
+using graphical approaches. First, the low and the high doses are
+considered equally important, which means that rejecting the primary
+hypothesis for either dose versus control leads to a successful trial.
+Regarding secondary hypotheses, each one is tested only if its
+corresponding primary hypothesis has been rejected. This means that
+<span class="math inline">\(H_3\)</span> is tested only after <span class="math inline">\(H_1\)</span> has been rejected; <span class="math inline">\(H_4\)</span> is tested only after <span class="math inline">\(H_2\)</span> has been rejected.</p>
+<p>In addition, there are some statistical considerations to complete
+the graph. The primary hypotheses <span class="math inline">\(H_1\)</span> and <span class="math inline">\(H_2\)</span> will have an equal hypothesis weight
+of 0.5. The secondary hypotheses will have a hypothesis weight of 0.
+When a primary hypothesis has been rejected, its weight will be
+propagated along two outgoing edges: One to the other primary hypothesis
+and one to its descendant secondary hypothesis. The two edges will have
+an equal transition weight of 0.5. When both the primary and the
+secondary hypotheses have been rejected for a dose-control comparison,
+their hypothesis weights will be propagated to the primary hypothesis
+for the other dose-control comparison. With these specifications, we can
+create the following graph.</p>
+</div>
+<div id="create-the-graph" class="section level1">
+<h1>Create the graph</h1>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>hypotheses <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="dv">0</span>, <span class="dv">0</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>transitions <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="dv">0</span>),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">0.5</span>),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>),</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>hyp_names <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;H1&quot;</span>, <span class="st">&quot;H2&quot;</span>, <span class="st">&quot;H3&quot;</span>, <span class="st">&quot;H4&quot;</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>g <span class="ot">&lt;-</span> <span class="fu">graph_create</span>(hypotheses, transitions, hyp_names)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(g, <span class="at">vertex.size =</span> <span class="dv">60</span>)</span></code></pre></div>
+</details>
+<p><img src="data:image/png;base64,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" style="display: block; margin: auto;" />C:5n8420812d74b3d-testing.R</p>
+</div>
+<div id="perform-the-graphical-multiple-comparison-procedure" class="section level1">
+<h1>Perform the graphical multiple comparison procedure</h1>
+<div id="adjusted-p-values-and-rejections" class="section level2">
+<h2>Adjusted p-values and rejections</h2>
+<p>Given a set of p-values for <span class="math inline">\(H_1, \ldots,
+H_4\)</span>, the graphical multiple comparison procedure can be
+performed to control the familywise error rate (FWER) at the
+significance level <code>alpha</code>. The
+<code>graph_test_shortcut</code> function is agnostic to one-sided or
+two-sided tests. For one-sided p-values, <code>alpha</code> is often set
+to 0.025 (default); for two-sided p-values, <code>alpha</code> is often
+set to 0.05. We consider one-sided tests here. A hypothesis is rejected
+if its adjusted p-value is less than or equal to <code>alpha</code>.
+After running the procedure, hypotheses <span class="math inline">\(H_1\)</span>, <span class="math inline">\(H_2\)</span>, and <span class="math inline">\(H_4\)</span> are rejected with their adjusted
+p-value calculated.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>p_values <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.018</span>, <span class="fl">0.01</span>, <span class="fl">0.105</span>, <span class="fl">0.006</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>test_results <span class="ot">&lt;-</span> <span class="fu">graph_test_shortcut</span>(g, <span class="at">p =</span> p_values, <span class="at">alpha =</span> <span class="fl">0.025</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>test_results<span class="sc">$</span>outputs<span class="sc">$</span>adjusted_p <span class="co"># Adjusted p-values</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    H1    H2    H3    H4 </span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.024 0.020 0.105 0.024</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>test_results<span class="sc">$</span>outputs<span class="sc">$</span>rejected <span class="co"># Rejections</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    H1    H2    H3    H4 </span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  TRUE  TRUE FALSE  TRUE</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+<div id="obtain-final-and-intermediate-graphs-after-rejections" class="section level2">
+<h2>Obtain final and intermediate graphs after rejections</h2>
+<p>The final graph is the graph after removing rejected hypotheses <span class="math inline">\(H_1\)</span>, <span class="math inline">\(H_2\)</span>, and <span class="math inline">\(H_4\)</span>. It can be obtained via
+<code>test_results$outputs$graph</code>. Rejected hypotheses get a
+hypothesis weight of <code>NA</code> and a transition weight of
+<code>NA</code>. This is based on the printing method of
+<code>print.updated_graph</code>. We can also obtain the non-NA graph by
+calling hypothesis weights and transition weights separately via
+<code>test_results$outputs$graph$hypotheses</code> and
+<code>test_results$outputs$graph$transitions</code>. Note in this case,
+rejected hypotheses get a 0 hypothesis weight and a 0 transition weight.
+This is mainly for internal calculation and updating of graphs.</p>
+<p>If we are also interested in intermediate graphs - for example, the
+graph after <span class="math inline">\(H_2\)</span> and <span class="math inline">\(H_1\)</span> are rejected - we can specify
+<code>verbose = TRUE</code> in <code>graph_test_shortcut</code>. Note
+that intermediate graphs depend on the order of rejections, i.e., the
+sequence of hypotheses being rejected. The default order is defined by
+the increasing adjusted p-values, followed by the earlier hypothesis
+numbering in the case of ties. In this example, the default order of
+rejection is <span class="math inline">\(H_2\rightarrow H_1\rightarrow
+H_4\)</span>. To obtain intermediate graphs based on this order of
+rejection, one can specify
+<code>test_results_verbose$details$results</code>. For example, the
+graph after <span class="math inline">\(H_2\)</span> and <span class="math inline">\(H_1\)</span> being rejected is given by
+<code>test_results_verbose$details$results[[3]]</code>.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>test_results<span class="sc">$</span>outputs<span class="sc">$</span>graph <span class="co"># Final graph after H1, H2 and H4 rejected (as NA&#39;s)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Updated graph</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; --- Hypothesis weights ---</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H1: NA</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H2: NA</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H3:  1</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H4: NA</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; --- Transition weights ---</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H1 H2 H3 H4</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  H1 NA NA NA NA</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  H2 NA NA NA NA</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  H3 NA NA  0 NA</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  H4 NA NA NA NA</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>test_results<span class="sc">$</span>outputs<span class="sc">$</span>graph<span class="sc">$</span>hypotheses <span class="co"># Hypothesis weights of the final graph</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H1 H2 H3 H4 </span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  0  0  1  0</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>test_results<span class="sc">$</span>outputs<span class="sc">$</span>graph<span class="sc">$</span>transitions <span class="co"># Transition weights of the final graph</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    H1 H2 H3 H4</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H1  0  0  0  0</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H2  0  0  0  0</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H3  0  0  0  0</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H4  0  0  0  0</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>test_results_verbose <span class="ot">&lt;-</span> <span class="fu">graph_test_shortcut</span>(</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>  g,</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">p =</span> p_values,</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.025</span>,</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="cn">TRUE</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Intermediate graph after H1 and H2 rejected</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>test_results_verbose<span class="sc">$</span>details<span class="sc">$</span>results[[<span class="dv">3</span>]]</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Updated graph</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; --- Hypothesis weights ---</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H1:  NA</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H2:  NA</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H3: 0.5</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H4: 0.5</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; --- Transition weights ---</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H1 H2 H3 H4</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  H1 NA NA NA NA</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  H2 NA NA NA NA</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  H3 NA NA  0  1</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  H4 NA NA  1  0</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+<div id="obtain-possible-orders-of-rejections" class="section level2">
+<h2>Obtain possible orders of rejections</h2>
+<p>The order of rejections may not be unique and not all orders are
+valid. For this example, the rejected hypotheses are <span class="math inline">\(H_1\)</span>, <span class="math inline">\(H_2\)</span> and <span class="math inline">\(H_4\)</span>. The default order of rejections is
+<span class="math inline">\(H_2 \rightarrow H_1 \rightarrow
+H_4\)</span>. Another valid order of rejections is <span class="math inline">\(H_2 \rightarrow H_4 \rightarrow H_1\)</span>.
+However, the first rejected hypothesis can not be <span class="math inline">\(H_1\)</span> or <span class="math inline">\(H_4\)</span>. To obtain all possible rejection
+orders, one can use the function <code>graph_rejection_orderings</code>.
+Then intermediate and final graphs can be obtained by using the function
+<code>graph_update</code> with a particular order of rejections.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Obtain all valid orders of rejections</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>orders <span class="ot">&lt;-</span> <span class="fu">graph_rejection_orderings</span>(test_results)<span class="sc">$</span>valid_orderings</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>orders</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[1]]</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H2 H1 H4 </span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2  1  4 </span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[2]]</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H2 H4 H1 </span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2  4  1</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Intermediate graphs following the order of H2 and H4</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="fu">graph_update</span>(g, <span class="at">delete =</span> orders[[<span class="dv">2</span>]])<span class="sc">$</span>intermediate_graphs[[<span class="dv">3</span>]]</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Updated graph</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; --- Hypothesis weights ---</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H1:  1</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H2: NA</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H3:  0</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H4: NA</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; --- Transition weights ---</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H1 H2 H3 H4</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  H1  0 NA  1 NA</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  H2 NA NA NA NA</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  H3  1 NA  0 NA</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  H4 NA NA NA NA</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+<div id="obtain-adjusted-significance-levels" class="section level2">
+<h2>Obtain adjusted significance levels</h2>
+<p>An equivalent way to obtain rejections is by adjusting significance
+levels. A hypothesis is rejected if its p-value is less than or equal to
+its adjusted significance level. The adjusted significance levels are
+calculated in the same order as adjusted p-values: <span class="math inline">\(H_2 \rightarrow H_1 \rightarrow H_4\)</span>, and
+there are four steps of checking for rejections. First, <span class="math inline">\(H_2\)</span> is rejected at an adjusted
+significance level of <code>0.5 * alpha</code>. Second, <span class="math inline">\(H_1\)</span> is rejected at an adjusted
+significance level of <code>0.75 * alpha</code>, after <span class="math inline">\(H_2\)</span> is rejected. Third, <span class="math inline">\(H_4\)</span> is rejected at an adjusted
+significance level of <code>0.5 * alpha</code>, after <span class="math inline">\(H_1\)</span> and <span class="math inline">\(H_2\)</span> are rejected. Fourth and finally,
+<span class="math inline">\(H_3\)</span> cannot be rejected at an
+adjusted significance level of <code>alpha</code>, after <span class="math inline">\(H_1\)</span>, <span class="math inline">\(H_2\)</span> and <span class="math inline">\(H_4\)</span> are rejected. These results can be
+obtained by specifying <code>test_values = TRUE</code>.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>test_results_test_values <span class="ot">&lt;-</span> <span class="fu">graph_test_shortcut</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  g,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">p =</span> p_values,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.025</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">test_values =</span> <span class="cn">TRUE</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>test_results_test_values<span class="sc">$</span>test_values<span class="sc">$</span>results</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   Step Hypothesis     p Weight Alpha Inequality_holds</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1    1         H2 0.010   0.50 0.025             TRUE</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2    2         H1 0.018   0.75 0.025             TRUE</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3    3         H4 0.006   0.50 0.025             TRUE</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4    4         H3 0.105   1.00 0.025            FALSE</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+</div>
+<div id="power-simulation" class="section level1">
+<h1>Power simulation</h1>
+<p>Given the above graph, we are interested in the “power” of the trial.
+For a single null hypothesis, the power is the probability of a true
+positive - that is, rejecting the null hypothesis at the significance
+level <code>alpha</code> when the alternative hypothesis is true. For
+multiple null hypotheses, there could be multiple versions of “power”.
+For example, the power to reject at least one hypothesis vs the power to
+reject all hypotheses, given the alternative hypotheses are true. With
+the graphical multiple comparison procedures, it is also important to
+understand the power to reject each hypothesis, given the multiplicity
+adjustment. Sometimes, we may want to customize definitions of power to
+define success. Thus power calculation is an important aspect of trial
+design.</p>
+<div id="input-marginal-power-for-primary-hypotheses" class="section level2">
+<h2>Input: Marginal power for primary hypotheses</h2>
+<p>Assume that the primary endpoint is about the occurrence of an
+unfavorable clinical event. To evaluate the treatment effect, the
+proportion of patients with this event is calculated, and a lower
+proportion is preferred. Assume that the proportions are 0.181 for the
+low and the high doses, and 0.3 for control. Using the equal
+randomization among the three treatment groups, the clinical trial team
+chooses a total sample size of 600 with 200 per group. This leads to a
+marginal power of 80% for <span class="math inline">\(H_1\)</span> and
+<span class="math inline">\(H_2\)</span>, respectively, using the
+two-sample test for difference in proportions with unpooled variance
+each at one-sided significance level 0.025. In this calculation, we use
+the marginal power to combine the information from the treatment effect,
+any nuisance parameter, and sample sizes for each hypothesis. Note that
+the significance level used for the marginal power calculation must be
+the same as <code>alpha</code>, which is used as the significance level
+for the FWER control. In addition, the marginal power has a one-to-one
+relationship with the noncentrality parameter, which is illustrated
+below.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>alpha <span class="ot">&lt;-</span> <span class="fl">0.025</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>prop <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.3</span>, <span class="fl">0.181</span>, <span class="fl">0.181</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>sample_size <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">200</span>, <span class="dv">3</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>unpooled_variance <span class="ot">&lt;-</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  prop[<span class="sc">-</span><span class="dv">1</span>] <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> prop[<span class="sc">-</span><span class="dv">1</span>]) <span class="sc">/</span> sample_size[<span class="sc">-</span><span class="dv">1</span>] <span class="sc">+</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  prop[<span class="dv">1</span>] <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> prop[<span class="dv">1</span>]) <span class="sc">/</span> sample_size[<span class="dv">1</span>]</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>noncentrality_parameter_primary <span class="ot">&lt;-</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span>(prop[<span class="sc">-</span><span class="dv">1</span>] <span class="sc">-</span> prop[<span class="dv">1</span>]) <span class="sc">/</span> <span class="fu">sqrt</span>(unpooled_variance)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>power_marginal_primary <span class="ot">&lt;-</span> <span class="fu">pnorm</span>(</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">qnorm</span>(alpha, <span class="at">lower.tail =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> noncentrality_parameter_primary,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd =</span> <span class="dv">1</span>,</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">lower.tail =</span> <span class="cn">FALSE</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(power_marginal_primary) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;H1&quot;</span>, <span class="st">&quot;H2&quot;</span>)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>power_marginal_primary</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        H1        H2 </span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.8028315 0.8028315</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+<div id="input-marginal-power-for-secondary-hypotheses" class="section level2">
+<h2>Input: Marginal power for secondary hypotheses</h2>
+<p>Assume that the secondary endpoint is about the change in total
+medication score from baseline, which is a continuous outcome. To
+evaluate the treatment effect, the mean change is calculated, and
+greater reduction is preferred. Assume that the mean change from
+baseline is the reduction of 7.5 and 8.25, respectively for the low and
+the high doses, and 5 for control. Further assume a known common
+standard deviation of 10. Given the sample size of 200 per treatment
+group, the marginal power is 71% and 90% for <span class="math inline">\(H_3\)</span> and <span class="math inline">\(H_4\)</span>, respectively, using the two-sample
+<span class="math inline">\(z\)</span>-test for the difference in means
+each at the one-sided significance level 0.025.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>mean_change <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="fl">7.5</span>, <span class="fl">8.25</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>sd <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">10</span>, <span class="dv">3</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>variance <span class="ot">&lt;-</span> sd[<span class="sc">-</span><span class="dv">1</span>]<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> sample_size[<span class="sc">-</span><span class="dv">1</span>] <span class="sc">+</span> sd[<span class="dv">1</span>]<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> sample_size[<span class="dv">1</span>]</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>noncentrality_parameter_secondary <span class="ot">&lt;-</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  (mean_change[<span class="sc">-</span><span class="dv">1</span>] <span class="sc">-</span> mean_change[<span class="dv">1</span>]) <span class="sc">/</span> <span class="fu">sqrt</span>(variance)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>power_marginal_secondary <span class="ot">&lt;-</span> <span class="fu">pnorm</span>(</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">qnorm</span>(alpha, <span class="at">lower.tail =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean =</span> noncentrality_parameter_secondary,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd =</span> <span class="dv">1</span>,</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">lower.tail =</span> <span class="cn">FALSE</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(power_marginal_secondary) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;H3&quot;</span>, <span class="st">&quot;H4&quot;</span>)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>power_marginal_secondary</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        H3        H4 </span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.7054139 0.9014809</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+<div id="input-correlation-structure-to-simulate-test-statistics" class="section level2">
+<h2>Input: Correlation structure to simulate test statistics</h2>
+<p>In addition to the marginal power, we also need to make assumptions
+about the joint distribution of test statistics. In this example, we
+assume that they follow a multivariate normal distribution with means
+defined by the noncentrality parameters above and the correlation matrix
+<span class="math inline">\(R\)</span>. To obtain the correlations, it
+is helpful to understand that there are two types of correlations in
+this example. The correlation between two dose-control comparisons for
+the same endpoint and the correlation between endpoints. The former
+correlation can be calculated as a function of sample size. For example,
+the correlation between test statistics for <span class="math inline">\(H_1\)</span> and <span class="math inline">\(H_2\)</span> is <span class="math inline">\(\rho_{12}=\left(\frac{n_1}{n_1+n_0}\right)^{1/2}\left(\frac{n_2}{n_3+n_0}\right)^{1/2}\)</span>.
+Under the equal randomization, this correlation is 0.5. The correlation
+between test statistics for <span class="math inline">\(H_3\)</span> and
+<span class="math inline">\(H_4\)</span> is the same as the above. On
+the other hand, the correlation between endpoints for the same
+dose-control comparison is often estimated based on prior knowledge or
+from previous trials. Without the information, we assume it to be <span class="math inline">\(\rho_{13}=\rho_{24}=0.5\)</span>. In practice, one
+could set this correlation as a parameter and try multiple values to
+assess the sensitivity of this assumption. Regarding the correlation
+between test statistics for <span class="math inline">\(H_1\)</span> and
+<span class="math inline">\(H_4\)</span> and for <span class="math inline">\(H_2\)</span> and <span class="math inline">\(H_3\)</span>, they are even more difficult to
+estimate. Here we use a simple product rule, which means that this
+correlation is a product of correlations of the two previously assumed
+correlations. For example, <span class="math inline">\(\rho_{14}=\rho_{12}*\rho_{24}\)</span> and <span class="math inline">\(\rho_{23}=\rho_{12}*\rho_{13}\)</span>. In
+practice, one may make further assumptions instead of using the product
+rule.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>corr <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="at">nrow =</span> <span class="dv">4</span>, <span class="at">ncol =</span> <span class="dv">4</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>corr[<span class="dv">1</span>, <span class="dv">2</span>] <span class="ot">&lt;-</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  corr[<span class="dv">3</span>, <span class="dv">4</span>] <span class="ot">&lt;-</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sqrt</span>(</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    sample_size[<span class="dv">2</span>] <span class="sc">/</span> <span class="fu">sum</span>(sample_size[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]) <span class="sc">*</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>      sample_size[<span class="dv">3</span>] <span class="sc">/</span> <span class="fu">sum</span>(sample_size[<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>)])</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>rho <span class="ot">&lt;-</span> <span class="fl">0.5</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>corr[<span class="dv">1</span>, <span class="dv">3</span>] <span class="ot">&lt;-</span> corr[<span class="dv">2</span>, <span class="dv">4</span>] <span class="ot">&lt;-</span> rho</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>corr[<span class="dv">1</span>, <span class="dv">4</span>] <span class="ot">&lt;-</span> corr[<span class="dv">2</span>, <span class="dv">3</span>] <span class="ot">&lt;-</span> corr[<span class="dv">1</span>, <span class="dv">2</span>] <span class="sc">*</span> rho</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>corr <span class="ot">&lt;-</span> corr <span class="sc">+</span> <span class="fu">t</span>(corr)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="fu">diag</span>(corr) <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(corr) <span class="ot">&lt;-</span> hyp_names</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(corr) <span class="ot">&lt;-</span> hyp_names</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>corr</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      H1   H2   H3   H4</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H1 1.00 0.50 0.50 0.25</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H2 0.50 1.00 0.25 0.50</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H3 0.50 0.25 1.00 0.50</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; H4 0.25 0.50 0.50 1.00</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+<div id="user-defined-success-criteria" class="section level2">
+<h2>User-defined success criteria</h2>
+<p>As mentioned earlier, there are multiple versions of “power” when
+there are multiple hypotheses. Commonly used “power” definitions
+include:</p>
+<ul>
+<li>Local power: The probability of each hypothesis being rejected (with
+multiplicity adjustment)</li>
+<li>Expected no. of rejections: The expected number of rejections</li>
+<li>Power to reject 1 or more: The probability to reject at least one
+hypothesis</li>
+<li>Power to reject all: The probability to reject all hypotheses</li>
+</ul>
+<p>These are the default outputs from the
+<code>graph_calculate_power</code> function. In addition, a user can
+customize success criteria to define other versions of “power”.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>success_fns <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Probability to reject H1</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">H1 =</span> <span class="cf">function</span>(x) x[<span class="dv">1</span>],</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Expected number of rejections</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Expected no. of rejections</span><span class="st">`</span> <span class="ot">=</span> <span class="cf">function</span>(x) x[<span class="dv">1</span>] <span class="sc">+</span> x[<span class="dv">2</span>] <span class="sc">+</span> x[<span class="dv">3</span>] <span class="sc">+</span> x[<span class="dv">4</span>],</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Probability to reject at least one hypothesis</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">AtLeast1</span><span class="st">`</span> <span class="ot">=</span> <span class="cf">function</span>(x) x[<span class="dv">1</span>] <span class="sc">|</span> x[<span class="dv">2</span>] <span class="sc">|</span> x[<span class="dv">3</span>] <span class="sc">|</span> x[<span class="dv">4</span>],</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Probability to reject all hypotheses</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">All</span><span class="st">`</span> <span class="ot">=</span> <span class="cf">function</span>(x) x[<span class="dv">1</span>] <span class="sc">&amp;</span> x[<span class="dv">2</span>] <span class="sc">&amp;</span> x[<span class="dv">3</span>] <span class="sc">&amp;</span> x[<span class="dv">4</span>],</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Probability to reject both H1 and H2</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">H1andH2</span><span class="st">`</span> <span class="ot">=</span> <span class="cf">function</span>(x) x[<span class="dv">1</span>] <span class="sc">&amp;</span> x[<span class="dv">2</span>],</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Probability to reject both hypotheses for the low dose or the high dose</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">(H1andH3)or(H2andH4)</span><span class="st">`</span> <span class="ot">=</span> <span class="cf">function</span>(x) (x[<span class="dv">1</span>] <span class="sc">&amp;</span> x[<span class="dv">3</span>]) <span class="sc">|</span> (x[<span class="dv">2</span>] <span class="sc">&amp;</span> x[<span class="dv">4</span>])</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+<div id="output-simulate-power" class="section level2">
+<h2>Output: Simulate power</h2>
+<p>Given the above inputs, we can estimate “power” via simulation for
+the graphical multiple comparison procedure at one-sided significance
+level <code>alpha = 0.025</code> using <code>sim_n = 1e5</code>
+simulations and the random seed 1234. The local power is 0.758, 0.765,
+0.689, and 0.570, respectively for <span class="math inline">\(H_1,
+\ldots, H_4\)</span>. Note that the local power is lower than the
+marginal power because the former is adjusted for multiplicity. The
+power to reject at least one hypothesis is 0.856 and the power to reject
+all hypotheses is 0.512. The expected number of rejections is 2.782. For
+the last two user-defined success criteria, the probability to reject
+both <span class="math inline">\(H_1\)</span> and <span class="math inline">\(H_2\)</span> is 0.667, and the probability to
+reject at least one pair of <span class="math inline">\((H_1\)</span>
+and <span class="math inline">\(H_3)\)</span> and <span class="math inline">\((H_2\)</span> and <span class="math inline">\(H_4)\)</span> is 0.747.</p>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>power_output <span class="ot">&lt;-</span> <span class="fu">graph_calculate_power</span>(</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  g,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.025</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_corr =</span> corr,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_n =</span> <span class="fl">1e5</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">power_marginal =</span> <span class="fu">c</span>(power_marginal_primary, power_marginal_secondary),</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_success =</span> success_fns</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>power_output<span class="sc">$</span>power</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $power_local</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      H1      H2      H3      H4 </span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 0.76396 0.75887 0.56767 0.69133 </span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $rejection_expected</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2.78183</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $power_at_least_1</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.85557</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $power_all</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.51205</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; $power_success</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                         H1 Expected no. of rejections </span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                    0.76396                    2.78183 </span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                   AtLeast1                        All </span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                    0.85557                    0.51205 </span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                    H1andH2       (H1andH3)or(H2andH4) </span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                    0.66726                    0.74695</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+<p>To see the detailed outputs of all simulated p-values and rejection
+decisions for all hypotheses, specify <code>verbose = TRUE</code>. This
+will produce a lot of outputs. To allow flexible printing functions, a
+user can change the following:</p>
+<ul>
+<li>The indented space with the default setting of
+<code>indent = 2</code></li>
+<li>The precision of numeric values (i.e., the number of significant
+digits) with the default setting of <code>precision = 4</code></li>
+</ul>
+<details class="chunk-details" open><summary class="chunk-summary"><span class="chunk-summary-text">Code</span></summary>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>power_verbose_output <span class="ot">&lt;-</span> <span class="fu">graph_calculate_power</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  g,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.025</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_corr =</span> corr,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_n =</span> <span class="fl">1e5</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">power_marginal =</span> <span class="fu">c</span>(power_marginal_primary, power_marginal_secondary),</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">sim_success =</span> success_fns,</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="cn">TRUE</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(power_verbose_output<span class="sc">$</span>details<span class="sc">$</span>p_sim, <span class="dv">10</span>)</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                 H1           H2           H3           H4</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1,] 0.0308204265 0.0120653993 0.0041185823 9.324338e-02</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2,] 0.0007933716 0.0006499046 0.0245177515 2.965604e-03</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3,] 0.0302991819 0.0595395828 0.0543082956 2.625834e-02</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4,] 0.0097433244 0.0033185711 0.0007417213 4.024688e-04</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5,] 0.0197134942 0.0086161835 0.0164182765 2.418325e-07</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6,] 0.0031206572 0.0067023099 0.0137441457 2.751703e-04</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7,] 0.0302208038 0.1423757994 0.0060382838 2.117403e-02</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8,] 0.0024975725 0.0294025573 0.0004142729 2.207786e-03</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9,] 0.0618994292 0.0387257108 0.3166125781 5.699791e-02</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10,] 0.3677921053 0.1895975134 0.0702264885 1.189651e-02</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(power_verbose_output, <span class="at">indent =</span> <span class="dv">4</span>, <span class="at">precision =</span> <span class="dv">6</span>)</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Test parameters ($inputs) ------------------------------------------------------</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Initial graph</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     --- Hypothesis weights ---</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H1: 0.5</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H2: 0.5</span></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H3: 0.0</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H4: 0.0</span></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     --- Transition weights ---</span></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         H1  H2  H3  H4</span></span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H1 0.0 0.5 0.5 0.0</span></span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H2 0.5 0.0 0.0 0.5</span></span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H3 0.0 1.0 0.0 0.0</span></span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     H4 1.0 0.0 0.0 0.0</span></span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Alpha = 0.025</span></span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Test types</span></span>
+<span id="cb12-46"><a href="#cb12-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     bonferroni: (H1, H2, H3, H4)</span></span>
+<span id="cb12-47"><a href="#cb12-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-48"><a href="#cb12-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Simulation parameters ($inputs) ------------------------------------------------</span></span>
+<span id="cb12-49"><a href="#cb12-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Testing 100,000 simulations with multivariate normal params:</span></span>
+<span id="cb12-50"><a href="#cb12-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-51"><a href="#cb12-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                           H1       H2       H3       H4</span></span>
+<span id="cb12-52"><a href="#cb12-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Marginal power: 0.802831 0.802831 0.705414 0.901481</span></span>
+<span id="cb12-53"><a href="#cb12-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-54"><a href="#cb12-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Correlation:      H1   H2   H3   H4</span></span>
+<span id="cb12-55"><a href="#cb12-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                  H1 1.00 0.50 0.50 0.25</span></span>
+<span id="cb12-56"><a href="#cb12-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                  H2 0.50 1.00 0.25 0.50</span></span>
+<span id="cb12-57"><a href="#cb12-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                  H3 0.50 0.25 1.00 0.50</span></span>
+<span id="cb12-58"><a href="#cb12-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                  H4 0.25 0.50 0.50 1.00</span></span>
+<span id="cb12-59"><a href="#cb12-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-60"><a href="#cb12-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Power calculation ($power) -----------------------------------------------------</span></span>
+<span id="cb12-61"><a href="#cb12-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                      H1      H2      H3      H4</span></span>
+<span id="cb12-62"><a href="#cb12-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                    Local power: 0.76396 0.75887 0.56767 0.69133</span></span>
+<span id="cb12-63"><a href="#cb12-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-64"><a href="#cb12-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Expected no. of rejections: 2.78183</span></span>
+<span id="cb12-65"><a href="#cb12-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      Power to reject 1 or more: 0.85557</span></span>
+<span id="cb12-66"><a href="#cb12-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;            Power to reject all: 0.51205</span></span>
+<span id="cb12-67"><a href="#cb12-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-68"><a href="#cb12-68" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                Success measure   Power</span></span>
+<span id="cb12-69"><a href="#cb12-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                             H1 0.76396</span></span>
+<span id="cb12-70"><a href="#cb12-70" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     Expected no. of rejections 2.78183</span></span>
+<span id="cb12-71"><a href="#cb12-71" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                       AtLeast1 0.85557</span></span>
+<span id="cb12-72"><a href="#cb12-72" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                            All 0.51205</span></span>
+<span id="cb12-73"><a href="#cb12-73" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                        H1andH2 0.66726</span></span>
+<span id="cb12-74"><a href="#cb12-74" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           (H1andH3)or(H2andH4) 0.74695</span></span>
+<span id="cb12-75"><a href="#cb12-75" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-76"><a href="#cb12-76" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Simulation details ($details) --------------------------------------------------</span></span>
+<span id="cb12-77"><a href="#cb12-77" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         p_sim_H1    p_sim_H2    p_sim_H3    p_sim_H4 rej_H1 rej_H2 rej_H3 rej_H4</span></span>
+<span id="cb12-78"><a href="#cb12-78" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      3.08204e-02 1.20654e-02 4.11858e-03 9.32434e-02  FALSE   TRUE  FALSE  FALSE</span></span>
+<span id="cb12-79"><a href="#cb12-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      7.93372e-04 6.49905e-04 2.45178e-02 2.96560e-03   TRUE   TRUE   TRUE   TRUE</span></span>
+<span id="cb12-80"><a href="#cb12-80" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      3.02992e-02 5.95396e-02 5.43083e-02 2.62583e-02  FALSE  FALSE  FALSE  FALSE</span></span>
+<span id="cb12-81"><a href="#cb12-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      9.74332e-03 3.31857e-03 7.41721e-04 4.02469e-04   TRUE   TRUE   TRUE   TRUE</span></span>
+<span id="cb12-82"><a href="#cb12-82" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      1.97135e-02 8.61618e-03 1.64183e-02 2.41833e-07   TRUE   TRUE   TRUE   TRUE</span></span>
+<span id="cb12-83"><a href="#cb12-83" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      3.12066e-03 6.70231e-03 1.37441e-02 2.75170e-04   TRUE   TRUE   TRUE   TRUE</span></span>
+<span id="cb12-84"><a href="#cb12-84" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      3.02208e-02 1.42376e-01 6.03828e-03 2.11740e-02  FALSE  FALSE  FALSE  FALSE</span></span>
+<span id="cb12-85"><a href="#cb12-85" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      2.49757e-03 2.94026e-02 4.14273e-04 2.20779e-03   TRUE  FALSE   TRUE  FALSE</span></span>
+<span id="cb12-86"><a href="#cb12-86" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      6.18994e-02 3.87257e-02 3.16613e-01 5.69979e-02  FALSE  FALSE  FALSE  FALSE</span></span>
+<span id="cb12-87"><a href="#cb12-87" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;      3.67792e-01 1.89598e-01 7.02265e-02 1.18965e-02  FALSE  FALSE  FALSE  FALSE</span></span>
+<span id="cb12-88"><a href="#cb12-88" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     ... (Use `print(x, rows = &lt;nn&gt;)` for more)</span></span></code></pre></div>
+</details>
+<p>C:5n8420812d74b3d-testing.R</p>
+</div>
+</div>
+<div id="reference" class="section level1">
+<h1>Reference</h1>
+<p>C:5n8420812d74b3d-testing.R</p>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-bretz-2009-graphical" class="csl-entry">
+Bretz, Frank, Willi Maurer, Werner Branath, and Martin Posch. 2009.
+<span>“A Graphical Approach to Sequentially Rejective Multiple Test
+Procedures.”</span> <em>Statistics in Medicine</em> 53 (4): 586–604. <a href="https://doi.org/10.1002/sim.3495">https://doi.org/10.1002/sim.3495</a>.
+</div>
+<div id="ref-bretz-2011-test" class="csl-entry">
+Bretz, Frank, Willi Maurer, and Gerhard Hommel. 2011. <span>“Test and
+Power Considerations for Multiple Endpoint Analyses Using Sequentially
+Rejective Graphical Procedures.”</span> <em>Statistics in Medicine</em>
+30 (13): 1489–1501. <a href="https://doi.org/10.1002/sim.3988">https://doi.org/10.1002/sim.3988</a>.
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

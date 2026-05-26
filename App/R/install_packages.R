@@ -33,7 +33,14 @@ dir.create(lib_dir, showWarnings = FALSE, recursive = TRUE)
 cat("Installing R packages into:", lib_dir, "\n")
 
 required_pkgs <- c("tidyverse", "data.table", "mgcv", "emmeans",
-                   "jsonlite", "gratia")
+                   "jsonlite", "gratia",
+                   # graphicalMCP: pure-R graphical multiple-testing
+                   # procedure (no Java dependency, unlike gMCP). Used by the
+                   # Correction tab when the user picks FWER + Tree +
+                   # reference-only contrasts. Provides correlation-aware
+                   # parametric tests via `test_corr` argument. Falls back to
+                   # Holm-gatekeeping if missing.
+                   "graphicalMCP")
 
 install.packages(
   required_pkgs,

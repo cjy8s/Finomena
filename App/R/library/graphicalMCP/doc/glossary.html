@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Glossary</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+
+
+
+<style type="text/css">
+/* for pandoc --citeproc since 2.11 */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Glossary</h1>
+
+
+
+<p>To improve the readability of the code, we provide the glossary to
+serve as an educational document to grow people’s understanding of the
+graphical approach to multiple comparison procedures. Most terms are
+inputs or outputs of exported functions and some are used only in the
+internal code. If any definition could be clarified or improved, please
+submit an issue to the GitHub repository.</p>
+<table>
+<colgroup>
+<col width="5%" />
+<col width="83%" />
+<col width="6%" />
+<col width="5%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Entity</th>
+<th>Definition</th>
+<th>Aliases</th>
+<th>Variable(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Graph</strong></td>
+<td>A set of nodes and directed edges representing a graphical multiple
+comparison procedure. Each node correspond to
+<strong>hypothesis</strong> and each edge corresponds to
+<strong>transition</strong>.</td>
+<td></td>
+<td><code>graph</code></td>
+</tr>
+<tr class="even">
+<td><ul>
+<li>Delete a <strong>hypothesis</strong></li>
+</ul></td>
+<td>Remove a <strong>hypothesis</strong> from a graph, and update the
+graph according to algorithm 1 of <span class="citation">Bretz et al.
+(2011)</span>. This is an operation on a graph.</td>
+<td></td>
+<td><code>updated_graph</code></td>
+</tr>
+<tr class="odd">
+<td><ul>
+<li>Reject a <strong>hypothesis</strong></li>
+</ul></td>
+<td>Under a given <strong>graph</strong>, <strong>testing
+strategy</strong>, and <code>alpha</code>, a hypothesis is rejected if
+its <strong>p-value</strong> is sufficiently small, which is determined
+by the graphical multiple comparison procedure.</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Hypothesis</strong></td>
+<td>A node with weight in a <strong>graph</strong>. Each node represents
+a null hypothesis, associated with a <strong>hypothesis</strong>
+weights. The corresponding <strong>significance level</strong> is the
+weight times <code>alpha</code>.</td>
+<td>weight, hypothesis weight</td>
+<td><code>hypotheses</code></td>
+</tr>
+<tr class="odd">
+<td></td>
+<td>Terms associated with <strong>hypothesis</strong> get their variable
+names: hypothesis name, and number of hypotheses.</td>
+<td></td>
+<td><code>hyp_names</code>, <code>num_hyps</code></td>
+</tr>
+<tr class="even">
+<td><strong>Transition</strong></td>
+<td>A directed edge with weight in a <strong>graph</strong>. Each edge
+defines the proportion of the <strong>hypothesis</strong> weight to be
+propagated from the origin hypothesis to the end hypothesis, when the
+origin is rejected.</td>
+<td>edge, transition weight</td>
+<td><code>transitions</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Intersection hypothesis</strong></td>
+<td>An intersection hypothesis is an intersection of multiple null
+hypotheses, which means that all associated null hypotheses are true.
+Plural often implies all intersections of all subsets of
+hypotheses.</td>
+<td>intersection, sub-graph(s), closure</td>
+<td><code>intersections</code></td>
+</tr>
+<tr class="even">
+<td><strong>Weighting strategy</strong></td>
+<td>The set of all <strong>intersections</strong> and their hypothesis
+<strong>weights</strong> according to Algorithm 1 in <span class="citation">Bretz et al. (2011)</span>.</td>
+<td>intersection weights, closure weights</td>
+<td><code>weighting_strategy</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Adjusted weight</strong></td>
+<td><p>The hypothesis <strong>weight</strong>, adjusted according to a
+multiple comparison procedure:</p>
+<ul>
+<li>Bonferroni: No change from the hypothesis weight from a graph</li>
+<li>Simes: Sum of hypothesis weights for hypotheses with smaller
+p-values in an intersection hypothesis</li>
+<li>Parametric: Multiply Bonferroni weight by c-value, which is
+calculated based on the joint distribution of test statistics of the
+associated intersection hypothesis A hypothesis may be rejected if its
+<strong>p-value</strong> is less than or equal to its <strong>adjusted
+weight</strong> times <code>alpha</code>.</li>
+</ul></td>
+<td></td>
+<td><code>adjusted_weights</code></td>
+</tr>
+<tr class="even">
+<td><strong>P-value</strong></td>
+<td>A p-value before multiplicity adjustment. Also could be called as an
+unadjusted p-value or a raw p-value.</td>
+<td></td>
+<td><code>p</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Ordered p-value</strong></td>
+<td>A <strong>p-value</strong> sorted from the smallest to the largest.
+They are mainly used to perform Simes tests.</td>
+<td></td>
+<td><code>ordered_p</code></td>
+</tr>
+<tr class="even">
+<td><strong>Adjusted p-value</strong></td>
+<td>A <strong>p-value</strong> that has been adjusted according to a
+multiple comparison procedure. A hypothesis may be rejected if its
+<strong>adjusted p-value</strong> is less than or equal to
+<code>alpha</code>.</td>
+<td></td>
+<td><code>adjusted_p</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Significance level</strong></td>
+<td>A threshold chosen to test a null hypothesis, which may be rejected
+if its <strong>p-value</strong> is less than or equal to its
+<strong>significance level</strong>. The overall significance level to
+test all hypotheses is <code>alpha</code>.</td>
+<td></td>
+<td><code>alpha</code></td>
+</tr>
+<tr class="even">
+<td><strong>Test type</strong></td>
+<td>A specification of which testing type to use for an
+<strong>intersection hypothesis</strong> - Bonferroni, Simes, and
+parametric are currently supported.</td>
+<td>tests</td>
+<td><code>test_types</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Test group</strong></td>
+<td>A partition of all null hypotheses in a <strong>graph</strong>
+specifying which <strong>hypotheses</strong> should be tested together
+using a <strong>test type</strong>.</td>
+<td>groups</td>
+<td><code>groups</code>, <code>test_groups</code></td>
+</tr>
+<tr class="even">
+<td><strong>Testing strategy</strong></td>
+<td><strong>Test types</strong> and <strong>test groups</strong>
+combined with a <strong>graph</strong>.</td>
+<td>multiple comparison procedure</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>Marginal power</strong></td>
+<td>The power to reject a null <strong>hypothesis</strong> at the
+<strong>significance level</strong> <code>alpha</code> (without
+multiplicity adjustment).</td>
+<td></td>
+<td><code>marginal_power</code></td>
+</tr>
+<tr class="even">
+<td><ul>
+<li><strong>Correlation matrix</strong></li>
+</ul></td>
+<td>Specification of correlations between test statistics for
+<strong>hypotheses</strong>. The correlation for testing
+<code>test_corr</code> is used to perform parametric tests. The
+correlation for simulation <code>test_sim</code> is used to simulate
+<strong>p-values</strong> from the alternative hypotheses for to assess
+<strong>power</strong>, under assumptions.</td>
+<td></td>
+<td><code>corr</code>, <code>test_corr</code>,
+<code>sim_corr</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Power</strong></td>
+<td>With a given <strong>graph</strong>, <strong>testing
+strategy</strong>, <code>alpha</code>, and the underlying distribution
+of test statistics under the alternative hypotheses, the estimated
+likelihood that a particular <strong>success</strong> criterion is
+met.</td>
+<td>probability of achieving success criterion</td>
+<td><code>power_*</code></td>
+</tr>
+<tr class="even">
+<td><ul>
+<li><strong>Success</strong></li>
+</ul></td>
+<td>Specification of the success criterion, which could be a combination
+of null <strong>hypotheses</strong>. Being success means that the
+combination of null hypotheses has been rejected.</td>
+<td></td>
+<td><code>sim_success</code></td>
+</tr>
+</tbody>
+</table>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-bretz-2011-graphical" class="csl-entry">
+Bretz, Frank, Martin Posch, Ekkehard Glimm, Florian Klinglmueller, Willi
+Maurer, and Kornelius Rohmeyer. 2011. <span>“Graphical Approaches for
+Multiple Comparison Procedures Using Weighted Bonferroni, Simes, or
+Parametric Tests.”</span> <em>Biometrical Journal</em> 53 (6): 894–913.
+<a href="https://doi.org/10.1002/bimj.201000239">https://doi.org/10.1002/bimj.201000239</a>.
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
