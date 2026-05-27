@@ -40,7 +40,14 @@ required_pkgs <- c("tidyverse", "data.table", "mgcv", "emmeans",
                    # reference-only contrasts. Provides correlation-aware
                    # parametric tests via `test_corr` argument. Falls back to
                    # Holm-gatekeeping if missing.
-                   "graphicalMCP")
+                   "graphicalMCP",
+                   # itsadug: standard diagnostic toolkit for GAM/BAM
+                   # time-series autocorrelation (acf_resid, start_value_rho).
+                   # The R script uses acf() directly for rho estimation
+                   # (equivalent to itsadug::start_value_rho with plot=FALSE),
+                   # but itsadug is required by the diagnostic block and is
+                   # the documented reference for these checks.
+                   "itsadug")
 
 install.packages(
   required_pkgs,

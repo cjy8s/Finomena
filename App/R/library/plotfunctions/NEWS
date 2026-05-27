@@ -1,0 +1,51 @@
+# plotfunctions 1.5
+
+* new functions that may facilitate plotting: keepFigRatio, axesLabels
+
+* update gradientLegend: dec value set by default to precision of 3, warning has been removed.
+
+* fixed issues with Rd cross-references checks.
+
+
+# plotfunctions 1.4
+
+* emptyPlot: Now possible to simplify axes by xmarks and ymarks arguments.
+
+* errorBars: new argument border to add border around error bar for better visibility, for example when bars are black. 
+
+* gradientLegend: Newly implemented. New argument n.seg allows to add arbitrary segments, whic a different color (specified by tick.col). Performance of dec and fit.margin is improved. Negative signs before zero values removed. See examples. Many thanks to the various users who pointed out bugs and potential changes for this function!
+
+* add_n_points: automatically determining distance between groups of points; Note that data does not always contains necessary info, so better to specify manually.
+
+* plot_error, fill_area: handling na values added
+
+* plot_image: keep.ratio argument added, to keep images in the original length/width ratio.
+
+* plot_surface: default changed to terrain colors. Topo colors are rather misleading because the colors do not change in a continuous gradient.
+
+
+# plotfunctions 1.3
+
+## New features / functions:
+- new function sortBoxplot: wrapper around boxplot for producing ordered boxplots.
+- new functions orderBoxplot and sortGroups: utility functions for sortBoxplot.
+- new function convertFile: utility function for changing decimal values in data from , to .
+- gradientLegend: argument fit.margin tries to ensure that the labels fit within the margin of the plot. 
+
+## Minorm changes:
+- argument na.rm for SE
+
+# plotfunctions 1.2
+
+## new features / functions:
+- new function plot_signifArea: indicates where a surface is not different from zero; to be used in combination with plotsurface().
+- new function getRatioCoords: utility function to support plot_image; the function calculates the plot coordinates given the height:width ratio of an image.
+- vignette plotfunctions is added with examples
+
+## Minor changes:
+- function drawArrows new implemented, easier to use
+
+# plotfunctions 1.1
+
+## Bug resolved: plotsurface now also allows to plot lists. Before and error was returned that the provided view argument was not found in the data.
+

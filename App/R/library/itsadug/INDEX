@@ -1,0 +1,84 @@
+acf_n_plots             Generate N ACF plots of individual or
+                        aggregated time series.
+acf_plot                Generate an ACF plot of an aggregated time
+                        series.
+acf_resid               Generate an ACF plot of model residuals. Works
+                        for lm, lmer, gam, bam, ....
+check_resid             Inspect residuals of regression models.
+compareML               Function for comparing two GAMM models.
+convertNonAlphanumeric
+                        Prepare string for regular expressions
+                        (backslash for all non-letter and non-digit
+                        characters)
+corfit                  Calculate the correlation between the fitted
+                        model and data.
+derive_timeseries       Derive the time series used in the AR1 model.
+diagnostics             Visualization of the model fit for time series
+                        data.
+diff_terms              Compare the formulas of two models and return
+                        the difference(s).
+dispersion              Calculate the dispersion of the residuals
+eeg                     Raw EEG data, single trial, 50Hz.
+fadeRug                 Fade out the areas in a surface without data.
+find_difference         Return the regions in which the smooth is
+                        significantly different from zero.
+fvisgam                 Visualization of nonlinear interactions, summed
+                        effects.
+gamtabs                 Convert model summary into Latex/HTML table for
+                        knitr/R Markdown reports.
+get_coefs               Get coefficients for the parametric terms
+                        (intercepts and random slopes).
+get_difference          Get model predictions for differences between
+                        conditions.
+get_fitted              Get model all fitted values.
+get_modelterm           Get estimated for selected model terms.
+get_pca_predictions     Return PCA predictions.
+get_predictions         Get model predictions for specific conditions.
+get_random              Get coefficients for the random intercepts and
+                        random slopes.
+info                    Information on how to cite this package
+infoMessages            Turn on or off information messages.
+inspect_random          Inspection and interpretation of random factor
+                        smooths.
+missing_est             Return indices of data that were not fitted by
+                        the model.
+modeledf                Retrieve the degrees of freedom specified in
+                        the model.
+observations            Number of observations in the model.
+plot_data               Visualization of the model fit for time series
+                        data.
+plot_diff               Plot difference curve based on model
+                        predictions.
+plot_diff2              Plot difference surface based on model
+                        predictions.
+plot_modelfit           Visualization of the model fit for time series
+                        data.
+plot_parametric         Visualization of group estimates.
+plot_pca_surface        Visualization of the effect predictors in
+                        nonlinear interactions with principled
+                        components.
+plot_smooth             Visualization of smooths.
+plot_topo               Visualization of EEG topo maps.
+print_summary           Print a named list of strings, output from
+                        'summary_data'.
+pvisgam                 Visualization of partial nonlinear
+                        interactions.
+refLevels               Return a list with reference levels for each
+                        factor.
+report_stats            Returns a description of the statistics of the
+                        smooth terms for reporting.
+res_df                  Retrieve the residual degrees of freedom from
+                        the model.
+resid_gam               Extract model residuals and remove the
+                        autocorrelation accounted for.
+rug_model               Add rug to plot, based on model.
+simdat                  Simulated time series data.
+start_event             Determine the starting point for each time
+                        series.
+start_value_rho         Extract the Lag 1 value from the ACF of the
+                        residuals of a gam, bam, lm, lmer model, ...
+summary_data            Print a descriptive summary of a data frame.
+timeBins                Label timestamps as timebins of a given
+                        binsize.
+wald_gam                Function for post-hoc comparison of the
+                        contrasts in a single GAMM model.

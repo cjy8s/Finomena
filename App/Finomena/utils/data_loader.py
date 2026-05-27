@@ -569,14 +569,31 @@ class DataLoaderWidget(QWidget):
             self._progress_signal.emit(0, "Scanning directories…")
             plate_file_lists = []
             total_files = 0
+            # Output subdirectories the app itself writes into; recursive scan
+            # must skip these so the loader doesn't try to ingest the BAM /
+            # ablation widget's output files as if they were plate inputs.
+            _SKIP_OUTPUT_DIRS = {"ablation", "ab_test_re", "ab_test_fs",
+                                 "ab_test_sz", "ab_test_re_slope",
+                                 "ab_test_none"}
+            def _under_output_subdir(p, root):
+                try:
+                    rel_parts = p.relative_to(root).parts
+                except ValueError:
+                    return False
+                return any(part in _SKIP_OUTPUT_DIRS for part in rel_parts)
+
             for directory in directories:
                 base_path = Path(directory)
-                folders = [base_path] + [f for f in base_path.rglob('*') if f.is_dir()]
+                folders = [base_path] + [
+                    f for f in base_path.rglob('*')
+                    if f.is_dir() and not _under_output_subdir(f, base_path)
+                ]
                 folder_files = []
                 for folder in folders:
                     files = sorted(
                         f for f in folder.glob('*')
                         if f.suffix.lower() in ('.csv', '.xls', '.xlsx')
+                        and not _under_output_subdir(f, base_path)
                     )
                     if files:
                         folder_files.append((folder, files))

@@ -63,6 +63,11 @@ from family_selection_widget   import FamilySelectionWidget
 from contrast_selection_widget import ContrastSelectionWidget
 from correction_widget         import CorrectionWidget
 from visualizations_widget     import VisualizationsWidget
+# Diagnostic ablation widget — remove this import + the corresponding
+# instantiation, sub-tab, and closeEvent line below once a winning model
+# configuration has been picked. The R script's ablation env vars default to
+# empty (= normal run mode), so the rest of the app keeps working unchanged.
+from random_basis_test_widget  import AblationTestWidget
 print("[DBG] app.py: all widget imports done", flush=True)
 
 
@@ -177,6 +182,13 @@ class MainWindow(QMainWindow):
         r_sub_tabs.addTab(self.contrast_selection_widget, "2. Contrast Selection")
         r_sub_tabs.addTab(self.correction_widget,        "3. Correction")
         r_sub_tabs.addTab(self.bam_widget,               "4. BAM Analysis")
+
+        # Diagnostic ablation tab — see comment on AblationTestWidget import.
+        self.ablation_test_widget = AblationTestWidget()
+        self.ablation_test_widget.set_bam_widget(self.bam_widget)
+        self.ablation_test_widget.set_contrast_widget(self.contrast_selection_widget)
+        self.ablation_test_widget.set_correction_widget(self.correction_widget)
+        r_sub_tabs.addTab(self.ablation_test_widget, "5. Architecture × Method Ablation")
 
         self.main_tabs.addTab(r_analysis_tab, "Time Series BAM")
 
@@ -316,7 +328,8 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Tear down any in-flight R subprocess trees before the app exits."""
-        for w in (self.bam_widget, self.family_selection_widget):
+        for w in (self.bam_widget, self.family_selection_widget,
+                  self.ablation_test_widget):
             try:
                 w.request_termination()
             except Exception:

@@ -1,12 +1,12 @@
 4b133f95ebb127da959878e3e7c7d2d5 *CITATION
-a66b493fccae1c7f57676912241f3f28 *DESCRIPTION
+51bea34d32728035e84125d61004d415 *DESCRIPTION
 44945251098ea0aa45d6c0dd817ea4eb *INDEX
 d415b57e8272bc6eb22303b033e0d6eb *Meta/Rd.rds
 854c930838846579e84a22a721624a4d *Meta/features.rds
 081a96547ca1c79147cf1d8c8ada031c *Meta/hsearch.rds
 2f60419bfea7adcf5411c77f9f99019c *Meta/links.rds
 e3dcfe101d3f7cfc8d433bef31044fa2 *Meta/nsInfo.rds
-c36e3482bf753c415848f2f0828cd902 *Meta/package.rds
+d2a055ff59a020bedd2360511feeb688 *Meta/package.rds
 0d1dab17f9ff8cee74c0cb2119bfe7ac *Meta/vignette.rds
 55fded922ad16103826437b61ef239d1 *NAMESPACE
 28f63c9456fdc7bab39c4304b5068d9d *NEWS.md
@@ -40,9 +40,9 @@ f7590f3fa4c4edbda1d345df3b9b0d48 *help/figures/README-plot-graph-1.png
 f408c7d08bcfbb3f1ec3593b978ad9e5 *help/figures/README-plot-updated-graph-1.png
 9566495e0d641ae7dd5ca113747e684b *help/figures/README-update-graph-1.png
 8d696c4e2148c4aa6cf2b2d8c1853a56 *help/figures/logo.png
-9b6bb33f39446173219a4179222b9d16 *help/graphicalMCP.rdb
-eb914a7f46da7c19ff432d069f509256 *help/graphicalMCP.rdx
-c6bfc459d862616b923cc4cbbcc4d5ff *help/paths.rds
+9d35ea9710001aadb92a0c0246277cda *help/graphicalMCP.rdb
+bd725ba8ef24e61888eece900d76abcd *help/graphicalMCP.rdx
+a35f34c9411f1eb9932a6c94fae40d3b *help/paths.rds
 ffb47d4f9d0819a417994738df43ee06 *hex-graphicalMCP_square-white.png
 534a8ccdf59ce6fb455cac08175484d4 *html/00Index.html
 8b9362669af13540a86a3ac6cf22f99d *html/R.css
