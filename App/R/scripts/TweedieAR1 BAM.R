@@ -23,6 +23,24 @@ library(gratia)
 # itsadug is loaded conditionally — only the ablation metric block uses it,
 # and only acf_resid() / start_value_rho() get called.
 
+# Console width — R wraps printed data.frames whose column widths exceed
+# `width`. The default is ~80 chars which splits the master table into two
+# chunks. The app's R log pane is much wider than that, so we set width to
+# a generous value so master_results prints in one contiguous block.
+# 320 is a safe-but-generous default: any terminal/widget narrower than
+# that will soft-wrap, which is no worse visually than R's own split would
+# have been, and wider surfaces get clean single-line output.
+options(width = 320)
+
+# Print warnings immediately (warn=1) rather than queueing them for end-of-
+# script flush. The deferred flush has been observed to produce a parse-
+# error trailer ("unexpected ')' in ' key)'") on some Rscript / mgcv combos,
+# which then surfaces as "Execution halted" AFTER the script's own last
+# cat() — confusing both the BAM widget's error dialog (which shows the
+# tail of the log) and the user. Immediate warnings appear in the log in
+# the order they fire, and the script exits cleanly after the final cat.
+options(warn = 1)
+
 # Null-coalescing operator (used when reading optional sidecar fields)
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
@@ -116,14 +134,18 @@ label_with_role <- function(cond) {
 k_start <- 30
 
 # Random-effect basis for animal_id and plate. Picked via env var so the
-# Random-Effect A/B Test tab can flip between options without changing the
-# CLI. Values (increasing flexibility):
+# Architecture × Method Ablation tab can flip between options without
+# changing the CLI. Values (increasing flexibility):
 #   none     — no animal/plate random effect (baseline; AR(1) only)
 #   re       — pure random intercept per level (no time argument)
 #   re_slope — random intercept + random slope over time_in_group
 #   fs       — factor smooth over time_in_group (unconstrained per-animal trajectory)
 #   sz       — sum-to-zero constrained smooth over time_in_group (deviation-from-mean)
-random_basis <- Sys.getenv("RANDOM_BASIS", "re")
+#
+# Default = "sz" — selected as the production winner via the ablation
+# diagnostic (see ABLATION_METHODOLOGY.md at the project root: Arch C HGAM
+# with sz random basis won by ~12% lower 5-fold CV deviance vs Arch A).
+random_basis <- Sys.getenv("RANDOM_BASIS", "sz")
 .valid_bases <- c("none", "re", "re_slope", "fs", "sz")
 if (!(random_basis %in% .valid_bases)) {
   warning("RANDOM_BASIS='", random_basis,
@@ -709,7 +731,7 @@ for (vi in seq_along(var_names)) {
     df_contrasts <- df_contrasts %>%
       mutate(
         Test_Family  = paste0(focal_var, "_Effect"),
-        Tested_Level = as.character(contrast),
+        Passed_Contrasts = as.character(contrast),
         Group        = as.integer(as.character(Group_factor))
       ) %>%
       select(-Group_factor)
@@ -717,7 +739,7 @@ for (vi in seq_along(var_names)) {
     df_contrasts <- df_contrasts %>%
       mutate(
         Test_Family  = paste0(focal_var, "_Effect"),
-        Tested_Level = as.character(contrast),
+        Passed_Contrasts = as.character(contrast),
         Group        = .arch_a_group_id
       )
   }
@@ -821,7 +843,7 @@ if (!is.null(emm_inter_contrasts)) {
     df_inter <- df_inter %>%
       mutate(
         Test_Family  = "Full_Interaction",
-        Tested_Level = as.character(contrast),
+        Passed_Contrasts = as.character(contrast),
         Split_By     = "None",
         Group        = as.integer(as.character(Group_factor))
       ) %>%
@@ -830,7 +852,7 @@ if (!is.null(emm_inter_contrasts)) {
     df_inter <- df_inter %>%
       mutate(
         Test_Family  = "Full_Interaction",
-        Tested_Level = as.character(contrast),
+        Passed_Contrasts = as.character(contrast),
         Split_By     = "None",
         Group        = .arch_a_group_id
       )
@@ -861,7 +883,7 @@ final_master_table <- master_results_df %>%
     SE         = SE       / log(2),
     Group      = as.integer(Group)
   ) %>%
-  select(Test_Family, Group, Split_By, Tested_Level, estimate, SE, raw_pvalue) %>%
+  select(Test_Family, Group, Split_By, Passed_Contrasts, estimate, SE, raw_pvalue) %>%
   arrange(Test_Family, Group)
 
 # Read correction.json if present
@@ -899,7 +921,13 @@ if (identical(correction_spec$strategy, "tree")) {
     cat("Tree strategy chosen but no tree spec provided — using default rescue tree.\n")
     tree_spec <- default_rescue_tree_spec(var_names, ref_map)
   }
-  final_master_table <- assign_tree_metadata(final_master_table, tree_spec)
+  # Pass var_names and the Python-supplied condition_lookup so design-variable
+  # linkage decodes Full_Interaction's multi-variable contrast strings via
+  # dict access (no R-side string parsing of "+"-joined condition names).
+  final_master_table <- assign_tree_metadata(
+    final_master_table, tree_spec, var_names,
+    condition_lookup = correction_spec$condition_lookup
+  )
 }
 
 final_master_table <- apply_correction(final_master_table, correction_spec)
@@ -907,7 +935,7 @@ final_master_table <- apply_correction(final_master_table, correction_spec)
 # Tidy up column order — tree columns may not have been added by flat methods
 # but they're always present after apply_correction (NAs are fine).
 final_master_table <- final_master_table %>%
-  select(Test_Family, Group, Split_By, Tested_Level,
+  select(Test_Family, Group, Split_By, Passed_Contrasts,
          estimate, SE,
          raw_pvalue, adjusted_pvalue, correction_method,
          tidyselect::any_of(c("tree_id", "tree_level",

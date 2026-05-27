@@ -184,11 +184,39 @@ class MainWindow(QMainWindow):
         r_sub_tabs.addTab(self.bam_widget,               "4. BAM Analysis")
 
         # Diagnostic ablation tab — see comment on AblationTestWidget import.
+        # Hidden by default; toggle via the small button at the bottom-right
+        # of this Time Series BAM tab. See ABLATION_METHODOLOGY.md for
+        # context on why this tab is hidden after the original model
+        # selection was made.
         self.ablation_test_widget = AblationTestWidget()
         self.ablation_test_widget.set_bam_widget(self.bam_widget)
         self.ablation_test_widget.set_contrast_widget(self.contrast_selection_widget)
         self.ablation_test_widget.set_correction_widget(self.correction_widget)
-        r_sub_tabs.addTab(self.ablation_test_widget, "5. Architecture × Method Ablation")
+        self._r_sub_tabs = r_sub_tabs   # store reference so the toggle can find it
+        self._ablation_tab_index = r_sub_tabs.addTab(
+            self.ablation_test_widget, "5. Architecture × Method Ablation"
+        )
+        r_sub_tabs.setTabVisible(self._ablation_tab_index, False)
+
+        # Bottom-right diagnostic-ablation tab toggle. Flat + small + grey
+        # so it stays unobtrusive but discoverable.
+        ablation_toggle_row = QHBoxLayout()
+        ablation_toggle_row.addStretch()
+        self._toggle_ablation_btn = QPushButton("Show Diagnostic Ablation")
+        self._toggle_ablation_btn.setFlat(True)
+        self._toggle_ablation_btn.setStyleSheet(
+            "QPushButton { color: #888888; font-size: 9pt; padding: 2px 8px; }"
+            "QPushButton:hover { color: #cccccc; }"
+        )
+        self._toggle_ablation_btn.setToolTip(
+            "Show / hide the Architecture × Method Ablation diagnostic "
+            "sub-tab.\n"
+            "Hidden by default after the original model selection was made.\n"
+            "See ABLATION_METHODOLOGY.md at the project root for context."
+        )
+        self._toggle_ablation_btn.clicked.connect(self._toggle_ablation_tab)
+        ablation_toggle_row.addWidget(self._toggle_ablation_btn)
+        r_layout.addLayout(ablation_toggle_row)
 
         self.main_tabs.addTab(r_analysis_tab, "Time Series BAM")
 
@@ -214,6 +242,11 @@ class MainWindow(QMainWindow):
         # Also push the per-variable breakdown to metadata for reference derivation
         self.conditions_format.conditions_updated.connect(
             self._push_condition_variables
+        )
+        # Pipe conditions to the Correction widget so its Split_By dropdowns
+        # populate from real condition levels instead of free-text typing.
+        self.conditions_format.conditions_updated.connect(
+            self.correction_widget.set_conditions
         )
 
         # Variable names → metadata, bam, family selection, data loader, correction
@@ -286,6 +319,32 @@ class MainWindow(QMainWindow):
         print("[DBG] seeding plate layouts", flush=True)
         self.plate_format_widget.emit_layouts_state()
         print("[DBG] MainWindow.__init__ END", flush=True)
+
+    # ── Diagnostic ablation tab toggle ────────────────────────────────────────
+
+    def _toggle_ablation_tab(self):
+        """Show or hide the Architecture × Method Ablation diagnostic tab.
+
+        The tab is hidden by default after the methodology was settled (see
+        ABLATION_METHODOLOGY.md). Toggling it makes the diagnostic tooling
+        re-available for inspection or re-runs without exposing it as a
+        front-line UI element.
+        """
+        idx = getattr(self, "_ablation_tab_index", -1)
+        if idx < 0 or self._r_sub_tabs is None:
+            return
+        visible_now = self._r_sub_tabs.isTabVisible(idx)
+        new_state = not visible_now
+        self._r_sub_tabs.setTabVisible(idx, new_state)
+        self._toggle_ablation_btn.setText(
+            "Hide Diagnostic Ablation" if new_state else "Show Diagnostic Ablation"
+        )
+        if new_state:
+            # Bring the user to the tab so they can find it immediately
+            self.main_tabs.setCurrentIndex(
+                self.main_tabs.indexOf(self._r_sub_tabs.parentWidget())
+            )
+            self._r_sub_tabs.setCurrentIndex(idx)
 
     # ── Output directory ────────────────────────────────────────────────────────
 

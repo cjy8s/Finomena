@@ -8,7 +8,7 @@
 #   adjusted_pvalue    numeric, one per row
 #   correction_method  string, identical across all rows
 #   tree_level         integer or NA  (NA for flat methods)
-#   tree_status        string or NA   ("tested" / "gate_failed" / "not_reached"
+#   tree_status        string or NA   ("passed" / "gate_failed" / "not_reached"
 #                                       for tree; NA for flat)
 #
 # Sourced by TweedieAR1 BAM.R after the master table is assembled.
@@ -16,7 +16,7 @@
 # Inputs
 # ------
 # `master_df`  Required columns: raw_pvalue, Test_Family, Group, Split_By,
-#              Tested_Level. For tree methods, also a `tree_level` column
+#              Passed_Contrasts. For tree methods, also a `tree_level` column
 #              assigning each row to a level and a `tree_parent_id` column
 #              identifying its parent in the tree (NA at the root).
 # `q`         Threshold (q for FDR, alpha for FWER).
@@ -28,26 +28,25 @@
 
 
 # ---------------------------------------------------------------------------
-# Flat correction: BH or Holm across all rows OR within Test_Family.
+# Flat correction: BH or Holm within Test_Family.
 # ---------------------------------------------------------------------------
 #
-# `scope`:
-#   "per_family" — group_by Test_Family before adjusting (historical default)
-#   "pooled"     — single p.adjust call over the whole table
+# Always corrects within each Test_Family because each family represents a
+# distinct scientific question (Genotype_Effect / Drug_Effect /
+# Full_Interaction etc.). The historic "pooled across all" scope was removed
+# as it conflated unrelated hypotheses into a single overly conservative
+# correction. The `scope` arg is accepted but ignored for back-compat with
+# any existing correction.json files; per-family is enforced.
 # ---------------------------------------------------------------------------
 .flat_correct <- function(master_df, method, q, scope = "per_family") {
   method <- match.arg(method, c("BH", "holm"))
-  scope  <- match.arg(scope,  c("per_family", "pooled"))
-
-  if (scope == "pooled") {
-    master_df$adjusted_pvalue <- p.adjust(master_df$raw_pvalue, method = method)
-  } else {
-    # per_family: adjust within each Test_Family separately
-    master_df <- master_df %>%
-      group_by(Test_Family) %>%
-      mutate(adjusted_pvalue = p.adjust(raw_pvalue, method = method)) %>%
-      ungroup()
+  if (!identical(scope, "per_family")) {
+    warning("'pooled' scope is no longer supported — using per_family.")
   }
+  master_df <- master_df %>%
+    group_by(Test_Family) %>%
+    mutate(adjusted_pvalue = p.adjust(raw_pvalue, method = method)) %>%
+    ungroup()
   master_df$correction_method <- if (method == "BH") "BH" else "Holm"
   master_df$tree_level        <- NA_integer_
   master_df$tree_status       <- NA_character_
@@ -89,7 +88,7 @@
   l1_p <- tree_df$raw_pvalue[l1]
   l1_adj <- p.adjust(l1_p, method = "BH")
   tree_df$adjusted_pvalue[l1] <- l1_adj
-  tree_df$tree_status[l1] <- ifelse(l1_adj < q, "tested", "gate_failed")
+  tree_df$tree_status[l1] <- ifelse(l1_adj < q, "passed", "gate_failed")
 
   # ── Subsequent levels: per-parent BH on children of rejected parents ────
   for (L in levels_sorted[-1]) {
@@ -101,7 +100,7 @@
       parent_row <- which(tree_df$tree_id == parent_id)
       if (length(parent_row) == 0) next
       parent_status   <- tree_df$tree_status[parent_row]
-      parent_rejected <- isTRUE(parent_status == "tested") &&
+      parent_rejected <- isTRUE(parent_status == "passed") &&
                          isTRUE(tree_df$adjusted_pvalue[parent_row] < q)
       if (!parent_rejected) {
         # Children of a non-rejected parent stay "not_reached".
@@ -112,7 +111,7 @@
       child_adj  <- p.adjust(child_p, method = "BH")
       tree_df$adjusted_pvalue[child_rows] <- child_adj
       tree_df$tree_status[child_rows] <-
-        ifelse(child_adj < q, "tested", "gate_failed")
+        ifelse(child_adj < q, "passed", "gate_failed")
     }
   }
   tree_df$correction_method <- "TreeBH"
@@ -142,7 +141,7 @@
 
   l1_adj <- p.adjust(tree_df$raw_pvalue[l1], method = "holm")
   tree_df$adjusted_pvalue[l1] <- l1_adj
-  tree_df$tree_status[l1] <- ifelse(l1_adj < alpha, "tested", "gate_failed")
+  tree_df$tree_status[l1] <- ifelse(l1_adj < alpha, "passed", "gate_failed")
 
   for (L in levels_sorted[-1]) {
     rows_at_L <- which(tree_df$tree_level == L)
@@ -153,7 +152,7 @@
       parent_row <- which(tree_df$tree_id == parent_id)
       if (length(parent_row) == 0) next
       parent_status   <- tree_df$tree_status[parent_row]
-      parent_rejected <- isTRUE(parent_status == "tested") &&
+      parent_rejected <- isTRUE(parent_status == "passed") &&
                          isTRUE(tree_df$adjusted_pvalue[parent_row] < alpha)
       if (!parent_rejected) next
 
@@ -161,7 +160,7 @@
       child_adj  <- p.adjust(tree_df$raw_pvalue[child_rows], method = "holm")
       tree_df$adjusted_pvalue[child_rows] <- child_adj
       tree_df$tree_status[child_rows] <-
-        ifelse(child_adj < alpha, "tested", "gate_failed")
+        ifelse(child_adj < alpha, "passed", "gate_failed")
     }
   }
   tree_df$correction_method <- "Holm-gatekeeping"
@@ -330,7 +329,7 @@
     full_rows <- on_tree_idx[rows_at_L_sub]
     if (L == levels_sorted[1]) {
       tree_df$tree_status[full_rows] <-
-        ifelse(rejected_sub[rows_at_L_sub], "tested", "gate_failed")
+        ifelse(rejected_sub[rows_at_L_sub], "passed", "gate_failed")
       tree_df$adjusted_pvalue[full_rows] <-
         ifelse(rejected_sub[rows_at_L_sub],
                tree_df$raw_pvalue[full_rows],
@@ -348,7 +347,7 @@
           next
         }
         tree_df$tree_status[i_full] <-
-          if (rejected_sub[i_sub]) "tested" else "gate_failed"
+          if (rejected_sub[i_sub]) "passed" else "gate_failed"
         tree_df$adjusted_pvalue[i_full] <-
           if (rejected_sub[i_sub]) tree_df$raw_pvalue[i_full]
           else max(tree_df$raw_pvalue[i_full], alpha)
@@ -370,7 +369,8 @@
 #     error_rate    = "FDR" | "FWER",
 #     contrast_set  = "all_pairs" | "ref_only",   # affects emmeans, not here
 #     threshold     = 0.05,
-#     scope         = "per_family" | "pooled",    # flat only
+#     scope         = "per_family",                # flat only (always per_family;
+#                                                   # pooled was removed)
 #     tree          = list(...)                   # tree only (level specs)
 #   )
 #

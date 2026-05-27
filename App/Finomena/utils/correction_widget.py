@@ -15,7 +15,7 @@ reorder). Each level specifies:
 
     Test_Family   – which contrast family it draws from
     Split_By      – optional filter on the Split_By column
-    Pair filter   – optional regex on Tested_Level
+    Pair filter   – optional regex on Passed_Contrasts
     Linkage key   – how identity carries from this level's parent
 
 The correction.json schema mirrors the R-side dispatcher's expectation:
@@ -25,13 +25,11 @@ The correction.json schema mirrors the R-side dispatcher's expectation:
       "error_rate":   "FDR" | "FWER",
       "contrast_set": "all_pairs" | "ref_only",
       "threshold":    0.05,
-      "scope":        "per_family" | "pooled",   (flat only)
+      "scope":        "per_family",               (flat only; pooled removed)
       "tree": [
         {
           "name":        "L1 phase gate",
           "Test_Family": "Genotype_Effect",
-          "split_by":    "DMSO",
-          "pair_filter": null,
           "linkage_key": null
         },
         ...
@@ -74,6 +72,7 @@ class CorrectionWidget(QWidget):
         super().__init__(parent)
         self._variable_names: list[str] = ["Genotype", "Drug"]
         self._variable_refs:  dict      = {}
+        self._conditions:     dict      = {}    # {full_interaction_name: hex_color}
         self._output_dir:     str       = ""
         self._build_ui()
         self._update_visibility()
@@ -82,11 +81,28 @@ class CorrectionWidget(QWidget):
 
     def set_variable_names(self, names: list):
         self._variable_names = list(names)
+        # Rebuild the default tree from the current variable list:
+        #   L1 = <var0>_Effect (gate)
+        #   L2 = <var1>_Effect (effect)
+        #   L3 = Full_Interaction (specificity)
+        # This is the canonical rescue-paradigm tree, simpler→complex order.
+        # Rebuilding here guarantees the default reflects the current design
+        # variables.
+        self._populate_default_tree()
         self._refresh_test_family_choices()
+        self._render_preview()
 
     def set_references(self, variable_refs: dict, ref_condition: str):
         self._variable_refs = dict(variable_refs)
         # Reset-to-default behaves more sensibly once we know the refs.
+
+    def set_conditions(self, conditions: dict):
+        """Wired to ExperimentalConditionsWidget.conditions_updated. The dict
+        is {full_interaction_name (e.g. "WT+DMSO"): hex_color}. We don't
+        care about colors; we use the keys to build the condition_lookup
+        that gets shipped to R via correction.json (so the design-variable
+        parser can decode multi-variable contrast strings by dict access)."""
+        self._conditions = dict(conditions)
 
     def set_output_dir(self, path: str):
         self._output_dir = path
@@ -100,18 +116,35 @@ class CorrectionWidget(QWidget):
                 "contrast_set": "all_pairs" if self._allpairs_radio.isChecked()
                                             else "ref_only",
                 "threshold":    float(self._threshold_spin.value()),
-                "scope":        ("per_family" if self._per_family_radio.isChecked()
-                                              else "pooled"),
+                # scope is fixed to per_family — pooled across all was removed
+                # because each Test_Family represents a distinct scientific
+                # question (Genotype / Drug / Full_Interaction).
+                "scope":        "per_family",
             }
         # Tree
         return {
-            "strategy":     "tree",
-            "error_rate":   "FDR" if self._fdr_radio.isChecked() else "FWER",
-            "contrast_set": "all_pairs" if self._allpairs_radio.isChecked()
-                                        else "ref_only",
-            "threshold":    float(self._threshold_spin.value()),
-            "tree":         self._collect_tree_levels(),
+            "strategy":          "tree",
+            "error_rate":        "FDR" if self._fdr_radio.isChecked() else "FWER",
+            "contrast_set":      "all_pairs" if self._allpairs_radio.isChecked()
+                                             else "ref_only",
+            "threshold":         float(self._threshold_spin.value()),
+            "tree":              self._collect_tree_levels(),
+            # Per-variable decoding for every condition name. Python already
+            # knows these — passing them to R lets tree_metadata.R decode
+            # Full_Interaction contrast strings via dict access instead of
+            # parsing "+"-joined condition names.
+            "condition_lookup":  self._build_condition_lookup(),
         }
+
+    def _build_condition_lookup(self) -> dict:
+        """{condition_name: {var_name: value, ...}} for every loaded condition."""
+        out = {}
+        for cond in self._conditions.keys():
+            parts = cond.split("+")
+            if len(parts) != len(self._variable_names):
+                continue
+            out[cond] = {v: p.strip() for v, p in zip(self._variable_names, parts)}
+        return out
 
     def write_sidecar(self) -> str:
         """Serialize the current spec to <output_dir>/correction.json.
@@ -191,15 +224,10 @@ class CorrectionWidget(QWidget):
         thr_row.addStretch()
         thr_col.addLayout(thr_row)
 
-        self._scope_label = QLabel("<b>Flat scope</b>")
-        thr_col.addWidget(self._scope_label)
-        self._per_family_radio = QRadioButton("Per Test_Family")
-        self._pooled_radio     = QRadioButton("Pooled across all")
-        self._per_family_radio.setChecked(True)
-        self._per_family_radio.toggled.connect(self._on_any_change)
-        self._pooled_radio.toggled.connect(self._on_any_change)
-        thr_col.addWidget(self._per_family_radio)
-        thr_col.addWidget(self._pooled_radio)
+        # "Pooled across all" was removed; flat correction is always
+        # per Test_Family because each family represents a distinct
+        # scientific question. See ABLATION_METHODOLOGY.md / earlier
+        # discussion of scope choice.
         thr_col.addStretch()
         sg_layout.addLayout(thr_col)
 
@@ -213,9 +241,6 @@ class CorrectionWidget(QWidget):
         self._cs_grp     = QButtonGroup(self)
         self._cs_grp.addButton(self._allpairs_radio)
         self._cs_grp.addButton(self._refonly_radio)
-        self._scope_grp  = QButtonGroup(self)
-        self._scope_grp.addButton(self._per_family_radio)
-        self._scope_grp.addButton(self._pooled_radio)
 
         outer.addWidget(strat_group)
 
@@ -231,6 +256,10 @@ class CorrectionWidget(QWidget):
         self._level_list.setDragDropMode(QListWidget.InternalMove)
         self._level_list.setDefaultDropAction(Qt.MoveAction)
         self._level_list.setSelectionMode(QListWidget.SingleSelection)
+        # When a row is dragged: refresh whichever row is now at position 0
+        # (root) so its linkage combo is greyed/None, and any previously-root
+        # row that moved DOWN gets its combo re-enabled.
+        self._level_list.model().rowsMoved.connect(self._refresh_root_level_state)
         self._level_list.model().rowsMoved.connect(self._on_any_change)
         d_layout.addWidget(self._level_list, stretch=1)
 
@@ -288,11 +317,6 @@ class CorrectionWidget(QWidget):
         # Tree designer only visible when Tree strategy is active
         tree_mode = self._tree_radio.isChecked()
         self._splitter.setVisible(tree_mode)
-        # Flat scope radios only visible when Flat strategy is active
-        flat_mode = self._flat_radio.isChecked()
-        self._scope_label.setVisible(flat_mode)
-        self._per_family_radio.setVisible(flat_mode)
-        self._pooled_radio.setVisible(flat_mode)
 
     def _update_status(self):
         spec = self.get_spec()
@@ -322,12 +346,22 @@ class CorrectionWidget(QWidget):
             if isinstance(row, _LevelRow):
                 row.set_test_family_choices(choices)
 
+    def _refresh_root_level_state(self):
+        """Whichever row sits at position 0 is the L1 root; its linkage_key
+        is structurally ignored by the R-side correction algorithms (BH/Holm
+        at L1 corrects across all rows with one shared alpha). Reflect that
+        in the UI by forcing the linkage combo to "None" and disabling it
+        for the row at index 0. Call this whenever the row order changes."""
+        for i in range(self._level_list.count()):
+            item = self._level_list.item(i)
+            row  = self._level_list.itemWidget(item)
+            if isinstance(row, _LevelRow):
+                row.set_root_level(i == 0)
+
     def _on_add_level(self):
         self._append_level({
             "name":        f"Level {self._level_list.count() + 1}",
             "Test_Family": "Full_Interaction",
-            "split_by":    "",
-            "pair_filter": "",
             "linkage_key": "Group",
         })
         self._on_any_change()
@@ -341,28 +375,30 @@ class CorrectionWidget(QWidget):
         if len(self._variable_names) >= 2:
             gate_var   = self._variable_names[0]
             screen_var = self._variable_names[1]
-            ref_screen = self._variable_refs.get(screen_var, "")
+            # split_by was removed — every row of a Test_Family is covered by
+            # exactly one tree level, so every computed p-value gets corrected.
+            # Default tree (rescue paradigm), simpler → more complex hypothesis:
+            #   L1 = gate     (Genotype_Effect — all contexts)
+            #     "Does the disease phenotype exist?"
+            #   L2 = effect   (Drug_Effect — both genotype contexts)
+            #     "Does the drug do anything?"
+            #   L3 = specificity (Full_Interaction)
+            #     "Is the drug's effect specifically rescue (differs by genotype)?"
             defaults = [
                 {
                     "name":        f"L1 {gate_var} gate",
-                    "Test_Family": f"{gate_var}_Effect",
-                    "split_by":    ref_screen,
-                    "pair_filter": "",
-                    "linkage_key": "",
+                    "Test_Family": f"{gate_var} Effect",
+                    "linkage_key": None,   # root — auto-forced to None at i==0
                 },
                 {
-                    "name":        "L2 rescue claim",
+                    "name":        f"L2 {screen_var} effect",
+                    "Test_Family": f"{screen_var} Effect",
+                    "linkage_key": f"{gate_var}",
+                },
+                {
+                    "name":        f"L3 Interaction specificity",
                     "Test_Family": "Full_Interaction",
-                    "split_by":    "",
-                    "pair_filter": "",
-                    "linkage_key": "Group",
-                },
-                {
-                    "name":        f"L3 {screen_var} specificity",
-                    "Test_Family": f"{screen_var}_Effect",
-                    "split_by":    "",
-                    "pair_filter": "",
-                    "linkage_key": "Tested_Level",
+                    "linkage_key": f"{screen_var}",
                 },
             ]
         else:
@@ -371,13 +407,17 @@ class CorrectionWidget(QWidget):
             self._append_level(spec)
 
     def _append_level(self, spec: dict):
-        row = _LevelRow(self._variable_names, spec, parent=self._level_list)
+        row = _LevelRow(
+            self._variable_names, spec,
+            parent=self._level_list,
+        )
         row.changed.connect(self._on_any_change)
         row.remove_requested.connect(self._on_remove_level)
         item = QListWidgetItem(self._level_list)
         item.setSizeHint(row.sizeHint())
         self._level_list.addItem(item)
         self._level_list.setItemWidget(item, row)
+        self._refresh_root_level_state()
 
     def _on_remove_level(self, row_widget):
         for i in range(self._level_list.count()):
@@ -385,6 +425,7 @@ class CorrectionWidget(QWidget):
             if self._level_list.itemWidget(item) is row_widget:
                 self._level_list.takeItem(i)
                 break
+        self._refresh_root_level_state()
         self._on_any_change()
 
     # ── Tree preview rendering ────────────────────────────────────────────
@@ -415,7 +456,7 @@ class CorrectionWidget(QWidget):
                     bbox=dict(boxstyle="round,pad=0.6",
                               facecolor="#37474f", edgecolor="#cfd8dc"))
             ax.text(5, 3,
-                    f"Scope: {spec.get('scope', 'per_family')}\n"
+                    f"Scope: per Test_Family\n"
                     f"Contrasts: {cs}",
                     ha="center", va="center",
                     color="#cfd8dc", fontsize=10)
@@ -434,27 +475,53 @@ class CorrectionWidget(QWidget):
             self._preview_canvas.draw_idle()
             return
 
-        # Lay out one box per level, top to bottom
-        ax.set_ylim(0, n + 1.5)
-        # Algorithm label
+        # Lay out: header at top, then a "Group root" indicator, then one
+        # box per level descending. Total vertical span = n + 2.5 units.
+        ax.set_ylim(0, n + 2.5)
+
+        # Algorithm label, with a one-line note about alpha-redistribution
+        # behaviour so the user knows what the method actually does.
         if err == "FDR":
             algo = "TreeBH"
+            redist_note = "BH per parent-rejected family · no alpha redistribution"
         else:
-            algo = "graphicalMCP (correlation-aware)" if cs == "ref_only" else "Holm-gatekeeping"
-        ax.text(5, n + 1.0,
+            if cs == "ref_only":
+                algo = "graphicalMCP (correlation-aware)"
+                redist_note = "alpha redistributes via graph edges (children + siblings)"
+            else:
+                algo = "Holm-gatekeeping"
+                redist_note = "Holm per parent-rejected family · no alpha redistribution"
+        ax.text(5, n + 2.2,
                 f"Tree · {err} · {cs} · {algo} at {thr:g}",
                 ha="center", va="bottom",
                 color="#80cbc4", fontsize=11, fontweight="bold")
+        ax.text(5, n + 1.95,
+                redist_note,
+                ha="center", va="top",
+                color="#9eaeb6", fontsize=8, fontstyle="italic")
+
+        # Group root indicator — visualises that L1 has one node per phase,
+        # all siblings of an implicit Group root. Important for understanding
+        # alpha flow at L1 (especially under graphicalMCP).
+        ax.text(5, n + 1.0,
+                "Group root\nL1 phase gate siblings share this level's alpha pool",
+                ha="center", va="center",
+                color="#cfd8dc", fontsize=8,
+                bbox=dict(boxstyle="round,pad=0.4",
+                          facecolor="#26323a", edgecolor="#546e7a",
+                          linestyle="dashed"))
+        # Arrow from root down to L1
+        ax.annotate("",
+                    xy=(5, n + 0.45), xytext=(5, n + 0.75),
+                    arrowprops=dict(arrowstyle="->", color="#80cbc4", lw=1.2))
 
         for i, lvl in enumerate(levels):
             y = n - i  # top → bottom
             label = lvl.get("name", f"Level {i+1}") or f"Level {i+1}"
             fam   = lvl.get("Test_Family", "—") or "—"
-            sb    = lvl.get("split_by") or "(all)"
-            pf    = lvl.get("pair_filter") or "(none)"
             lk    = lvl.get("linkage_key")
             if i == 0:
-                lk_str = "(root)"
+                lk_str = "(from Group root, per-phase siblings)"
             else:
                 if isinstance(lk, dict):
                     lk_str = lk.get("parent_var", "Group")
@@ -463,7 +530,7 @@ class CorrectionWidget(QWidget):
 
             text = (
                 f"{label}\n"
-                f"family: {fam}    Split_By: {sb}    pair: {pf}\n"
+                f"family: {fam}\n"
                 f"linkage from parent: {lk_str}"
             )
             ax.text(5, y, text,
@@ -492,15 +559,16 @@ class CorrectionWidget(QWidget):
             if not isinstance(row, _LevelRow):
                 continue
             spec = row.get_spec()
-            # Normalize empty strings to None for cleaner JSON
-            for k in ("split_by", "pair_filter"):
-                if spec.get(k) == "":
-                    spec[k] = None
             # First level has no linkage key
             if i == 0:
                 spec["linkage_key"] = None
             else:
                 lk = spec.get("linkage_key") or "Group"
+                # Safety net: the "None" option is meant to live only on the
+                # L1 row. If it somehow leaks into a non-root spec (e.g. timing
+                # during reorder), fall back to "Group".
+                if lk == "None":
+                    lk = "Group"
                 # JSON shape mirrors what tree_metadata.R expects
                 spec["linkage_key"] = {"parent_var": lk, "child_var": lk}
             levels.append(spec)
@@ -542,23 +610,14 @@ class _LevelRow(QFrame):
         self._family_combo.currentIndexChanged.connect(self.changed)
         layout.addWidget(self._family_combo)
 
-        layout.addWidget(QLabel("Split_By:"))
-        self._split_edit = QLineEdit(spec.get("split_by", "") or "")
-        self._split_edit.setMaximumWidth(120)
-        self._split_edit.setPlaceholderText("(all)")
-        self._split_edit.textChanged.connect(self.changed)
-        layout.addWidget(self._split_edit)
-
-        layout.addWidget(QLabel("Pair filter:"))
-        self._pair_edit = QLineEdit(spec.get("pair_filter", "") or "")
-        self._pair_edit.setMaximumWidth(140)
-        self._pair_edit.setPlaceholderText("(none, regex on Tested_Level)")
-        self._pair_edit.textChanged.connect(self.changed)
-        layout.addWidget(self._pair_edit)
+        # split_by + pair_filter were both removed — narrowing tree levels
+        # would leave some computed p-values uncorrected (off_tree). p-value
+        # correction must be all-or-nothing for the family of computed tests.
+        # Pair narrowing belongs in Contrast Selection / plate layout.
 
         layout.addWidget(QLabel("Linkage:"))
         self._linkage_combo = QComboBox()
-        link_options = ["Group", "Tested_Level"] + list(variable_names)
+        link_options = ["Group", "Passed_Contrasts"] + list(variable_names)
         for opt in link_options:
             self._linkage_combo.addItem(opt)
         idx = self._linkage_combo.findText(spec.get("linkage_key", "Group"))
@@ -593,7 +652,25 @@ class _LevelRow(QFrame):
         return {
             "name":        self._name_edit.text().strip(),
             "Test_Family": self._family_combo.currentText(),
-            "split_by":    self._split_edit.text().strip(),
-            "pair_filter": self._pair_edit.text().strip(),
             "linkage_key": self._linkage_combo.currentText(),
         }
+
+    def set_root_level(self, is_root: bool):
+        """L1 (position 0) has no parent — corrections.R applies BH/Holm
+        across ALL its rows with one shared alpha, ignoring whatever
+        linkage_key the JSON carries. Reflect that in the UI by forcing
+        the combo to "None" and disabling it for the root row. If this
+        row is later moved out of position 0 (or another row takes its
+        place), the combo re-enables with its prior options."""
+        self._linkage_combo.blockSignals(True)
+        none_idx = self._linkage_combo.findText("None")
+        if is_root:
+            if none_idx < 0:
+                self._linkage_combo.insertItem(0, "None")
+            self._linkage_combo.setCurrentIndex(self._linkage_combo.findText("None"))
+            self._linkage_combo.setEnabled(False)
+        else:
+            if none_idx >= 0:
+                self._linkage_combo.removeItem(none_idx)
+            self._linkage_combo.setEnabled(True)
+        self._linkage_combo.blockSignals(False)

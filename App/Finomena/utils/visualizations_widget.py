@@ -22,7 +22,7 @@ Plot types
 Data contract
 -------------
 Reads ``master_results.csv`` from the chosen output directory. Required cols:
-``Test_Family, Group, Split_By, Tested_Level, estimate, SE, raw_pvalue,
+``Test_Family, Group, Split_By, Passed_Contrasts, estimate, SE, raw_pvalue,
 adjusted_pvalue``. Optional cols: ``correction_method``, ``tree_level``,
 ``tree_status`` (NA-filled for flat correction).
 
@@ -333,8 +333,8 @@ class VisualizationsWidget(QWidget):
         filt_layout.addWidget(QLabel("Tree status"))
         self._tree_status_combo = QComboBox()
         self._tree_status_combo.addItem("All",                     "all")
-        self._tree_status_combo.addItem("Tested only",             "tested")
-        self._tree_status_combo.addItem("Tested + gate-failed",    "tested_plus_gate_failed")
+        self._tree_status_combo.addItem("Passed only",             "passed")
+        self._tree_status_combo.addItem("Passed + gate-failed",    "passed_plus_gate_failed")
         self._tree_status_combo.addItem("Not reached (gated out)", "not_reached")
         self._tree_status_combo.addItem("Off-tree (outside spec)", "off_tree")
         self._tree_status_combo.currentIndexChanged.connect(self._render)
@@ -771,7 +771,7 @@ class VisualizationsWidget(QWidget):
             self._status_label.setText(f"Could not read CSV: {exc}")
             return
 
-        required = {"Test_Family", "Group", "Split_By", "Tested_Level",
+        required = {"Test_Family", "Group", "Split_By", "Passed_Contrasts",
                     "estimate", "SE", "raw_pvalue", "adjusted_pvalue"}
         missing = required - set(df.columns)
         if missing:
@@ -1037,10 +1037,10 @@ class VisualizationsWidget(QWidget):
         # Tree-status filter — only acts when the CSV has tree_status info.
         if "tree_status" in df.columns and hasattr(self, "_tree_status_combo"):
             scope = self._tree_status_combo.currentData()
-            if scope == "tested":
-                df = df[df["tree_status"].astype(str) == "tested"]
-            elif scope == "tested_plus_gate_failed":
-                df = df[df["tree_status"].astype(str).isin(["tested", "gate_failed"])]
+            if scope == "passed":
+                df = df[df["tree_status"].astype(str) == "passed"]
+            elif scope == "passed_plus_gate_failed":
+                df = df[df["tree_status"].astype(str).isin(["passed", "gate_failed"])]
             elif scope == "not_reached":
                 df = df[df["tree_status"].astype(str) == "not_reached"]
             elif scope == "off_tree":
@@ -1198,7 +1198,7 @@ class VisualizationsWidget(QWidget):
                     label_df = sig_df.nlargest(min(20, len(sig_df)), "neg_log10_fdr")
                 for _, row in label_df.iterrows():
                     ax.annotate(
-                        self._annotate_label(row["Tested_Level"],
+                        self._annotate_label(row["Passed_Contrasts"],
                                              group=row.get("Group"),
                                              split_by=row.get("Split_By")),
                         xy=(row["estimate"], row["neg_log10_fdr"]),
@@ -1285,7 +1285,7 @@ class VisualizationsWidget(QWidget):
             labels = [
                 self._annotate_label(t, group=g, split_by=s)
                 for t, g, s in zip(
-                    ranked["Tested_Level"].astype(str),
+                    ranked["Passed_Contrasts"].astype(str),
                     ranked["Group"] if "Group" in ranked.columns
                                     else [None] * len(ranked),
                     ranked["Split_By"] if "Split_By" in ranked.columns
@@ -1387,7 +1387,7 @@ class VisualizationsWidget(QWidget):
                     )
                 for _, row in label_rows.iterrows():
                     ax.annotate(
-                        self._annotate_label(row["Tested_Level"],
+                        self._annotate_label(row["Passed_Contrasts"],
                                              group=row.get("Group"),
                                              split_by=row.get("Split_By")),
                         xy=(row["_x"], row["estimate"]),
@@ -1446,12 +1446,12 @@ class VisualizationsWidget(QWidget):
 
         # Per-variable contrasts (e.g. "KO - WT" out of Genotype_Effect) have
         # multiple rows per Group — one per Split_By context (e.g. one for
-        # DMSO, one for compound). Grouping by Tested_Level alone stitches
-        # those into a single zig-zagging line. Use the (Tested_Level,
+        # DMSO, one for compound). Grouping by Passed_Contrasts alone stitches
+        # those into a single zig-zagging line. Use the (Passed_Contrasts,
         # Split_By) pair as the trajectory identifier so each context
         # becomes its own smooth panel.
         df = df.copy()
-        df["_traj_key"] = (df["Tested_Level"].astype(str) + "  |  "
+        df["_traj_key"] = (df["Passed_Contrasts"].astype(str) + "  |  "
                            + df["Split_By"].astype(str))
 
         # Compute a per-trajectory score across groups, then keep the top N.
@@ -1560,7 +1560,7 @@ class VisualizationsWidget(QWidget):
             # Pull contrast + split_by back out of the key for the panel
             # title. Skip the split label when it's the placeholder "None"
             # used by Full_Interaction rows so those titles stay clean.
-            contrast = rows["Tested_Level"].iloc[0]
+            contrast = rows["Passed_Contrasts"].iloc[0]
             split_by = rows["Split_By"].iloc[0]
             title = self._annotate_label(contrast, split_by=split_by)
             if str(split_by) not in ("None", "All", "nan"):

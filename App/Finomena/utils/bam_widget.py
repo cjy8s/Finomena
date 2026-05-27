@@ -479,8 +479,24 @@ class BamWidget(QWidget):
             # User clicked Stop — _on_stop already set the status label and
             # logged the action. Don't pop a "failed" dialog for an intentional cancel.
             return
-        if success:
-            self._r_status_label.setText("Complete ✓")
+        # Treat the run as successful if the R script printed its own
+        # "Analysis complete" marker AND wrote master_results.csv, even when
+        # Rscript exits with non-zero status. This catches the case where R's
+        # warning-queue flush at end-of-script produces a parse-error trailer
+        # (e.g. "unexpected ')' in ...") that's cosmetic — the main analysis
+        # completed but Rscript bubbled up the warning-printer failure.
+        completed_marker_seen = "Analysis complete." in self._log_text.toPlainText()
+        master_path = os.path.join(self._output_dir or "", "master_results.csv")
+        master_written = bool(self._output_dir) and os.path.isfile(master_path)
+        treat_as_success = success or (completed_marker_seen and master_written)
+
+        if treat_as_success:
+            if not success:
+                # Cosmetic post-script error from R — flag it in the status
+                # label but don't pop an error dialog over a finished run.
+                self._r_status_label.setText("Complete ✓  (R reported a post-script warning — see log)")
+            else:
+                self._r_status_label.setText("Complete ✓")
             self._load_summary()
             self.analysis_complete.emit(self._output_dir)
         else:

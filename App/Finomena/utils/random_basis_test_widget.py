@@ -970,8 +970,8 @@ class AblationTestWidget(QWidget):
         # Build per-contrast cross-variant table from stored master_results.csv
         if not self._stage1_master:
             return
-        # Merge by (Test_Family, Group, Split_By, Tested_Level)
-        merge_keys = ["Test_Family", "Group", "Split_By", "Tested_Level"]
+        # Merge by (Test_Family, Group, Split_By, Passed_Contrasts)
+        merge_keys = ["Test_Family", "Group", "Split_By", "Passed_Contrasts"]
         merged = None
         # Pull master_results per VARIANT (already aggregated per Arch A by run_id reuse:
         # for A we have separate masters per group — concat them per variant_id)
