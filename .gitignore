@@ -1,22 +1,35 @@
+# --- Local-only folders (not to be tracked) ---
+Data/
+OG R script/
+*.xlsx
 
-# Python cache
+# --- IDE / tooling state ---
+.claude/
+.vscode/
+.idea/
+.Rproj.user/
+
+# --- Python ---
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
 
-# Project data folders
-/Input/
-/Output/
+# --- PyInstaller build artifacts ---
+Finomena/App/build/
+Finomena/App/dist/
+Finomena/App/*.manifest
 
-# Original script files, no longer needed
-/Script/
+# --- R bundled library and runtime droppings ---
+# (downstream installer reads install_packages.R and fetches packages itself;
+#  we do NOT commit the bundled R package binaries.)
+Finomena/App/R/library/
+**/.Rhistory
+**/.RData
 
-# Portable R runtime — populated locally by setup_dev.bat / setup_dev.sh
-# Never commit: platform-specific binaries, hundreds of MB
-/App/R/runtime/
-
-# Build artifacts
-/App/dist/
-/App/build/
-/App/Output/
-
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+desktop.ini
