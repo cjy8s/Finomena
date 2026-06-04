@@ -249,10 +249,12 @@ if (!all(var_names_display %in% colnames(full_df))) {
 # ---------------------------------------------------------
 # Unified-model design:
 #   - One bam() fit across all phase groups, not one per group.
-#   - time_in_group resets at each phase boundary so per-(condition × phase)
-#     smooths live entirely inside their own phase.
-#   - time_sec is the global continuous-time variable used by the per-well
-#     and per-plate random-effect smooths so they span the whole recording.
+#   - time_in_group resets at each phase boundary; per-(condition × phase)
+#     smooths AND the per-well / per-plate random-effect smooths therefore
+#     live entirely inside their own phase under the default (Arch C) build.
+#   - time_sec is retained as the original continuous-time stamp for data
+#     prep and is only used inside the model under Arch B (ablation only),
+#     which routes all smooths through it.
 #   - Group_factor encodes phase identity as a categorical predictor for the
 #     parametric expansion and the by-interaction smooth.
 #   - start_event resets the AR(1) chain at BOTH well starts AND phase
@@ -338,6 +340,9 @@ if (shift_val != 0) {
 # ---------------------------------------------------------
 # 2. BUILD UNIFIED BAM FORMULA
 # ---------------------------------------------------------
+# Default formula (no ABL_ARCH set → Arch C unified, RANDOM_BASIS default 'sz';
+# see the architecture / random-basis dispatch immediately below for variants):
+#
 # Parametric:   Var1 * Var2 * ... * VarN * Group_factor
 #               → all design-variable main effects + all interactions
 #                 INCLUDING phase-group interactions; captures per-(condition,
@@ -346,13 +351,14 @@ if (shift_val != 0) {
 #   s(time_in_group, k = k_start)                                  — shared within-phase shape baseline
 #   s(time_in_group, by = interaction(Condition_Combo, Group_factor), k = k_start)
 #                                                                  — per-(condition × phase) trajectory deviation
-#   s(time_sec, plate,     bs = 'fs', m = 1)                       — plate random smooth across all time
-#   s(time_sec, animal_id, bs = 'fs', m = 1)                       — well random smooth across all time
+#   s(time_in_group, plate,     bs = 'sz')                         — per-plate sum-to-zero deviation (omitted when n_plates < 2)
+#   s(time_in_group, animal_id, bs = 'sz')                         — per-well  sum-to-zero deviation
 #
 # Transition spikes between phases are inferred from the early-time shape of
 # the next phase's per-(condition, phase) smooth plus the parametric phase
-# intercepts. The random-effect smooths over time_sec span the entire
-# recording so per-well / per-plate variance is estimated once jointly.
+# intercepts. Because the random-effect smooths also use time_in_group, they
+# reset at each phase boundary too — per-well / per-plate variance is
+# estimated once per phase, not once across the whole recording.
 # Random-effect smooth string builder. Returns the formula fragment for
 # ONE factor (animal_id or plate) given the chosen basis and time variable.
 # Returns "" for "none" so the caller can omit the term entirely.

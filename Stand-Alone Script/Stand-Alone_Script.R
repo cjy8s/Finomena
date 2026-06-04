@@ -180,11 +180,16 @@ cat("Ref condition:    ", ref_condition, "\n\n")
 time_frame_path <- file.path(INPUT_DIR, "time_frame.csv")
 if (!file.exists(time_frame_path)) stop("Missing time_frame.csv at: ", time_frame_path)
 time_frame <- read.csv(time_frame_path, stringsAsFactors = FALSE)
-if (!all(c("Group", "Phase", "Start", "End") %in% colnames(time_frame))) {
-  stop("time_frame.csv must have columns: Group, Phase, Start, End")
+if (!all(c("Group", "Phase", "End") %in% colnames(time_frame))) {
+  stop("time_frame.csv must have columns: Group, Phase, End  ",
+       "(Start is optional and ignored; phase assignment is End-only ",
+       "to match the app's pd.merge_asof(direction='forward') semantics).")
+}
+if ("Start" %in% colnames(time_frame)) {
+  cat("Note: 'Start' column present in time_frame.csv but ignored. ",
+      "Phase assignment uses End-only semantics matching the app.\n", sep = "")
 }
 time_frame$Group <- as.integer(time_frame$Group)
-time_frame$Start <- as.integer(time_frame$Start)
 time_frame$End   <- as.integer(time_frame$End)
 cat("Time frame:\n")
 print(time_frame, row.names = FALSE)
@@ -277,8 +282,8 @@ parse_plate_layout <- function(layout_path, expected_n_vars) {
 
 
 # ── LOAD ONE PLATE'S RAW CSV(S) AND BIN TO 1-SEC ────────────────────────────
-load_plate <- function(plate_dir, plate_name) {
-  cat("  ", plate_name, " ... ", sep = "")
+load_plate <- function(plate_dir, plate_name, plate_idx) {
+  cat("  [", plate_idx, "] ", plate_name, " ... ", sep = "")
 
   layout <- parse_plate_layout(file.path(plate_dir, "plate_layout.csv"), n_vars)
 
@@ -314,11 +319,16 @@ load_plate <- function(plate_dir, plate_name) {
       next
     }
     tmp <- tmp[, ..keep_cols]
-    # Drop the marker rows the Zebrabox emits for sound / light state changes.
-    tmp <- tmp[!data1 %in% c("SOUND", "BACK_LIGHT", "TOP_LIGHT", "Not identify")]
-    # data1 arrives as character because of those marker strings — now safe to coerce.
+    # Mirror Python (data_loader.py L661): drop time<=0 rows before binning,
+    # so the time_sec=0 bin contains the same samples in both pipelines.
+    tmp <- tmp[time > 0]
+    # Mirror Python (data_loader.py L681): coerce data1 to integer; non-numeric
+    # marker strings (SOUND / BACK_LIGHT / TOP_LIGHT / "Not identify") become
+    # NA via suppressWarnings — equivalent to pd.to_numeric(errors='coerce').
+    # DO NOT drop NA rows: bins containing only markers must still emit a row
+    # with pixel_diff = 0, which sum(na.rm = TRUE) produces — matching pandas'
+    # default sum(skipna = True).
     tmp[, data1 := suppressWarnings(as.integer(data1))]
-    tmp <- tmp[!is.na(data1)]
     dfs[[i]] <- tmp
   }
   dfs <- dfs[!sapply(dfs, is.null)]
@@ -348,15 +358,27 @@ load_plate <- function(plate_dir, plate_name) {
   binned[, Condition := unname(layout$well_to_cond[loc_coord])]
   binned <- binned[!is.na(Condition) & Condition != ""]
 
-  binned[, plate     := plate_name]
-  binned[, animal_id := paste(plate_name, loc_coord, sep = "_")]
+  # Match the app exactly:
+  #   plate     = integer plate index (1, 2, ...) — bam_widget.py L242 reads
+  #               the integer `plate` column the data loader assigns at
+  #               data_loader.py L670 (plate_combined['plate'] = plate_idx).
+  #   animal_id = paste(plate, location, sep = "_"), where `location` is the
+  #               raw Zebrabox "loc_<n>" string (NOT the reconstructed A1/B7
+  #               loc_coord). Mirrors bam_widget.py L242:
+  #                 animal_id = df['plate'].astype(str) + "_" + df['location'].astype(str)
+  #               and the app R's TweedieAR1 BAM.R L271 reconstruction
+  #                 animal_id = paste(plate, location, sep = "_").
+  # plate_name (the path-relative directory name) is no longer used for any
+  # model-facing column — it remains the per-plate console label only.
+  binned[, plate     := plate_idx]
+  binned[, animal_id := paste(plate_idx, location, sep = "_")]
 
   cat(nrow(binned), " rows.\n", sep = "")
   binned[]
 }
 
 cat("── Aggregating plate data ──\n")
-plate_tabs <- Map(load_plate, plate_dirs, plate_names)
+plate_tabs <- Map(load_plate, plate_dirs, plate_names, seq_along(plate_dirs))
 plate_tabs <- plate_tabs[!sapply(plate_tabs, is.null)]
 if (length(plate_tabs) == 0) stop("All plates yielded zero usable rows.")
 full_df <- rbindlist(plate_tabs)
@@ -367,13 +389,18 @@ cat("Data time_sec range: [", min(full_df$time_sec), ", ",
 
 
 # ── JOIN PHASE / GROUP FROM time_frame ──────────────────────────────────────
-# Each (Start, End) window in time_frame is closed on both ends. Rows that
-# don't fall inside any window are dropped.
-full_df[, `:=`(Phase = NA_character_, Group = NA_integer_)]
-for (i in seq_len(nrow(time_frame))) {
-  full_df[time_sec >= time_frame$Start[i] & time_sec <= time_frame$End[i],
-          `:=`(Phase = time_frame$Phase[i], Group = time_frame$Group[i])]
-}
+# Mirrors the app's pd.merge_asof(direction='forward') on End
+# (data_loader.py L700-706): for each row at time_sec t, assign the phase
+# whose End is the smallest value >= t. Equivalently, phase i covers
+# (End_{i-1}, End_i], with phase 1 covering [0, End_1]; Start is not used.
+# Rows with t > max(End) get NA and are dropped.
+time_frame <- time_frame[order(time_frame$End), ]
+phase_idx  <- findInterval(full_df$time_sec - 1L, time_frame$End) + 1L
+phase_idx[phase_idx > nrow(time_frame)] <- NA_integer_
+full_df[, `:=`(
+  Phase = time_frame$Phase[phase_idx],
+  Group = time_frame$Group[phase_idx]
+)]
 n_before <- nrow(full_df)
 full_df  <- full_df[!is.na(Phase)]
 cat("Phase join: kept ", nrow(full_df), " / ", n_before,
@@ -384,9 +411,8 @@ if (nrow(full_df) == 0) {
        "  Data time_sec range:    [",
        min(rbindlist(plate_tabs)$time_sec), ", ",
        max(rbindlist(plate_tabs)$time_sec), "]\n",
-       "  time_frame.csv covers:  [",
-       min(time_frame$Start), ", ", max(time_frame$End), "]\n",
-       "Edit time_frame.csv so its Start/End values match this experiment's ",
+       "  time_frame.csv covers:  [0, ", max(time_frame$End), "]\n",
+       "Edit time_frame.csv so its End values cover this experiment's ",
        "phase boundaries (in seconds).")
 }
 
@@ -475,8 +501,8 @@ cat("Conditions:   ", paste(levels(gam_df$Condition_Combo), collapse = ", "), "\
 #     - shared within-phase trajectory baseline
 #   s(time_in_group, by = ..., k = k_start)
 #     - per-(condition [× phase-group]) deviation from baseline
-#   s(time_sec, plate, bs = 'sz')      (omitted when only one plate)
-#   s(time_sec, animal_id, bs = 'sz')  - per-animal trajectory
+#   s(time_in_group, plate, bs = 'sz')      (omitted when only one plate)
+#   s(time_in_group, animal_id, bs = 'sz')  - per-animal trajectory
 k_start <- 30
 
 parametric_str <- if (use_group_factor) {
@@ -489,8 +515,8 @@ by_term <- if (use_group_factor) {
 } else {
   "Condition_Combo"
 }
-plate_smooth  <- if (n_plates >= 2) " + s(time_sec, plate, bs = 'sz')" else ""
-animal_smooth <- " + s(time_sec, animal_id, bs = 'sz')"
+plate_smooth  <- if (n_plates >= 2) " + s(time_in_group, plate, bs = 'sz')" else ""
+animal_smooth <- " + s(time_in_group, animal_id, bs = 'sz')"
 
 formula_str <- paste0(
   "pixel_diff ~ ", parametric_str,
@@ -554,7 +580,7 @@ cat("\n")
 # argument internally; trimming reduces that copy. aggregated_data.csv already
 # persists the untrimmed frame (line above) so Condition / loc_coord / Phase /
 # Group / location / loc_id remain available on disk for inspection.
-bam_cols <- c("pixel_diff", "time_in_group", "time_sec",
+bam_cols <- c("pixel_diff", "time_in_group",
               "plate", "animal_id", "Condition_Combo",
               "start_event", var_names)
 if (use_group_factor) bam_cols <- c(bam_cols, "Group_factor")
@@ -697,7 +723,9 @@ for (vi in seq_along(var_names)) {
     split_cols <- as.data.frame(df_c[, other_vars, drop = FALSE])
     df_c$Split_By <- apply(split_cols, 1, function(r) paste(r, collapse = " + "))
   } else {
-    df_c$Split_By <- NA_character_
+    # Match the app's sentinel — tree_metadata.R compares Split_By literally
+    # against a tree spec's split_by value, so "All" must match "All", not NA.
+    df_c$Split_By <- "All"
   }
 
   df_c <- df_c %>% select(-any_of(other_vars))
@@ -769,7 +797,9 @@ df_inter <- as.data.frame(emm_inter) %>%
   mutate(
     Test_Family      = "Full_Interaction",
     Passed_Contrasts = as.character(contrast),
-    Split_By         = NA_character_
+    # Match the app's sentinel — tree_metadata.R compares Split_By literally
+    # against a tree spec's split_by value, so "None" must match "None", not NA.
+    Split_By         = "None"
   )
 if (use_group_factor) {
   df_inter$Group <- as.integer(as.character(df_inter$Group_factor))
@@ -880,13 +910,11 @@ cat("Saved: summary_statistics_by_group.csv\n")
   lhs_vars <- parse_cond(lhs)
   rhs_vars <- parse_cond(rhs)
 
-  time_grid       <- seq(0, max(group_rows$time_in_group), length.out = n_time)
-  time_sec_anchor <- mean(range(group_rows$time_sec))
+  time_grid <- seq(0, max(group_rows$time_in_group), length.out = n_time)
 
   build_nd <- function(cond_str, vars_list) {
     nd <- data.frame(
-      time_in_group = time_grid,
-      time_sec      = time_sec_anchor
+      time_in_group = time_grid
     )
     for (v in var_names) {
       nd[[v]] <- factor(vars_list[[v]], levels = levels(full_df[[v]]))
@@ -908,8 +936,8 @@ cat("Saved: summary_statistics_by_group.csv\n")
 
   # Standalone hardcodes bs='sz' for animal (and plate when n_plates >= 2),
   # so exclude exactly those terms to get population-level draws.
-  excl <- "s(time_sec,animal_id)"
-  if (n_plates >= 2L) excl <- c(excl, "s(time_sec,plate)")
+  excl <- "s(time_in_group,animal_id)"
+  if (n_plates >= 2L) excl <- c(excl, "s(time_in_group,plate)")
 
   X_lhs  <- predict(model, newdata = nd_lhs, type = "lpmatrix", exclude = excl)
   X_rhs  <- predict(model, newdata = nd_rhs, type = "lpmatrix", exclude = excl)
